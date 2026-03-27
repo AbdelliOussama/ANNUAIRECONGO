@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ANNUAIRECONGO.Api/ANNUAIRECONGO.Api.csproj" />
+    <Project Path="src/ANNUAIRECONGO.Application/ANNUAIRECONGO.Application.csproj" />
+    <Project Path="src/ANNUAIRECONGO.Contracts/ANNUAIRECONGO.Contracts.csproj" />
+    <Project Path="src/ANNUAIRECONGO.Domain/ANNUAIRECONGO.Domain.csproj" />
+    <Project Path="src/ANNUAIRECONGO.Infrastructure/ANNUAIRECONGO.Infrastructure.csproj" />
+  </Folder>
+</Solution>

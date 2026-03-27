@@ -1,0 +1,28 @@
+@baseUrl = https://localhost:7139/identity
+
+### Login As Admin
+POST {{baseUrl}}/token/generate
+Content-Type: application/json
+
+{
+    "email": "Admin@localhost",
+    "password": "Admin@localhost"
+}
+
+### Login As Business Owner
+POST {{baseUrl}}/token/generate
+Content-Type: application/json
+
+{
+    "email": "john.businessOwner@localhost",
+    "password": "john.businessOwner@localhost"
+}
+
+### Refresh Token
+POST {{baseUrl}}/token/refresh-token
+Content-Type: application/json
+
+{
+    "ExpiredAccessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOWE1OTEyOS02YzIwLTQxN2EtODM0ZC0xMWEyMDhkMzJkOTYiLCJlbWFpbCI6IkFkbWluQGxvY2FsaG9zdCIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc3NDA1NTcwMSwiZXhwIjoxNzc0MDU5MzAxLCJpYXQiOjE3NzQwNTU3MDEsImlzcyI6ImxvY2FsaG9zdCIsImF1ZCI6ImxvY2FsaG9zdCJ9.avv6_guEts-akomI89MwTUK4eCOxmCAqmO8HN55wYrs",
+    "refreshToken": "Wtlb4I47xEsDadZX8tevfRCzsceZazO7iI0vLipCYJY="
+}

@@ -1,0 +1,47 @@
+using ANNUAIRECONGO.Application.Common.Interfaces;
+using ANNUAIRECONGO.Domain.Common.Results;
+using ANNUAIRECONGO.Domain.Companies;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
+
+namespace ANNUAIRECONGO.Application.Features.Companies.Commands.Contacts.UpdateContact;
+
+public sealed record UpdateContactCommandHandler(
+    ILogger<UpdateContactCommandHandler> logger,
+    IAppDbContext context,
+    HybridCache cache) : IRequestHandler<UpdateContactCommand, Result<Updated>>
+{
+    private readonly ILogger<UpdateContactCommandHandler> _logger = logger;
+    private readonly IAppDbContext _context = context;
+    private readonly HybridCache _cache = cache;
+
+    public async Task<Result<Updated>> Handle(UpdateContactCommand request, CancellationToken cancellationToken)
+    {
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+
+        if (company is null)
+        {
+            _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
+            return CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
+        var companyContact = company.Contacts.FirstOrDefault(c => c.Id == request.ContactId);
+        if (companyContact is null)
+        {
+            _logger.LogWarning("Contact with id {ContactId} not found", request.ContactId);
+            return CompanyErrors.ContactNotFound;
+        }
+
+        var result = company.UpdateContact(request.ContactId,companyContact);
+        if (result.IsError)
+        {
+            _logger.LogWarning("Failed to add contact to company with id {CompanyId}", request.CompanyId);
+            return result.Errors;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        await _cache.RemoveByTagAsync("company");
+        return Result.Updated;
+    }
+}

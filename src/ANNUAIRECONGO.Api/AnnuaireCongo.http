@@ -1,0 +1,84 @@
+@baseUrl = https://localhost:7139/api
+
+
+@Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOWE1OTEyOS02YzIwLTQxN2EtODM0ZC0xMWEyMDhkMzJkOTYiLCJlbWFpbCI6IkFkbWluQGxvY2FsaG9zdCIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc3NDIxNTQ2NywiZXhwIjoxNzc0MjE5MDY3LCJpYXQiOjE3NzQyMTU0NjcsImlzcyI6ImxvY2FsaG9zdCIsImF1ZCI6ImxvY2FsaG9zdCJ9.LzkK03ItXJ7vZ48AEp5NNLKOC44bqL6ulJQBpVuYPck
+
+GET {{baseUrl}}/v1/business-owners
+Authorization: Bearer {{Token}}
+
+
+
+#### Sectors
+### Get All Sectors
+GET {{baseUrl}}/v1/sectors
+
+### Get Sector By Id
+@SectorId = 8d5a015b-392f-4228-167e-08de890daeed
+GET {{baseUrl}}/v1/sectors/{{SectorId}}
+
+### Create Sector
+POST {{baseUrl}}/v1/sectors
+Content-Type: application/json
+
+{
+  "name": "Agriculture",
+  "IconUrl": "https://example.com/agriculture.png",
+  "description": "Agriculture is the practice of cultivating plants."
+}
+
+
+#### Cities
+### Get All Cities
+GET {{baseUrl}}/v1/cities
+
+### Get City By Id
+@CityId = 8d5a015b-392f-4228-167e-08de890daeed
+GET {{baseUrl}}/v1/cities/{{CityId}}
+
+### Create City
+POST {{baseUrl}}/v1/cities
+Content-Type: application/json
+
+
+
+{
+  "name": "Kinshasa",
+  "IconUrl": "https://example.com/kinshasa.png",
+  "description": "Kinshasa is the capital of the Democratic Republic of the Congo."
+}
+
+#### Companies
+### Get All Companies
+GET {{baseUrl}}/v1/companies
+
+### Get Company By Id
+@CompanyId = 8d5a015b-392f-4228-167e-08de890daeed
+GET {{baseUrl}}/v1/companies/{{CompanyId}}
+
+### Create Company
+
+@BusinessOwnerId = E17C83DE-1089-4F19-BF79-5F789133D37F
+@CityId = 3664A7C1-4275-49A5-9339-08DE87A6FF01
+@SectorId = 705CFE96-36A6-460A-B995-08DE88636315
+POST {{baseUrl}}/v1/companies
+Content-Type: application/json
+
+{
+  "ownerId": "{{BusinessOwnerId}}",
+  "name": "FinaTech Solutions",
+  "cityId": "{{CityId}}",
+  "description": "FinaTech Solutions is a company that provides financial technology solutions.",
+  "address": "123 Main Street",
+  "latitude": 4.3225,
+  "longitude": 15.3137,
+  "sectorIds": ["{{SectorId}}"]
+}
+
+### Get Paginated Companies
+GET {{baseUrl}}/v1/companies
+
+
+
+
+
+
