@@ -24,7 +24,7 @@ public class Company : AuditableEntity
 
     // ── Location ──────────────────────────────────────────────────
     public Guid CityId { get; private set; }
-    public string Address { get; private set; }
+    public string? Address { get; private set; }
     public decimal? Latitude { get; private set; }
     public decimal? Longitude { get; private set; }
 

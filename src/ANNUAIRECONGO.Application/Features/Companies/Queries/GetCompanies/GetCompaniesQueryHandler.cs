@@ -62,6 +62,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
 
         if (companies is null || !companies.Any())
         {
+            _logger.LogWarning("No companies found");
             return new PaginatedList<CompanyDto>
             {
                 Items = new List<CompanyDto>(),

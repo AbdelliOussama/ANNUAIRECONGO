@@ -15,7 +15,7 @@ public class CompanyConfigurations : IEntityTypeConfiguration<Company>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Slug).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Description).IsRequired().HasMaxLength(1000);
-        builder.Property(x => x.Address).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.Description).IsRequired(false);
+        builder.Property(x => x.Address).IsRequired(false);
     }
 }
