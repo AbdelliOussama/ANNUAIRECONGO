@@ -14,17 +14,15 @@ public class City : AuditableEntity
     public Region Region { get; private set; } = null!;
 
     private readonly List<Company>_Companies = [];
-    public ICollection<Companies.Company> Companies =>_Companies.AsReadOnly();
+    public ICollection<Company> Companies =>_Companies.AsReadOnly();
 
     private City() { }
 
-    private City(Guid id,Guid regionId,string name, List<Company> companies) :base(id)
+    private City(Guid id,Guid regionId,string name) :base(id)
     {
         RegionId=regionId;
         Name=name;
-        _Companies = companies;
-
-
+        Slug=GenerateSlug(name);
     }
 
     public static Result<City> Create(Guid id,Guid regionId, string name)
@@ -41,12 +39,7 @@ public class City : AuditableEntity
         {
             return CityErrors.SlugAlreadyExists;
         }
-        return new City
-        {
-            RegionId = regionId,
-            Name = name,
-            Slug = GenerateSlug(name)
-        };
+        return new City(id,regionId,name);
     }
 
     public Result<Updated>Update(string name)
@@ -60,6 +53,11 @@ public class City : AuditableEntity
         return Result.Updated;
     }
 
+    public Result<Updated>AddCompany(Company company)
+    {
+        _Companies.Add(company);
+        return Result.Updated;
+    }
     private static string GenerateSlug(string name) =>
         name.ToLowerInvariant()
             .Replace(" ", "-")
