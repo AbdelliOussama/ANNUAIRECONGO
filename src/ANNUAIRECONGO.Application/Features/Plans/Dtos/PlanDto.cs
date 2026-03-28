@@ -11,4 +11,5 @@ public sealed record PlanDto(
     int MaxDocuments,
     bool HasAnalytics,
     bool HasFeaturedBadge,
-    int SearchPriority);
+    int SearchPriority,
+    bool IsActive);

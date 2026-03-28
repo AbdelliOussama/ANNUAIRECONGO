@@ -16,7 +16,8 @@ public static class PlanMapper
             plan.MaxDocuments,
             plan.HasAnalytics,
             plan.HasFeaturedBadge,
-            plan.SearchPriority
+            plan.SearchPriority,
+            plan.IsActive
         );
     }
     public static List<PlanDto> ToDtos(this IEnumerable<Plan> plans)
