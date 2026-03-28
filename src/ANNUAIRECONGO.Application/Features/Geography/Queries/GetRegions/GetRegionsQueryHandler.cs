@@ -2,7 +2,6 @@ using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Geography.Dtos;
 using ANNUAIRECONGO.Application.Features.Geography.Mappers;
 using ANNUAIRECONGO.Domain.Common.Results;
-using ANNUAIRECONGO.Domain.Geography;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -22,7 +21,6 @@ public sealed class GetRegionsQueryHandler(
         var regions = await _context.Regions
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-
         return regions.ToDtos();
     }
 }

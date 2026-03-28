@@ -260,33 +260,33 @@ public class ApplicationDbContextInitialiser(
             await _context.SaveChangesAsync();
         }
 
-         if (!_context.Sectors.Any())
-         {
-             _context.Sectors.AddRange(
-             [
-                 Sector.Create(Guid.NewGuid(), "Technology", "Technology and software development companies").Value,
-                 Sector.Create(Guid.NewGuid(), "Finance", "Banking, insurance, and financial services").Value,
-                 Sector.Create(Guid.NewGuid(), "Healthcare", "Hospitals, clinics, and healthcare providers").Value,
-                 Sector.Create(Guid.NewGuid(), "Education", "Schools, universities, and educational institutions").Value,
-                 Sector.Create(Guid.NewGuid(), "Retail", "Retail stores and e-commerce businesses").Value,
-                 Sector.Create(Guid.NewGuid(), "Construction", "Construction companies and real estate").Value,
-                 Sector.Create(Guid.NewGuid(), "Energy", "Oil, gas, and renewable energy companies").Value,
-                 Sector.Create(Guid.NewGuid(), "Telecommunications", "Telecom providers and internet services").Value,
-                 Sector.Create(Guid.NewGuid(), "Agriculture", "Agriculture and agro-industry").Value,
-                 Sector.Create(Guid.NewGuid(), "Tourism", "Hotels, restaurants, and tourism services").Value,
-                 Sector.Create(Guid.NewGuid(), "Transport", "Transportation and logistics companies").Value,
-                 Sector.Create(Guid.NewGuid(), "Food", "Food processing and beverage companies").Value,
-                 Sector.Create(Guid.NewGuid(), "Media", "Media, advertising, and entertainment").Value,
-                 Sector.Create(Guid.NewGuid(), "Consulting", "Consulting and professional services").Value,
-                 Sector.Create(Guid.NewGuid(), "Manufacturing", "Manufacturing and industrial production").Value
-             ]);
-             await _context.SaveChangesAsync();
-         }
+        if (!_context.Sectors.Any())
+        {
+            _context.Sectors.AddRange(
+            [
+                Sector.Create(Guid.NewGuid(), "Technology", "Technology and software development companies").Value,
+                Sector.Create(Guid.NewGuid(), "Finance", "Banking, insurance, and financial services").Value,
+                Sector.Create(Guid.NewGuid(), "Healthcare", "Hospitals, clinics, and healthcare providers").Value,
+                Sector.Create(Guid.NewGuid(), "Education", "Schools, universities, and educational institutions").Value,
+                Sector.Create(Guid.NewGuid(), "Retail", "Retail stores and e-commerce businesses").Value,
+                Sector.Create(Guid.NewGuid(), "Construction", "Construction companies and real estate").Value,
+                Sector.Create(Guid.NewGuid(), "Energy", "Oil, gas, and renewable energy companies").Value,
+                Sector.Create(Guid.NewGuid(), "Telecommunications", "Telecom providers and internet services").Value,
+                Sector.Create(Guid.NewGuid(), "Agriculture", "Agriculture and agro-industry").Value,
+                Sector.Create(Guid.NewGuid(), "Tourism", "Hotels, restaurants, and tourism services").Value,
+                Sector.Create(Guid.NewGuid(), "Transport", "Transportation and logistics companies").Value,
+                Sector.Create(Guid.NewGuid(), "Food", "Food processing and beverage companies").Value,
+                Sector.Create(Guid.NewGuid(), "Media", "Media, advertising, and entertainment").Value,
+                Sector.Create(Guid.NewGuid(), "Consulting", "Consulting and professional services").Value,
+                Sector.Create(Guid.NewGuid(), "Manufacturing", "Manufacturing and industrial production").Value
+            ]);
+            await _context.SaveChangesAsync();
+        }
 
          // Seed plans
-         await PlanSeeder.SeedPlansAsync(_context);
+        await PlanSeeder.SeedPlansAsync(_context);
 
-         await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }
 
