@@ -12,6 +12,7 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.Sus
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.ValidateCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
+using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Contracts.Common;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Contacts;
 using Asp.Versioning;
@@ -23,7 +24,7 @@ namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/companies")]
 [ApiVersion("1.0")]
-public sealed class CompaniesController(ISender sender) : ApiController
+public sealed class CompaniesController(ISender sender, IUser currentUser) : ApiController
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -34,9 +35,19 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint creates a new company.")]
     [EndpointName("CreateCompany")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyCommand command, CancellationToken ct)
+    public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyWithoutOwnerCommand command, CancellationToken ct)
     {
-        var result = await sender.Send(command, ct);
+        var createCompanyCommand = new CreateCompanyCommand(
+            Guid.Parse(currentUser.Id!),
+            command.Name,
+            command.CityId,
+            command.SectorIds,
+            command.Description,
+            command.Address,
+            command.Latitude,
+            command.Longitude
+        );
+        var result = await sender.Send(createCompanyCommand, ct);
         return result.Match(
             response => CreatedAtRoute(
                 routeName : "GetCompanyById",
@@ -263,7 +274,4 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
     // ****************** Company Contacts ******************
-
-
-    
 }

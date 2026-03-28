@@ -21,6 +21,12 @@ public static class CityErrors
     public static readonly Error SlugAlreadyExists = Error.Conflict(
         "City.SlugAlreadyExists",
         "A city with this name already exists in this region.");
+
+    public static Error NameAlreadyExists = Error.Conflict(
+        "City.NameAlreadyExists",
+        "A city with this name already exists.");
+
+
     public static Error RegionNotFound(Guid regionId) =>Error.NotFound(
         "City.RegionNotFound",
         $"Region with id '{regionId}' was not found.");

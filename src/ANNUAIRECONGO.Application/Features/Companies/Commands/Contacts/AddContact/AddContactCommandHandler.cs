@@ -27,7 +27,12 @@ public sealed record AddContactCommandHandler(
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        var result = company.AddContact();
+        
+        var contactResult = CompanyContact.Create(request.CompanyId, request.Type, request.Value, request.IsPrimary);
+        if (contactResult.IsError)
+            return contactResult.Errors;
+
+        var result = company.AddContact(contactResult.Value);
         if (result.IsError)
         {
             _logger.LogError("Failed to add contact to company with id {CompanyId} Errors = {2}", request.CompanyId,result.Errors);
