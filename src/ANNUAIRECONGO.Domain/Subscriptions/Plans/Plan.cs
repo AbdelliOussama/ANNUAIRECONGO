@@ -34,6 +34,7 @@ public class Plan : AuditableEntity
     }
 
     public static Result<Plan> Create(
+        Guid id,
         PlanName name,
         decimal price,
         int durationDays,
@@ -53,20 +54,29 @@ public class Plan : AuditableEntity
         {
             return PlanErrors.InvalidSearchPriority;
         }
-        return new Plan
-        {
-            Name = name,
-            Price = price,
-            DurationDays = durationDays,
-            MaxImages = maxImages,
-            MaxDocuments = maxDocuments,
-            HasAnalytics = hasAnalytics,
-            HasFeaturedBadge = hasFeaturedBadge,
-            SearchPriority = searchPriority,
-            IsActive = true
-        };
-
+        return new Plan(id,name,price,durationDays,maxImages,maxDocuments,hasAnalytics,hasFeaturedBadge,searchPriority);
     }
+    public Result<Updated> Update(
+        PlanName name,
+        decimal price,
+        int durationDays,
+        int maxImages,
+        int maxDocuments,
+        bool hasAnalytics,
+        bool hasFeaturedBadge,
+        int searchPriority)
+    {
+        Name = name;
+        Price = price;
+        DurationDays = durationDays;
+        MaxImages = maxImages;
+        MaxDocuments = maxDocuments;
+        HasAnalytics = hasAnalytics;
+        HasFeaturedBadge = hasFeaturedBadge;
+        SearchPriority = searchPriority;
+        return Result.Updated;
+    }
+
 
     public Result<Updated> Deactivate()
     {

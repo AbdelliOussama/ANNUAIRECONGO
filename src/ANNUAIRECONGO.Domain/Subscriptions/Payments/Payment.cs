@@ -25,57 +25,57 @@ public class Payment : AuditableEntity
 
     private Payment() { }
 
+    private Payment(Guid id,Guid companyId,Guid subscriptionId,decimal amount,string currency,PaymentMethod method,string? gatewayRef,string? invoiceUrl,DateTime? paidAt) : base(id)
+    {
+        CompanyId = companyId;
+        SubscriptionId = subscriptionId;
+        Amount = amount;
+        Currency = currency;
+        Method = method;
+        GatewayRef = gatewayRef;
+        InvoiceUrl = invoiceUrl;
+        PaidAt = paidAt;
+        Status = PaymentStatus.Pending;
+    }
+
     public static Result<Payment> Create(
+        Guid id,
         Guid companyId,
         Guid subscriptionId,
         decimal amount,
         string currency,
-        PaymentMethod method)
+        PaymentMethod method,
+        string GatewayRef,
+        string InvoiceUrl,
+        DateTime paidAt)
     {
-        return new Payment
-        {
-            CompanyId = companyId,
-            SubscriptionId = subscriptionId,
-            Amount = amount,
-            Currency = currency,
-            Method = method,
-            Status = PaymentStatus.Pending
-        };
+        return new Payment(id,companyId,subscriptionId,amount,currency,method,GatewayRef,InvoiceUrl,paidAt);
     }
 
-    public Result<Updated> MarkAsSucceeded(string ownerId, string gatewayRef)
+    public Result<Updated> MarkAsSucceeded()
     {
         if (Status != PaymentStatus.Pending)
             return PaymentErrors.NotPending;
 
         Status = PaymentStatus.Success;
-        GatewayRef = gatewayRef;
         PaidAt = DateTime.UtcNow;
-
-        // RaiseDomainEvent(new PaymentSucceededEvent(
-        //     Id, CompanyId, SubscriptionId, ownerId, Amount, Currency));
-
         return Result.Updated;
     }
 
-    public Result<Updated> MarkAsFailed(string ownerId, string reason)
+    public Result<Updated> MarkAsFailed()
     {
         if (Status != PaymentStatus.Pending)
             return PaymentErrors.NotPending;
 
         Status = PaymentStatus.Failed;
-        // RaiseDomainEvent(new PaymentFailedEvent(
-        //     Id, CompanyId, ownerId, reason));
         return Result.Updated;
     }
 
-    public Result<Success> Refund(string ownerId)
+    public Result<Success> Refund()
     {
         if (Status != PaymentStatus.Success)
             return PaymentErrors.CannotRefund;
         Status = PaymentStatus.Refunded;
-        // RaiseDomainEvent(new PaymentRefundedEvent(
-        //     Id, CompanyId, ownerId, Amount));
         return Result.Success;
     }
 

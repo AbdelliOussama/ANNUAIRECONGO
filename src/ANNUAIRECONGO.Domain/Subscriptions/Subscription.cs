@@ -71,15 +71,19 @@ public class Subscription : AuditableEntity
         return Result.Success;
     }
 
-    public Result<Success> Cancel(string ownerId)
+    public Result<Updated> Cancel()
     {
         if (Status is SubscriptionStatus.Expired or SubscriptionStatus.Cancelled)
             return SubscriptionErrors.CannotCancel;
 
         Status = SubscriptionStatus.Cancelled;
-        return Result.Success;
+        return Result.Updated;
     }
-
+    public Result<Updated> AddPayment(Payment payment)
+    {
+        _payments.Add(payment);
+        return Result.Updated;
+    }
     public Result<Success> IsActive() {
         var result = Status is SubscriptionStatus.Active
         or SubscriptionStatus.ExpiringSoon;

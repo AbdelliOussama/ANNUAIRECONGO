@@ -22,6 +22,6 @@ public sealed record GetSectorsQueryHandler(ILogger<GetSectorsQueryHandler> logg
             _logger.LogWarning("No sectors found");
             return ApplicationErrors.sectorsNotFound;
         }
-        return sectors.Select(s => s.ToDto()).ToList();
+        return sectors.ToDtos();
     }
 }
