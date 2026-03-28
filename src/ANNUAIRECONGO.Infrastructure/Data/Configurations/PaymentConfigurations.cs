@@ -1,6 +1,6 @@
-using AnnuaireCongo.Domain.Payments;
 using ANNUAIRECONGO.Domain.Companies;
 using ANNUAIRECONGO.Domain.Subscriptions;
+using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

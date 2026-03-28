@@ -21,7 +21,7 @@ public sealed class ConfirmPaymentCommandHandler(
         if (payment is null)
             return PaymentErrors.PaymentNotFound(request.PaymentId);
 
-        var confirmResult = payment.MarkAsSucceeded(request.OwnerId, request.GatewayRef);
+        var confirmResult = payment.MarkAsSucceeded();
         if (confirmResult.IsError)
             return confirmResult.Errors;
 

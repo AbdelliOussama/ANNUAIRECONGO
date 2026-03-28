@@ -2,11 +2,9 @@
 using ANNUAIRECONGO.Domain.Common;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
-using ANNUAIRECONGO.Domain.Subscriptions;
-using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
 
-namespace AnnuaireCongo.Domain.Payments;
+namespace ANNUAIRECONGO.Domain.Subscriptions.Payments;
 
 public class Payment : AuditableEntity
 {
@@ -45,9 +43,9 @@ public class Payment : AuditableEntity
         decimal amount,
         string currency,
         PaymentMethod method,
-        string GatewayRef,
-        string InvoiceUrl,
-        DateTime paidAt)
+        string? GatewayRef,
+        string? InvoiceUrl,
+        DateTime? paidAt)
     {
         return new Payment(id,companyId,subscriptionId,amount,currency,method,GatewayRef,InvoiceUrl,paidAt);
     }
@@ -71,12 +69,12 @@ public class Payment : AuditableEntity
         return Result.Updated;
     }
 
-    public Result<Success> Refund()
+    public Result<Updated> Refund()
     {
         if (Status != PaymentStatus.Success)
             return PaymentErrors.CannotRefund;
         Status = PaymentStatus.Refunded;
-        return Result.Success;
+        return Result.Updated;
     }
 
     public Result<Updated> SetInvoiceUrl(string invoiceUrl)

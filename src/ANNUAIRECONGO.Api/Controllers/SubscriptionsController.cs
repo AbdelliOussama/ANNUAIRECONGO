@@ -54,7 +54,7 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
         if (companyId != Guid.Parse(currentUser.Id!))
             return Forbid();
 
-        var result = await sender.Send(new CancelSubscriptionCommand(companyId, currentUser.Id!), ct);
+        var result = await sender.Send(new CancelSubscriptionCommand(companyId), ct);
         return result.Match(
             response => Ok(response),
             Problem);
@@ -132,7 +132,7 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId, [FromBody] string gatewayReference, CancellationToken ct)
     {
-        var command = new ConfirmPaymentCommand(paymentId, currentUser.Id!, gatewayReference);
+        var command = new ConfirmPaymentCommand(paymentId);
         var result = await sender.Send(command, ct);
         return result.Match(
             response => Ok(response),

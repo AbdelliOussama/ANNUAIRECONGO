@@ -5,4 +5,4 @@ using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.ConfirmPayment;
 
-public sealed record ConfirmPaymentCommand(Guid PaymentId, string OwnerId, string GatewayRef) : IRequest<Result<PaymentDto>>;
+public sealed record ConfirmPaymentCommand(Guid PaymentId) : IRequest<Result<PaymentDto>>;

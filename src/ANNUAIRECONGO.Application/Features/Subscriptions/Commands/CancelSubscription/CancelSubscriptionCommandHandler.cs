@@ -18,7 +18,7 @@ public sealed class CancelSubscriptionCommandHandler(
         if (subscription is null)
             return SubscriptionErrors.NotFound(request.SubscriptionId);
 
-        var cancelResult = subscription.Cancel(request.OwnerId);
+        var cancelResult = subscription.Cancel();
         if (cancelResult.IsError)
             return cancelResult.Errors;
 

@@ -1,9 +1,9 @@
 
-using AnnuaireCongo.Domain.Payments;
 using ANNUAIRECONGO.Domain.Common;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
 using ANNUAIRECONGO.Domain.Subscriptions.Enums;
+using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans;
 
 namespace ANNUAIRECONGO.Domain.Subscriptions;

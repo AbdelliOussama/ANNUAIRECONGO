@@ -1,5 +1,4 @@
 using AnnuaireCongo.Domain.Notifications;
-using AnnuaireCongo.Domain.Payments;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Analytics;
 using ANNUAIRECONGO.Domain.BusinessOwners;
@@ -10,6 +9,7 @@ using ANNUAIRECONGO.Domain.Identity;
 using ANNUAIRECONGO.Domain.Logs;
 using ANNUAIRECONGO.Domain.Sectors;
 using ANNUAIRECONGO.Domain.Subscriptions;
+using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans;
 using ANNUAIRECONGO.Infrastructure.Identity;
 using MediatR;

@@ -6,4 +6,13 @@ using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.CreatePayment;
 
-public sealed record CreatePaymentCommand(Guid CompanyId, Guid SubscriptionId, decimal Amount, string Currency, PaymentMethod Method) : IRequest<Result<PaymentDto>>;
+public sealed record CreatePaymentCommand(
+    Guid CompanyId,
+    Guid SubscriptionId,
+    decimal Amount,
+    string Currency,
+    PaymentMethod Method,
+    string? GatewayRef,
+    string? InvoiceUrl,
+    DateTime? PaidAt)
+: IRequest<Result<PaymentDto>>;
