@@ -18,21 +18,70 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
 
     public async Task<Result<PaginatedList<CompanyDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
     {
-        var companies =await  _context.Companies.AsNoTracking().ToListAsync(cancellationToken);
-        if(companies is null)
+        var query = _context.Companies.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            _logger.LogError("No companies found");
-            return CompanyErrors.NoCompaniesFound;
+            query = query.Where(c =>
+                c.Name.Contains(request.SearchTerm) ||
+                c.Description.Contains(request.SearchTerm) ||
+                c.Address.Contains(request.SearchTerm));
         }
+
+        bool needSectorFilter = request.SectorId.HasValue;
+        bool needRegionFilter = request.RegionId.HasValue;
+        bool needCityFilter = request.CityId.HasValue;
+
+
+        if (needSectorFilter || needRegionFilter)
+        {
+            query = query.Include(c => c.CompanySectors)
+                        .Include(c => c.City);
+        }
+
+        if (needSectorFilter)
+        {
+            query = query.Where(c => c.CompanySectors.Any(cs => cs.SectorId == request.SectorId.Value));
+        }
+
+        if (needCityFilter)
+        {
+            query = query.Where(c => c.CityId == request.CityId.Value);
+        }
+
+        if (needRegionFilter)
+        {
+            query = query.Where(c => c.City.RegionId == request.RegionId.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var companies = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        if (companies is null || !companies.Any())
+        {
+            return new PaginatedList<CompanyDto>
+            {
+                Items = new List<CompanyDto>(),
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize,
+                TotalCount = 0,
+                TotalPages = 0
+            };
+        }
+
         var companiesDto = companies.ToDTos();
         var paginatedList = new PaginatedList<CompanyDto>
         {
             Items = companiesDto,
-            PageNumber = 1,
-            PageSize = 10,
-            TotalCount = companiesDto.Count,
-            TotalPages = (int)Math.Ceiling(companiesDto.Count / (double)10)
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize)
         };
+
         return paginatedList;
     }
 }

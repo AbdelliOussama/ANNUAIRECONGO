@@ -81,9 +81,22 @@ public sealed class CompaniesController(ISender sender, IUser currentUser) : Api
     [EndpointDescription("This endpoint gets all companies.")]
     [EndpointName("GetAllCompanies")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> GetAllCompanies(CancellationToken ct)
+    public async Task<IActionResult> GetAllCompanies(
+        CancellationToken ct,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] Guid? sectorId = null,
+        [FromQuery] Guid? cityId = null,
+        [FromQuery] Guid? regionId = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var result = await sender.Send(new GetCompaniesQuery(), ct);
+        var result = await sender.Send(new GetCompaniesQuery(
+            searchTerm,
+            sectorId,
+            cityId,
+            regionId,
+            pageNumber,
+            pageSize), ct);
         return result.Match(
             response => Ok(response),
             Problem
