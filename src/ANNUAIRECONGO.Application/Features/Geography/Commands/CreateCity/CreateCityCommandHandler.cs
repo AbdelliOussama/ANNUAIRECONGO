@@ -18,7 +18,7 @@ public sealed class CreateCityCommandHandler(ILogger<CreateCityCommandHandler> l
     private readonly IAppDbContext _context = context;
     public async Task<Result<CityDto>> Handle(CreateCityCommand request, CancellationToken cancellationToken)
     {
-        var cityExist = await _context.Cities.AnyAsync(c => EF.Functions.Like(c.Name , request.Name),cancellationToken);
+        var cityExist = await _context.Cities.AnyAsync(c => c.Name == request.Name,cancellationToken);
         if(cityExist)
         {
             _logger.LogWarning("city with name {c} already Exists",request.Name);

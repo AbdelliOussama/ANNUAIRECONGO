@@ -8,8 +8,5 @@ public sealed class UpdateSectorCommandValidator : AbstractValidator<UpdateSecto
     {
         RuleFor(x => x.Name)
             .NotEmpty().MaximumLength(50);
-
-        RuleFor(x => x.Description)
-            .NotEmpty().MaximumLength(50);
     }
 }

@@ -3,6 +3,7 @@ using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeleteSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorById;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectors;
+using ANNUAIRECONGO.Contracts.Requests.Sectors;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,21 @@ public sealed class SectorsController(ISender sender) : ApiController
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await sender.Send(new GetSectorsQuery(), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
+    [HttpPut("{SectorId:guid}", Name = "UpdateSector")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Updates a sector by ID.")]
+    [EndpointDescription("Updates the specified sector.")]
+    [EndpointName("UpdateSector")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> UpdateSector(Guid SectorId, [FromBody] UpdateSectorRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new UpdateSectorCommand(SectorId, request.Name,request.IConUrl, request.Description), ct);
         return result.Match(
             response => Ok(response),
             Problem);

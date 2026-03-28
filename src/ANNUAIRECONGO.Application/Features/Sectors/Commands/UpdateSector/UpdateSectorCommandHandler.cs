@@ -26,6 +26,7 @@ public sealed record UpdateSectorCommandHandler(ILogger<UpdateSectorCommandHandl
         var UpdateSectorResult = sector.Update(request.Name,request.Description,request.IConUrl);
         if (UpdateSectorResult.IsError)
         {
+            _logger.LogError("Failed to update sector {0} , errors: {1}",sector.Name,UpdateSectorResult.Errors);
             return UpdateSectorResult.Errors;
         }
         await _context.SaveChangesAsync(cancellationToken);

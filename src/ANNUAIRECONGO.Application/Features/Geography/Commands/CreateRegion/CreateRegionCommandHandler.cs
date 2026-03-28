@@ -13,20 +13,24 @@ public sealed class CreateRegionCommandHandler(ILogger<CreateRegionCommandHandle
     HybridCache cache,
     IAppDbContext context) : IRequestHandler<CreateRegionCommand, Result<RegionDto>>
 {
-    private readonly ILogger<CreateRegionCommandHandler> _logger;
-    private readonly HybridCache _cache;
-    private readonly IAppDbContext _context;
+    private readonly ILogger<CreateRegionCommandHandler> _logger = logger;
+    private readonly HybridCache _cache = cache;
+    private readonly IAppDbContext _context = context;
     public async Task<Result<RegionDto>> Handle(CreateRegionCommand request, CancellationToken cancellationToken)
     {
         var regionResult = Region.Create(Guid.NewGuid(), request.Name);
 
         if (regionResult.IsError)
+        {
+            _logger.LogError("Error while creating region {c} , Errors = {e}",request.Name,regionResult.Errors);
             return regionResult.Errors;
+        }
 
         var region = regionResult.Value;
 
         _context.Regions.Add(region);
         await _context.SaveChangesAsync(cancellationToken);
+        await _cache.RemoveByTagAsync("regions");
 
         return region.ToDto();
     }
