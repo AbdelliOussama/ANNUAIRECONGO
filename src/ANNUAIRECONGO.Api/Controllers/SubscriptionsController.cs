@@ -1,7 +1,6 @@
 using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.ActivateSubscription;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.CancelSubscription;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.CreateSubscription;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Dtos;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.ConfirmPayment;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.CreatePayment;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Dtos;
