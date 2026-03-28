@@ -17,24 +17,27 @@ public static class PlanErrors
         "Plan.FreeCannotBePurchased",
         "The Free plan does not require payment.");
 
-    public static Result<Plan> InvalidPrice = Error.Validation(
+    public static readonly Error InvalidPrice = Error.Validation(
         "Plan.InvalidPrice",
         "Price must be a non-negative value.");
 
-    public static Result<Plan> InvalidDuration = Error.Validation(
+    public static readonly Error InvalidDuration = Error.Validation(
         "Plan.InvalidDuration",
         "Duration must be greater than zero.");
 
-    public static Result<Plan> InvalidSearchPriority = Error.Validation(
+    public static readonly Error InvalidSearchPriority = Error.Validation(
         "Plan.InvalidSearchPriority",
         "Search priority must be between 1 and 3.");
 
-    public static Result<Updated> AlreadyInactive = Error.Conflict(
+    public static readonly Error AlreadyInactive = Error.Conflict(
         "Plan.AlreadyInactive",
         "This plan is already inactive.");
 
-    public static Result<Updated> AlreadyActive = Error.Conflict(
+    public static readonly Error AlreadyActive = Error.Conflict(
         "Plan.AlreadyActive",
         "This plan is already active.");
 
+    public static readonly Error NoPlansFound = Error.NotFound(
+        "Plan.NoPlansFound",
+        "No plans were found in the database.");
 }
