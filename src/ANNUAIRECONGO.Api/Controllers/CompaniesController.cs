@@ -12,13 +12,13 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.Sus
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.ValidateCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
-using ANNUAIRECONGO.Application.Common.Interfaces;
-using ANNUAIRECONGO.Contracts.Common;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Contacts;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ANNUAIRECONGO.Contracts.Requests.Companies;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateComanyProfile;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateMedia;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -96,6 +96,54 @@ public sealed class CompaniesController(ISender sender) : ApiController
             regionId,
             pageNumber,
             pageSize), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
+    [HttpPut("{id:guid}/UpdateCompanyProfile" , Name = "UpdateCompanyProfile")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Update company profile by id.")]
+    [EndpointDescription("This endpoint update company profile by id.")]
+    [EndpointName("UpdateCompanyProfile")]
+    [MapToApiVersion("1.0")]
+
+    public async Task<IActionResult> UpdateCompanyProfile(Guid id, [FromBody] UpdateCompanyProfileRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new UpdateCompanyProfileCommand(
+            id,
+            request.name,
+            request.description,
+            request.website,
+            request.cityId,
+            request.address,
+            request.latitude,
+            request.longitude,
+            request.sectorIds
+        ), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
+
+    [HttpPut("{id:guid}/UpdateMedia" , Name = "UpdateMedia")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Update company media by id.")]
+    [EndpointDescription("This endpoint update company media by id.")]
+    [EndpointName("UpdateMedia")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult>UpdateMedia(Guid id, [FromBody] UpdateCompanyMediaRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new UpdateMediaCommand(request.Id,request.LogoUrl,request.CoverUrl),ct);
         return result.Match(
             response => Ok(response),
             Problem
