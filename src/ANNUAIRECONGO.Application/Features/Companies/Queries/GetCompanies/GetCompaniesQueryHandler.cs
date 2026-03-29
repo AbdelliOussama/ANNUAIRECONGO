@@ -18,7 +18,8 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
 
     public async Task<Result<PaginatedList<CompanyDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Companies.AsQueryable();
+        var query = _context.Companies.AsNoTracking().Include(c => c.CompanySectors)
+                        .Include(c => c.City).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -31,13 +32,6 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         bool needSectorFilter = request.SectorId.HasValue;
         bool needRegionFilter = request.RegionId.HasValue;
         bool needCityFilter = request.CityId.HasValue;
-
-
-        if (needSectorFilter || needRegionFilter)
-        {
-            query = query.Include(c => c.CompanySectors)
-                        .Include(c => c.City);
-        }
 
         if (needSectorFilter)
         {
