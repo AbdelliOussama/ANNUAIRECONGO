@@ -68,7 +68,6 @@ public class Payment : AuditableEntity
         Status = PaymentStatus.Failed;
         return Result.Updated;
     }
-
     public Result<Updated> Refund()
     {
         if (Status != PaymentStatus.Success)
