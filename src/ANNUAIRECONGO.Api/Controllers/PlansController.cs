@@ -7,12 +7,14 @@ using ANNUAIRECONGO.Contracts.Requests.Plans;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans.Enums;
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/plans")]
 [ApiVersion("1.0")]
+[Authorize]
 public sealed class PlansController(ISender sender) : ApiController
 {
     [HttpGet]
@@ -22,6 +24,7 @@ public sealed class PlansController(ISender sender) : ApiController
     [EndpointDescription("This endpoint gets all available plans.")]
     [EndpointName("GetPlans")]
     [MapToApiVersion("1.0")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPlans(CancellationToken ct)
     {
         var result = await sender.Send(new GetPlansQuery(), ct);
@@ -38,6 +41,7 @@ public sealed class PlansController(ISender sender) : ApiController
     [EndpointDescription("This endpoint gets a specific plan by its id.")]
     [EndpointName("GetPlanById")]
     [MapToApiVersion("1.0")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPlanById([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetPlanByIdQuery(id), ct);
@@ -55,6 +59,7 @@ public sealed class PlansController(ISender sender) : ApiController
     [EndpointDescription("This endpoint activates a specific plan.")]
     [EndpointName("ActivatePlan")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult>ActivatePlan([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new ActivatePlanCommand(id), ct);
@@ -72,6 +77,7 @@ public sealed class PlansController(ISender sender) : ApiController
     [EndpointDescription("This endpoint deactivates a specific plan.")]
     [EndpointName("DeActivatePlan")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult>DeActivatePlan([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new DeActivatePlanCommand(id), ct);
@@ -89,6 +95,7 @@ public sealed class PlansController(ISender sender) : ApiController
     [EndpointDescription("This endpoint updates a specific plan.")]
     [EndpointName("UpdatePlan")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult>UpdatePlan([FromRoute] Guid id, [FromBody] UpdatePlanRequest updatePlanRequest, CancellationToken ct)
     {
         var result = await sender.Send(new UpdatePlanCommand(id,(PlanName) updatePlanRequest.Name, updatePlanRequest.Price, updatePlanRequest.DurationDays, updatePlanRequest.MaxImages, updatePlanRequest.MaxDocuments, updatePlanRequest.HasAnalytics, updatePlanRequest.HasFeaturedBadge, updatePlanRequest.SearchPriority), ct);

@@ -6,12 +6,14 @@ using ANNUAIRECONGO.Application.Features.Geography.Queries.GetRegions;
 using ANNUAIRECONGO.Contracts.Requests.Geography;
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/geography")]
 [ApiVersion("1.0")]
+[Authorize]
 public sealed class GeographyController(ISender sender) : ApiController
 {
     [HttpGet]
@@ -21,6 +23,7 @@ public sealed class GeographyController(ISender sender) : ApiController
     [EndpointDescription("This endpoint gets all regions.")]
     [EndpointName("GetRegions")]
     [MapToApiVersion("1.0")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetRegions(CancellationToken ct)
     {
         var result = await sender.Send(new GetRegionsQuery(), ct);
@@ -37,6 +40,7 @@ public sealed class GeographyController(ISender sender) : ApiController
     [EndpointDescription("This endpoint gets all cities for a specific region.")]
     [EndpointName("GetCitiesByRegion")]
     [MapToApiVersion("1.0")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetCitiesByRegion([FromRoute] Guid regionId, CancellationToken ct)
     {
         var result = await sender.Send(new GetCitiesByRegionQuery(regionId), ct);
@@ -53,6 +57,7 @@ public sealed class GeographyController(ISender sender) : ApiController
     [EndpointDescription("This endpoint creates a new region.")]
     [EndpointName("CreateRegion")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateRegion([FromBody] CreateRegionRequest request, CancellationToken ct)
     {
         var command = new CreateRegionCommand(request.Name);
@@ -71,6 +76,7 @@ public sealed class GeographyController(ISender sender) : ApiController
     [EndpointDescription("This endpoint creates a new city in a specific region.")]
     [EndpointName("CreateCity")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateCity([FromBody] CreateCityRequest request, CancellationToken ct)
     {
         var command = new CreateCityCommand(request.Name, request.RegionId);

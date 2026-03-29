@@ -6,6 +6,7 @@ using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectors;
 using ANNUAIRECONGO.Contracts.Requests.Sectors;
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
@@ -14,6 +15,7 @@ namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/sectors")]
 [ApiVersion("1.0")]
+[Authorize]
 public sealed class SectorsController(ISender sender) : ApiController
 {
     [HttpPost]
@@ -25,6 +27,7 @@ public sealed class SectorsController(ISender sender) : ApiController
     [EndpointDescription("This endpoint creates a new sector.")]
     [EndpointName("CreateSector")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateSector([FromBody] CreateSectorCommand command, CancellationToken ct)
     {
         var result = await sender.Send(command, ct);
@@ -46,6 +49,7 @@ public sealed class SectorsController(ISender sender) : ApiController
     [EndpointName("GetSectorById")]
     [MapToApiVersion("1.0")]
     [OutputCache(Duration = 60)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid SectorId, CancellationToken ct)
     {
         var result = await sender.Send(new GetSectorByIdQuery(SectorId), ct);
@@ -62,6 +66,7 @@ public sealed class SectorsController(ISender sender) : ApiController
     [EndpointName("GetAllSectors")]
     [MapToApiVersion("1.0")]
     [OutputCache(Duration = 60)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await sender.Send(new GetSectorsQuery(), ct);
@@ -77,6 +82,7 @@ public sealed class SectorsController(ISender sender) : ApiController
     [EndpointDescription("Updates the specified sector.")]
     [EndpointName("UpdateSector")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateSector(Guid SectorId, [FromBody] UpdateSectorRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateSectorCommand(SectorId, request.Name,request.IConUrl, request.Description), ct);
@@ -93,6 +99,7 @@ public sealed class SectorsController(ISender sender) : ApiController
     [EndpointDescription("Removes the specified sector from the system.")]
     [EndpointName("DeleteSector")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteSector(Guid SectorId, CancellationToken ct)
     {
         var result = await sender.Send(new DeleteSectorCommand(SectorId), ct);
