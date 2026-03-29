@@ -15,4 +15,10 @@ public static class BusinessOwnerErrors
 
     public static Error RoleInvalid =>
         Error.Validation("Employee.Role.Invalid", "Invalid role assigned to employee.");
+
+    public static Error NotFound(Guid id) =>
+        Error.NotFound("BusinessOwner.NotFound", $"No business owner found with ID: {id}");
+
+    public static Error NotOwner(Guid id) =>
+        Error.Unauthorized("BusinessOwner.NotOwner", $"User is not the owner of business owner with ID: {id}");
 }

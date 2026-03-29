@@ -1,7 +1,10 @@
+using ANNUAIRECONGO.Application.Features.BusinessOwners.Commands.UpdateBusinessOwnerProfile;
 using ANNUAIRECONGO.Application.Features.BusinessOwners.Dtos;
+using ANNUAIRECONGO.Application.Features.BusinessOwners.Queries.GetBusinessOwnerById;
 using ANNUAIRECONGO.Application.Features.BusinessOwners.Queries.GetBusinessOwners;
 using ANNUAIRECONGO.Application.Features.BusinessOwners.Queries.GetMyCompanies;
 using ANNUAIRECONGO.Application.Features.Companies.Dtos;
+using ANNUAIRECONGO.Contracts.Requests.BusinessOwner;
 using ANNUAIRECONGO.Domain.Common.Results;
 using Asp.Versioning;
 using MediatR;
@@ -38,6 +41,22 @@ public sealed class BusinessOwnersControllers : ApiController
     }
 
 
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(BusinessOwnerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Get a business owner by id.")]
+    [EndpointDescription("This endpoint returns a business owner by its id.")]
+    [EndpointName("GetBusinessOwnerById")]
+    [MapToApiVersion("1.0")]
+    [OutputCache(Duration = 60)]
+    public async Task<IActionResult> GetBusinessOwnerById(Guid id, CancellationToken ct)
+    {
+        var result = await _sender.Send(new GetBusinessOwnerByIdQuery(id), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
     [HttpGet("my-companies")]
     [ProducesResponseType(typeof(List<CompanyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -53,4 +72,21 @@ public sealed class BusinessOwnersControllers : ApiController
             response => Ok(response),
             Problem);
     }
+
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(BusinessOwnerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Update a business owner profile.")]
+    [EndpointDescription("This endpoint updates a business owner's profile.")]
+    [EndpointName("UpdateBusinessOwner")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult>UpdateBusinessOwner(Guid id, UpdateBusinessOwnerRequest request, CancellationToken ct)
+    {
+        var result = await _sender.Send(new UpdateBusinessOwnerProfileCommand(id,request.Name,request.Email,request.PhoneNumber,request.CompanyPosition ), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
 }
+

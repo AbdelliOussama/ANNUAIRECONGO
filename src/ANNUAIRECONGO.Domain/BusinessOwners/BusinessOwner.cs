@@ -7,10 +7,10 @@ namespace ANNUAIRECONGO.Domain.BusinessOwners;
 
 public sealed class BusinessOwner : AuditableEntity
 {
-    public string FirstName { get; }
-    public string LastName { get; }
+    public string FirstName { get;private set; }
+    public string LastName { get;private set; }
     public string FullName => $"{FirstName} {LastName}";
-    public Role Role { get; }
+    public Role Role { get; private set; }
     public string Phone { get; private set; }
     public string? CompanyPosition { get; private set; }
     public bool IsVerified { get; private set; } = default; // KYC verification
@@ -48,5 +48,21 @@ public sealed class BusinessOwner : AuditableEntity
             return BusinessOwnerErrors.RoleInvalid;
         }
         return new BusinessOwner(id,firstName, lastName, phone, companyPosition, role);
+    }
+    public Result<Updated> UpdateProfile(string firstName, string lastName, string phone, string? companyPosition)
+    {
+        if(string.IsNullOrWhiteSpace(firstName))
+        {
+            return BusinessOwnerErrors.FirstNameRequired;
+        }
+        if(string.IsNullOrWhiteSpace(lastName))
+        {
+            return BusinessOwnerErrors.LastNameRequired;
+        }
+        FirstName = firstName;
+        LastName = lastName;
+        Phone = phone;
+        CompanyPosition = companyPosition;
+        return Result.Updated;
     }
 }
