@@ -59,7 +59,7 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
             Problem);
     }
 
-    [HttpPut("{companyId:guid}/activate")]
+    [HttpPut("{subscriptionId:guid}/activate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -69,13 +69,12 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [EndpointDescription("This endpoint activates a pending subscription for a company.")]
     [EndpointName("ActivateSubscription")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> ActivateSubscription([FromRoute] Guid companyId, CancellationToken ct)
+    public async Task<IActionResult> ActivateSubscription([FromRoute] Guid subscriptionId, CancellationToken ct)
     {
         // Verify the company belongs to the current user
-        if (companyId != Guid.Parse(currentUser.Id!))
-            return Forbid();
 
-        var result = await sender.Send(new ActivateSubscriptionCommand(companyId, currentUser.Id!), ct);
+
+        var result = await sender.Send(new ActivateSubscriptionCommand(subscriptionId), ct);
         return result.Match(
             response => Ok(response),
             Problem);

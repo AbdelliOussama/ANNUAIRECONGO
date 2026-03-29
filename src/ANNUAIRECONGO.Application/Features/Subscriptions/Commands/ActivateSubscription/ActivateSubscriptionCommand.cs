@@ -5,4 +5,4 @@ using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Commands.ActivateSubscription;
 
-public sealed record ActivateSubscriptionCommand(Guid SubscriptionId, string OwnerId) : IRequest<Result<SubscriptionDto>>;
+public sealed record ActivateSubscriptionCommand(Guid SubscriptionId) : IRequest<Result<SubscriptionDto>>;

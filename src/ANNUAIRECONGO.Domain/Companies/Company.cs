@@ -245,7 +245,7 @@ public class Company : AuditableEntity
     }
     // ── Images ────────────────────────────────────────────────────
 
-    public Result<Success> AddImage(string imageUrl, string? caption, Plan activePlan)
+    public Result<Updated> AddImage(string imageUrl, string? caption, Plan activePlan)
     {
         if (_images.Count >= activePlan.MaxImages)
             return CompanyErrors.ImageLimitReached;
@@ -253,17 +253,17 @@ public class Company : AuditableEntity
         var order = _images.Count == 0 ? 1 : _images.Max(i => i.DisplayOrder) + 1;
         var image = CompanyImage.Create(Id, imageUrl, order, caption);
         _images.Add(image.Value);
-        return Result.Success;
+        return Result.Updated;
     }
 
-    public Result<Success> RemoveImage(Guid imageId)
+    public Result<Updated> RemoveImage(Guid imageId)
     {
         var image = _images.FirstOrDefault(i => i.Id == imageId);
         if (image is null)
             return CompanyErrors.ImageNotFound;
 
         _images.Remove(image);
-        return Result.Success;
+        return Result.Updated;
     }
 
     public Result<Updated> ReorderImages(List<(Guid ImageId, int Order)> orders)
@@ -278,7 +278,7 @@ public class Company : AuditableEntity
 
     // ── Documents ─────────────────────────────────────────────────
 
-    public Result<Success> AddDocument(
+    public Result<Updated> AddDocument(
         DocumentType docType,
         string fileUrl,
         bool isPublic,
@@ -289,37 +289,42 @@ public class Company : AuditableEntity
 
         var document = CompanyDocument.Create(Id, docType, fileUrl, isPublic);
         _documents.Add(document.Value);
-        return Result.Success;
+        return Result.Updated;
     }
 
-    public Result<Success> RemoveDocument(Guid documentId)
+    public Result<Updated> RemoveDocument(Guid documentId)
     {
         var document = _documents.FirstOrDefault(d => d.Id == documentId);
         if (document is null)
             return CompanyErrors.DocumentNotFound;
 
         _documents.Remove(document);
-        return Result.Success;
+        return Result.Updated;
     }
 
     // ── Reports ───────────────────────────────────────────────────
 
-    public Result<Success> AddReport(string reporterIp, string reason) {
+    public Result<Updated> AddReport(string reporterIp, string reason) {
         var report = CompanyReport.Create(Id, reporterIp, reason);
         _reports.Add(report.Value);
-        return Result.Success;
+        return Result.Updated;
+    }
+
+    // ── Subscriptions ─────────────────────────────────────────────
+    public Result<Updated> AddSubscription(Subscription subscription)
+    {
+        _subscriptions.Add(subscription);
+        return Result.Updated;
     }
 
     // ── Helpers ───────────────────────────────────────────────────
 
-    public Result<Success> IsOwnedBy(string userId)
+    public bool IsOwnedBy(string userId)
     {
         if (OwnerId != Guid.Parse(userId))
-            return CompanyErrors.NotOwner;
-
-        return Result.Success;
+            return false;
+        return true;
     }
-
     private static string GenerateSlug(string name) =>
         System.Text.RegularExpressions.Regex.Replace(
             name.ToLowerInvariant()

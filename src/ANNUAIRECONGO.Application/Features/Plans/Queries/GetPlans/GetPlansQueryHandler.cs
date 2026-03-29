@@ -22,7 +22,7 @@ public sealed class GetPlansQueryHandler(
         if(plans == null || !plans.Any())
         {
             _logger.LogWarning("No plans found in the database.");
-            return PlanErrors.NoPlansFound;
+            return new List<PlanDto>();
         }
         return plans.ToDtos();
     }

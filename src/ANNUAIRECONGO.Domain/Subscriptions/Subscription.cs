@@ -23,52 +23,51 @@ public class Subscription : AuditableEntity
     public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
 
     private Subscription() { }
+    private Subscription(Guid id, Guid companyId, Guid planId,int durationDays) : base(id)
+    {
+        CompanyId = companyId;
+        PlanId = planId;
+        Status = SubscriptionStatus.Pending;
+        StartedAt = DateTime.UtcNow;
+        ExpiresAt = StartedAt.AddDays(durationDays);
+
+    }
 
     public static Result<Subscription> Create(
+        Guid id,
         Guid companyId,
         Guid planId,
         int durationDays)
     {
         var now = DateTime.UtcNow;
-        return new Subscription
-        {
-            CompanyId = companyId,
-            PlanId = planId,
-            Status = SubscriptionStatus.Pending,
-            StartedAt = now,
-            ExpiresAt = now.AddDays(durationDays)
-        };
+        if (durationDays <= 0)
+            return SubscriptionErrors.InvalidDuration;
+        if (planId == Guid.Empty)
+            return SubscriptionErrors.PlanIdRequired;
+
+        return new Subscription(id,companyId,planId,durationDays);
     }
 
-    public Result<Success> Activate(string ownerId, string planName)
+    public Result<Updated> Activate()
     {
         if (Status != SubscriptionStatus.Pending)
             return SubscriptionErrors.NotPending;
 
         Status = SubscriptionStatus.Active;
 
-        return Result.Success;
+        return Result.Updated;
     }
 
-    public Result<Success> MarkAsExpiringSoon(string ownerId)
+    public Result<Updated> MarkAsExpiringSoon()
     {
-        if (ownerId is null)
-        {
-            return SubscriptionErrors.OwnerIdRequired;
-        }
         Status = SubscriptionStatus.ExpiringSoon;
-
-        return Result.Success;
+        return Result.Updated;
     }
 
-    public Result<Success> MarkAsExpired(string ownerId)
+    public Result<Updated> MarkAsExpired()
     {
-        if(ownerId is null)
-        {
-            return SubscriptionErrors.OwnerIdRequired;
-        }
         Status = SubscriptionStatus.Expired;
-        return Result.Success;
+        return Result.Updated;
     }
 
     public Result<Updated> Cancel()

@@ -8,6 +8,18 @@ public static class SubscriptionErrors
         "Owner Id Required",
         $"Owner Id is required.");
 
+    public static Error PlanIdRequired => Error.Validation(
+        "Plan Id Required",
+        $"Plan Id is required.");
+
+    public static Error InvalidDuration => Error.Validation(
+        "Invalid Duration",
+        $"Duration must be a positive integer.");
+
+    public static Error InvalidPlan(Guid planId) => Error.Validation(
+        "Invalid Plan",
+        $"Plan with id '{planId}' was not found.");
+
     public static readonly Error NotActive  = Error.Conflict(
         "Subscription.NotActive",
         "Subscription is not active.");
