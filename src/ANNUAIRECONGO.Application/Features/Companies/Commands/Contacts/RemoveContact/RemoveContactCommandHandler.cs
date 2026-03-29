@@ -11,17 +11,28 @@ namespace ANNUAIRECONGO.Application.Features.Companies.Commands.Contacts.RemoveC
 public sealed record RemoveContactCommandHandler(
     ILogger<RemoveContactCommandHandler> Logger,
     IAppDbContext context,
-    HybridCache cache) : IRequestHandler<RemoveContactCommand, Result<Updated>>
+    HybridCache cache,
+    IUser currentUser) : IRequestHandler<RemoveContactCommand, Result<Updated>>
 {
+    private readonly IUser _currentUser = currentUser;
+    private readonly ILogger<RemoveContactCommandHandler> _logger = Logger;
+    private readonly IAppDbContext _context = context;
+    private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(RemoveContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await context.Companies
+        var company = await _context.Companies
             .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {
-            Logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
+            _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
+        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+        if (!isOwnedByCurrentUser)
+        {
+            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
+            return CompanyErrors.NotOwner;
         }
 
         var result = company.RemoveContact(request.ContactId);
@@ -30,8 +41,8 @@ public sealed record RemoveContactCommandHandler(
             return result.Errors;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
-        await cache.RemoveByTagAsync("company");
+        await _context.SaveChangesAsync(cancellationToken);
+        await _cache.RemoveByTagAsync("company");
         return Result.Updated;
     }
 }

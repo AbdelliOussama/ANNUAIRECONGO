@@ -7,16 +7,25 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateComanyProfile;
 
-public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyProfileCommandHandler> logger, IAppDbContext context, HybridCache cache) : IRequestHandler<UpdateCompanyProfileCommand, Result<Updated>>
+public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyProfileCommandHandler> logger, IAppDbContext context, HybridCache cache, IUser user) : IRequestHandler<UpdateCompanyProfileCommand, Result<Updated>>
 {
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
     private readonly ILogger<UpdateCompanyProfileCommandHandler> _logger =logger;
+    private readonly IUser _currentUser = user;
+
     public async Task<Result<Updated>> Handle(UpdateCompanyProfileCommand request, CancellationToken cancellationToken)
     {
         var company = await _context.Companies.FindAsync(request.companyId);
         if (company is null)
             return CompanyErrors.CompanyNotFound(request.companyId);
+
+        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+        if (!isOwnedByCurrentUser)
+        {
+            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.companyId, _currentUser.Id);
+            return CompanyErrors.NotOwner;
+        }
         var companyUpdateProfileResult = company.UpdateProfile(request.name, request.description, request.website, request.cityId, request.address, request.latitude, request.longitude, request.sectorIds);
         if(companyUpdateProfileResult.IsError)
         {

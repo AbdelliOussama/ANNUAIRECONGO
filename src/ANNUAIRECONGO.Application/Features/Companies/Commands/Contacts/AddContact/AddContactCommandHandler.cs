@@ -11,11 +11,13 @@ namespace ANNUAIRECONGO.Application.Features.Companies.Commands.Contacts.AddCont
 public sealed record AddContactCommandHandler(
     ILogger<AddContactCommandHandler> logger,
     IAppDbContext context,
-    HybridCache cache) : IRequestHandler<AddContactCommand, Result<Updated>>
+    HybridCache cache,
+    IUser currentUser) : IRequestHandler<AddContactCommand, Result<Updated>>
 {
     private readonly ILogger<AddContactCommandHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
+    private readonly IUser _currentUser = currentUser;
 
     public async Task<Result<Updated>> Handle(AddContactCommand request, CancellationToken cancellationToken)
     {
@@ -27,7 +29,12 @@ public sealed record AddContactCommandHandler(
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        
+        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+        if (!isOwnedByCurrentUser)
+        {
+            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
+            return CompanyErrors.NotOwner;
+        }
         var contactResult = CompanyContact.Create(request.CompanyId, request.Type, request.Value, request.IsPrimary);
         if (contactResult.IsError)
             return contactResult.Errors;

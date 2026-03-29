@@ -4,4 +4,4 @@ using MediatR;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Commands.CreateCompany;
 
-public sealed record CreateCompanyCommand(Guid OwnerId, string Name, Guid CityId, IEnumerable<Guid> SectorIds,string Description,string Address,decimal? Latitude,decimal? Longitude) : IRequest<Result<CompanyDto>>;
+public sealed record CreateCompanyCommand(string Name, Guid CityId, IEnumerable<Guid> SectorIds,string Description,string Address,decimal? Latitude,decimal? Longitude) : IRequest<Result<CompanyDto>>;

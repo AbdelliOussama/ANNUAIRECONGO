@@ -18,13 +18,14 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.Contacts;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ANNUAIRECONGO.Contracts.Requests.Companies;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
 
 [Route("api/v{version:apiVersion}/companies")]
 [ApiVersion("1.0")]
-public sealed class CompaniesController(ISender sender, IUser currentUser) : ApiController
+public sealed class CompaniesController(ISender sender) : ApiController
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -35,19 +36,17 @@ public sealed class CompaniesController(ISender sender, IUser currentUser) : Api
     [EndpointDescription("This endpoint creates a new company.")]
     [EndpointName("CreateCompany")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyWithoutOwnerCommand command, CancellationToken ct)
+    public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyRequest request, CancellationToken ct)
     {
-        var createCompanyCommand = new CreateCompanyCommand(
-            Guid.Parse(currentUser.Id!),
-            command.Name,
-            command.CityId,
-            command.SectorIds,
-            command.Description,
-            command.Address,
-            command.Latitude,
-            command.Longitude
-        );
-        var result = await sender.Send(createCompanyCommand, ct);
+        var result = await sender.Send(new CreateCompanyCommand(
+            request.Name,
+            request.CityId,
+            request.SectorIds,
+            request.Description,
+            request.Address,
+            request.Latitude,
+            request.Longitude
+        ), ct);
         return result.Match(
             response => CreatedAtRoute(
                 routeName : "GetCompanyById",

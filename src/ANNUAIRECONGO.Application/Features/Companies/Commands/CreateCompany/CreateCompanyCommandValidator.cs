@@ -7,7 +7,6 @@ public sealed class CreateCompanyCommandValidator : AbstractValidator<CreateComp
     public CreateCompanyCommandValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.OwnerId).NotEmpty();
         RuleFor(x => x.CityId).NotEmpty();
         RuleFor(x => x.SectorIds).NotEmpty();
     }

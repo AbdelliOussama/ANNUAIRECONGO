@@ -11,11 +11,13 @@ namespace ANNUAIRECONGO.Application.Features.Companies.Commands.Contacts.UpdateC
 public sealed record UpdateContactCommandHandler(
     ILogger<UpdateContactCommandHandler> logger,
     IAppDbContext context,
-    HybridCache cache) : IRequestHandler<UpdateContactCommand, Result<Updated>>
+    HybridCache cache,
+    IUser currentUser) : IRequestHandler<UpdateContactCommand, Result<Updated>>
 {
     private readonly ILogger<UpdateContactCommandHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
+    private readonly IUser _currentUser = currentUser;
 
     public async Task<Result<Updated>> Handle(UpdateContactCommand request, CancellationToken cancellationToken)
     {
@@ -25,6 +27,12 @@ public sealed record UpdateContactCommandHandler(
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
+        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+        if (!isOwnedByCurrentUser)
+        {
+            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
+            return CompanyErrors.NotOwner;
         }
         var companyContact = company.Contacts.FirstOrDefault(c => c.Id == request.ContactId);
         if (companyContact is null)
