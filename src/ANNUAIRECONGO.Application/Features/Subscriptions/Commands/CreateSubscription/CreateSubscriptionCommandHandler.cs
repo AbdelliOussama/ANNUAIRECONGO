@@ -29,7 +29,7 @@ public sealed class CreateSubscriptionCommandHandler(ILogger<CreateSubscriptionC
             Guid.NewGuid(),
             request.CompanyId,
             request.PlanId,
-            request.DurationDays);
+            plan.DurationDays);
 
         if (subscriptionResult.IsError)
         {

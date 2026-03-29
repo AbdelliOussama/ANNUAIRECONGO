@@ -11,7 +11,6 @@ namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/stats")]
 [ApiVersion("1.0")]
-[Authorize]
 public sealed class StatsController(ISender sender) : ApiController
 {
     [HttpGet("platform-summary")]
