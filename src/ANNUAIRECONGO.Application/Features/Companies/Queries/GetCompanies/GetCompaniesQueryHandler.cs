@@ -18,8 +18,8 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
 
     public async Task<Result<PaginatedList<CompanyDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Companies.AsNoTracking().Include(c => c.CompanySectors)
-                        .Include(c => c.City).AsQueryable();
+        var query = _context.Companies.AsNoTracking().Include(c => c.CompanySectors).ThenInclude(cs => cs.Sector)
+                        .Include(c => c.City).ThenInclude(c => c.Region).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {

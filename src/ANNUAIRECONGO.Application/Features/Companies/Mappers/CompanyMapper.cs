@@ -1,8 +1,9 @@
 using ANNUAIRECONGO.Application.Features.Companies.Dtos;
+using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
+using ANNUAIRECONGO.Application.Features.Sectors.Mappers;
 using ANNUAIRECONGO.Domain.Companies;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Mappers;
-
 public static class CompanyMapper
 {
     public static CompanyDto ToDto(this Company company)
@@ -13,10 +14,21 @@ public static class CompanyMapper
             OwnerId = company.OwnerId,
             Name = company.Name,
             Slug = company.Slug,
+            Description = company.Description,
+            LogoUrl = company.LogoUrl,
+            CoverUrl = company.CoverUrl,
+            Website = company.Website,
             CityId = company.CityId,
+            Address = company.Address,
+            Latitude = company.Latitude,
+            Longitude = company.Longitude,
+            CityName = company.City.Name,
+            RegionName = company.City.Region.Name,
             Status = company.Status,
+            RejectionReason = company.RejectionReason,
             IsFeatured = company.IsFeatured,
-            RejectionReason = company.RejectionReason
+            ActiveSubscriptionId = company.ActiveSubscriptionId,
+            Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList()
         };
     }
     public static List<CompanyDto> ToDTos(this IEnumerable<Company> companies)
