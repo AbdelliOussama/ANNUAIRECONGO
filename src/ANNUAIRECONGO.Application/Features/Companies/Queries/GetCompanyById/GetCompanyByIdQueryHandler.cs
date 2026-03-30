@@ -16,7 +16,12 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
     private readonly IAppDbContext _context = context;
     public async Task<Result<CompanyDto>> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.id);
+        var company = await _context.Companies.AsNoTracking()
+            .Include(c => c.City)
+            .ThenInclude(c => c.Region)
+            .Include(c => c.CompanySectors)
+            .ThenInclude(cs => cs.Sector)
+            .FirstOrDefaultAsync(c => c.Id == request.id);
 
         if (company is null)
         {

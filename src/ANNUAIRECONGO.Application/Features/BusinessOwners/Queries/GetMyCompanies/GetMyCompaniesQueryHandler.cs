@@ -23,6 +23,10 @@ public sealed record GetMyCompaniesQueryHandler(IAppDbContext Context, ILogger<G
             return new List<CompanyDto>();
         }
         var companies = await _context.Companies.AsNoTracking()
+            .Include(c => c.City)
+            .ThenInclude(c => c.Region)
+            .Include(c => c.CompanySectors)
+            .ThenInclude(cs => cs.Sector)
             .Where(c => c.OwnerId.ToString() == _currentUser.Id)
             .ToListAsync(cancellationToken);
 

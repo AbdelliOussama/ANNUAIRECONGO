@@ -11,7 +11,7 @@ public static class GeographyMappers
         {
             Id = city.Id,
             Name = city.Name,
-            regionId = city.RegionId
+            RegionId = city.RegionId
         };
     }
     public static List<CityDto> ToDtos(this IEnumerable<City> cities)
