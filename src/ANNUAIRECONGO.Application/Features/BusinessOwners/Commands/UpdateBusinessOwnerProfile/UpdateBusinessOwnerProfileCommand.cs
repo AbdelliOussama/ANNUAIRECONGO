@@ -5,8 +5,8 @@ namespace ANNUAIRECONGO.Application.Features.BusinessOwners.Commands.UpdateBusin
 
 public sealed record UpdateBusinessOwnerProfileCommand(
     Guid Id,
-    string Name,
-    string Email,
+    string FirstName,
+    string LastName,
     string PhoneNumber,
     string CompanyPosition
 ) : IRequest<Result<Updated>>;

@@ -16,7 +16,7 @@ IRequestHandler<GetBusinessOwnerByIdQuery,Result<BusinessOwnerDto>>
     private readonly ILogger<GetBusinessOwnerByIdQueryHandler> _logger = logger;
     public async Task<Result<BusinessOwnerDto>> Handle(GetBusinessOwnerByIdQuery request, CancellationToken cancellationToken)
     {
-        var businessOwner = _context.BusinessOwners.AsNoTracking().FirstOrDefault(x => x.Id == request.Id);
+        var businessOwner =await _context.BusinessOwners.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (businessOwner == null)
         {
             _logger.LogWarning("Business owner not found for ID: {Id}", request.Id);

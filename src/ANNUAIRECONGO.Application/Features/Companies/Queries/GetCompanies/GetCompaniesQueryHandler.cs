@@ -25,8 +25,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         {
             query = query.Where(c =>
                 c.Name.Contains(request.SearchTerm) ||
-                c.Description.Contains(request.SearchTerm) ||
-                c.Address.Contains(request.SearchTerm));
+                (c.Description != null && c.Description.Contains(request.SearchTerm)) ||
+                (c.Address != null && c.Address.Contains(request.SearchTerm))
+            );
         }
 
         bool needSectorFilter = request.SectorId.HasValue;

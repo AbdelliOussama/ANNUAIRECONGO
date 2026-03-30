@@ -83,7 +83,7 @@ public sealed class BusinessOwnersControllers : ApiController
     [MapToApiVersion("1.0")]
     public async Task<IActionResult>UpdateBusinessOwner(Guid id, UpdateBusinessOwnerRequest request, CancellationToken ct)
     {
-        var result = await _sender.Send(new UpdateBusinessOwnerProfileCommand(id,request.Name,request.Email,request.PhoneNumber,request.CompanyPosition ), ct);
+        var result = await _sender.Send(new UpdateBusinessOwnerProfileCommand(id,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition ), ct);
         return result.Match(
             response => Ok(response),
             Problem);

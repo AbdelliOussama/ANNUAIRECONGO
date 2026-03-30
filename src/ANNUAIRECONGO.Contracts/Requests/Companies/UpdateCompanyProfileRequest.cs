@@ -2,13 +2,12 @@ namespace ANNUAIRECONGO.Contracts.Requests.Companies;
 
 public class UpdateCompanyProfileRequest
 {
-    public  Guid companyId { get; set; }
-    public  string? name { get; set;}
-    public string? description { get; set;}
-    public string? website { get; set;}
-    public Guid cityId { get; set;}
-    public string? address { get; set;}
-    public decimal? latitude { get; set;}
-    public decimal? longitude { get; set;}
-    public IEnumerable<Guid> sectorIds { get; set;}
+    public  string? Name { get; set;}
+    public string? Description { get; set;}
+    public string? Website { get; set;}
+    public Guid CityId { get; set;}
+    public string? Address { get; set;}
+    public decimal? Latitude { get; set;}
+    public decimal? Longitude { get; set;}
+    public IEnumerable<Guid> SectorIds { get; set;}
 }

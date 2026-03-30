@@ -50,8 +50,7 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     public async Task<IActionResult> CancelSubscription([FromRoute] Guid companyId, CancellationToken ct)
     {
         // Verify the company belongs to the current user
-        if (companyId != Guid.Parse(currentUser.Id!))
-            return Forbid();
+
 
         var result = await sender.Send(new CancelSubscriptionCommand(companyId), ct);
         return result.Match(
@@ -92,8 +91,6 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     public async Task<IActionResult> GetCompanySubscriptions([FromRoute] Guid companyId, CancellationToken ct)
     {
         // Verify the company belongs to the current user
-        if (companyId != Guid.Parse(currentUser.Id!))
-            return Forbid();
 
         var result = await sender.Send(new GetCompanySubscriptionsQuery(companyId), ct);
         return result.Match(

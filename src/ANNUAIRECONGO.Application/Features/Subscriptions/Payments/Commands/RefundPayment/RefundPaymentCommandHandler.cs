@@ -16,7 +16,7 @@ public sealed record RefundPaymentCommandHandler(IAppDbContext context, ILogger<
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(RefundPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = _context.Payments.Include(p =>p.Company).ThenInclude(p => p.Owner).FirstOrDefault(p => p.Id == request.PaymentId);
+        var payment = await _context.Payments.Include(p =>p.Company).ThenInclude(p => p.Owner).FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
         if (payment is null)
         {
             _logger.LogWarning("Payment with ID {PaymentId} not found for refund", request.PaymentId);
@@ -30,9 +30,10 @@ public sealed record RefundPaymentCommandHandler(IAppDbContext context, ILogger<
             return result.Errors;
         }
 
+        payment.AddDomainEvent(new PaymentRefundedEvent(payment.Id, payment.CompanyId, payment.Company.OwnerId.ToString(), payment.Amount));
+
         await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Payment with ID {PaymentId} refunded successfully", request.PaymentId);
-        payment.AddDomainEvent(new PaymentRefundedEvent(payment.Id, payment.CompanyId, payment.Company.OwnerId.ToString(), payment.Amount));
         await _cache.RemoveByTagAsync("payments", cancellationToken);
         return Result.Updated;
     }
