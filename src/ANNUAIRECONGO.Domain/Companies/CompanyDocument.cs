@@ -30,15 +30,15 @@ public class CompanyDocument : Entity
         string fileUrl,
         bool isPublic = false)
     {
-        return new CompanyDocument
-        {
-            CompanyId = companyId,
-            DocType = docType,
-            FileUrl = fileUrl,
-            IsPublic = isPublic,
-            UploadedAt = DateTime.UtcNow
-        };
+        if (string.IsNullOrWhiteSpace(fileUrl))
+            return CompanyErrors.FileUrlRequired;
+
+        return new CompanyDocument(companyId, docType, fileUrl, isPublic);
     }
 
-    public void SetPublic(bool isPublic) => IsPublic = isPublic;
+    public Result<Updated>SetPublic(bool isPublic)
+    {
+        IsPublic = isPublic;
+        return Result.Updated;
+    }
 }

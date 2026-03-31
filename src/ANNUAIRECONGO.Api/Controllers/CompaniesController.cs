@@ -20,6 +20,8 @@ using ANNUAIRECONGO.Contracts.Requests.Companies;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateComanyProfile;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateMedia;
 using Microsoft.AspNetCore.Authorization;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.AddImage;
+using ANNUAIRECONGO.Contracts.Requests.Companies.Images;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -350,4 +352,22 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
     // ****************** Company Contacts ******************
+
+    // ****************** Company Images ******************
+    [HttpPost("{id:guid}/AddImage" , Name = "AddImage")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Add image for a company by id.")]
+    [EndpointDescription("This endpoint add image for a company by id.")]
+    [EndpointName("AddImage")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
+    {
+        var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.Caption), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+     // ****************** Company Images ******************
 }

@@ -30,14 +30,13 @@ public class CompanyReport : Entity
         string reporterIp,
         string reason)
     {
-        return new CompanyReport
-        {
-            CompanyId = companyId,
-            ReporterIp = reporterIp,
-            Reason = reason,
-            Status = ReportStatus.Pending,
-            CreatedAt = DateTime.UtcNow
-        };
+        if (string.IsNullOrWhiteSpace(reporterIp))
+            return CompanyErrors.ReporterIpRequired;
+
+        if (string.IsNullOrWhiteSpace(reason))
+            return CompanyErrors.ReasonRequired;
+
+        return new CompanyReport(companyId, reporterIp, reason);
     }
 
     public Result<Updated> UpdateReason(string reason)

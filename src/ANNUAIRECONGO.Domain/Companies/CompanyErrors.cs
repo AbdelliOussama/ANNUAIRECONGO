@@ -14,6 +14,12 @@ public static class CompanyErrors
         "Company.NameAlreadyExists",
         $"Company with name '{name}' already exists.");
 
+    public static Error CompanyWithoutSubscription(Guid companyId) => Error.Conflict(
+        "Company.WithoutSubscription",
+        $"Company with id '{companyId}' does not have a subscription plan.");
+
+
+
     public static readonly Error NotFoundBySlug = Error.NotFound(
         "Company.NotFoundBySlug",
         "Company with this slug was not found.");
@@ -92,5 +98,20 @@ public static class CompanyErrors
     public static Error ContactAlreadyExists = Error.Conflict(
         "Company.ContactAlreadyExists",
         "A contact with this value already exists.");
+
+    public static Error FileUrlRequired = Error.Validation(
+        "Company.FileUrlRequired",
+        "File URL is required.");
+
+    public static Error ImageUrlRequired = Error.Validation(
+        "Company.ImageUrlRequired",
+        "Image URL is required.");
+
+    public static Error ReporterIpRequired = Error.Validation(
+        "Company.ReporterIpRequired",
+        "Reporter IP is required.");
+    public static Error ReasonRequired = Error.Validation(
+        "Company.ReasonRequired",
+        "Reason is required.");
 
 }

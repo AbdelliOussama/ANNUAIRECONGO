@@ -28,14 +28,10 @@ public class CompanyImage : Entity
         int displayOrder,
         string? caption = null)
     {
-        return new CompanyImage
-        {
-            CompanyId = companyId,
-            ImageUrl = imageUrl,
-            Caption = caption,
-            DisplayOrder = displayOrder,
-            UploadedAt = DateTime.UtcNow
-        };
+        if (string.IsNullOrWhiteSpace(imageUrl))
+            return CompanyErrors.ImageUrlRequired;
+
+        return new CompanyImage(companyId, imageUrl, displayOrder, caption);
     }
 
     public Result<Updated> UpdateOrder(int displayOrder)

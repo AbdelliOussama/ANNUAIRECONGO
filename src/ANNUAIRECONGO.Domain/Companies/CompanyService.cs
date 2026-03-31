@@ -26,11 +26,17 @@ public class CompanyService : AuditableEntity
         string title,
         string? description = null)
     {
-        return new CompanyService(id, companyId, title, description);
+        if (string.IsNullOrWhiteSpace(title))
+            return CompanyErrors.ServiceTitleRequired;
+
+        return new CompanyService(id,companyId, title, description);
     }
 
     public Result<Updated> Update(string title, string? description)
     {
+        if (string.IsNullOrWhiteSpace(title))
+            return CompanyErrors.ServiceTitleRequired;
+
         Title = title;
         Description = description;
         return Result.Updated;
