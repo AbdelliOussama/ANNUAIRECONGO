@@ -48,7 +48,6 @@ public sealed class BusinessOwnersControllers : ApiController
     [EndpointDescription("This endpoint returns a business owner by its id.")]
     [EndpointName("GetBusinessOwnerById")]
     [MapToApiVersion("1.0")]
-    [OutputCache(Duration = 60)]
     public async Task<IActionResult> GetBusinessOwnerById(Guid id, CancellationToken ct)
     {
         var result = await _sender.Send(new GetBusinessOwnerByIdQuery(id), ct);
@@ -64,7 +63,6 @@ public sealed class BusinessOwnersControllers : ApiController
     [EndpointDescription("This endpoint returns a list of companies owned by the authenticated business owner.")]
     [EndpointName("GetMyCompanies")]
     [MapToApiVersion("1.0")]
-    [OutputCache(Duration = 60)]
     public async Task<IActionResult> GetMyCompanies(CancellationToken ct)
     {
         var result = await _sender.Send(new GetMyCompaniesQuery(), ct);

@@ -18,7 +18,7 @@ public sealed record RejectPaymentCommandHandler(IAppDbContext context, ILogger<
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(RejectPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = _context.Payments.Include(p => p.Company).ThenInclude(c =>c.Owner).FirstOrDefault(p => p.Id == request.PaymentId);
+        var payment =await  _context.Payments.Include(p => p.Company).ThenInclude(c =>c.Owner).FirstOrDefaultAsync(p => p.Id == request.PaymentId);
 
         if (payment is null)
         {

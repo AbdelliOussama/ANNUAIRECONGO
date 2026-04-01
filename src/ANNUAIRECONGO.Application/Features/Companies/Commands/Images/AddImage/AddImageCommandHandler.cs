@@ -1,6 +1,7 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
+using ANNUAIRECONGO.Domain.Subscriptions.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,10 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        var subscription = await _context.Subscriptions.AsNoTracking().Include(s => s.Plan).FirstOrDefaultAsync(s => s.CompanyId == request.CompanyId, cancellationToken);
+        var subscription = await _context.Subscriptions.AsNoTracking()
+            .Include(s => s.Plan)
+            .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.ExpiringSoon)
+            .FirstOrDefaultAsync(s => s.CompanyId == request.CompanyId, cancellationToken);
         if (subscription is null)
         {
             _logger.LogWarning("Company with id {CompanyId} does not have a subscription ", request.CompanyId);

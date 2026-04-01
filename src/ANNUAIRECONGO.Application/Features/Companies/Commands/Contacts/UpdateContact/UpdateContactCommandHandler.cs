@@ -34,14 +34,9 @@ public sealed record UpdateContactCommandHandler(
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
-        var companyContact = company.Contacts.FirstOrDefault(c => c.Id == request.ContactId);
-        if (companyContact is null)
-        {
-            _logger.LogWarning("Contact with id {ContactId} not found", request.ContactId);
-            return CompanyErrors.ContactNotFound;
-        }
+        var companyContact = CompanyContact.Create(new Guid(),request.Type,request.Value);
 
-        var result = company.UpdateContact(request.ContactId,companyContact);
+        var result = company.UpdateContact(request.ContactId,companyContact.Value);
         if (result.IsError)
         {
             _logger.LogWarning("Failed to add contact to company with id {CompanyId}", request.CompanyId);

@@ -22,6 +22,7 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.UpdateMedia;
 using Microsoft.AspNetCore.Authorization;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.AddImage;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Images;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.RemoveImage;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -40,7 +41,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint creates a new company.")]
     [EndpointName("CreateCompany")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new CreateCompanyCommand(
@@ -118,7 +119,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint update company profile by id.")]
     [EndpointName("UpdateCompanyProfile")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> UpdateCompanyProfile(Guid id, [FromBody] UpdateCompanyProfileRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateCompanyProfileCommand(
@@ -148,7 +149,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint update company media by id.")]
     [EndpointName("UpdateMedia")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult>UpdateMedia(Guid id, [FromBody] UpdateCompanyMediaRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateMediaCommand(id,request.LogoUrl,request.CoverUrl),ct);
@@ -200,7 +201,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint submit a company by id.")]
     [EndpointName("SubmitCompany")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult>SubmitCompany([FromRoute] Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new SubmitCompanyCommand(id), ct);
@@ -253,7 +254,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint clear active subscription for a company by id.")]
     [EndpointName("ClearActiveSubscription")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult>ClearActiveSubscription(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new ClearActiveSubscriptionCommand(id), ct);
@@ -271,7 +272,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint set active subscription for a company by id.")]
     [EndpointName("SetActiveSubscription")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
 
     public async Task<IActionResult> SetActiveSubscription(Guid id, [FromBody] Guid subscriptionId, CancellationToken ct)
     {
@@ -290,7 +291,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint set featured for a company by id.")]
     [EndpointName("setFeatured")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles = "Admin,BusinessOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> setFeatured(Guid id,[FromBody] bool isFeatured, CancellationToken ct)
     {
         var result = await sender.Send(new SetFeatureCommand(id,isFeatured), ct);
@@ -308,6 +309,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint add contact for a company by id.")]
     [EndpointName("AddContact")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactRequest commandRequest, CancellationToken ct)
     {
         var command = new AddContactCommand(id,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
@@ -325,6 +327,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint remove contact for a company by id.")]
     [EndpointName("RemoveContact")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> RemoveContact(Guid id, [FromBody] Guid contactId, CancellationToken ct)
     {
         var command = new RemoveContactCommand(id, contactId);
@@ -342,6 +345,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint update contact for a company by id.")]
     [EndpointName("UpdateContact")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactRequest commandRequest, CancellationToken ct)
     {
         var command = new UpdateContactCommand(id,commandRequest.ContactId,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
@@ -361,9 +365,28 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointDescription("This endpoint add image for a company by id.")]
     [EndpointName("AddImage")]
     [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
     {
         var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.Caption), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
+
+    [HttpDelete("{id:guid}/RemoveImage" , Name = "RemoveImage")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Remove image for a company by id.")]
+    [EndpointDescription("This endpoint Remove image for a company by id.")]
+    [EndpointName("RemoveImage")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
+    public async Task<IActionResult> RemoveImage(Guid id, [FromBody] RemoveImageRequest commandRequest, CancellationToken ct)
+    {
+        var result = await sender.Send(new RemoveImageCommand(id,commandRequest.ImageId), ct);
         return result.Match(
             response => Ok(response),
             Problem

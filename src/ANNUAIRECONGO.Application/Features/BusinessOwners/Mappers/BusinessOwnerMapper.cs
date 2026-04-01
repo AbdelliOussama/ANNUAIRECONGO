@@ -12,7 +12,8 @@ public static class BusinessOwnerMapper
             BusinessOwnerId = businessOwner.Id,
             FirstName = businessOwner.FirstName,
             LastName = businessOwner.LastName,
-            Phone = businessOwner.Phone
+            Phone = businessOwner.Phone,
+            CompanyPosition = businessOwner.CompanyPosition
         };
     }
     public static List<BusinessOwnerDto> ToDtos(this IEnumerable<BusinessOwner> businessOwners)

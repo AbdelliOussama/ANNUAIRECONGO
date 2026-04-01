@@ -1,6 +1,7 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
+using ANNUAIRECONGO.Domain.Companies.Events;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -27,6 +28,7 @@ public sealed record ValidateCompanyCommandHandler(ILogger<ValidateCompanyComman
             _logger.LogError("Failed to validate company {CompanyId}", request.CompanyId);
             return validationResult.Errors;
         }
+        company.AddDomainEvent(new CompanyValidatedEvent(company.Id,company.OwnerId.ToString(),company.Name));
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("company");
         return Result.Updated;
