@@ -36,7 +36,7 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
             Problem);
     }
 
-    [HttpPut("{companyId:guid}/cancel")]
+    [HttpPut("{subscriptionId:guid}/cancel")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -46,12 +46,12 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [EndpointDescription("This endpoint cancels the active subscription for a company.")]
     [EndpointName("CancelSubscription")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> CancelSubscription([FromRoute] Guid companyId, CancellationToken ct)
+    public async Task<IActionResult> CancelSubscription([FromRoute] Guid subscriptionId, CancellationToken ct)
     {
         // Verify the company belongs to the current user
 
 
-        var result = await sender.Send(new CancelSubscriptionCommand(companyId), ct);
+        var result = await sender.Send(new CancelSubscriptionCommand(subscriptionId), ct);
         return result.Match(
             response => Ok(response),
             Problem);
@@ -106,10 +106,6 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanyPayments([FromRoute] Guid companyId, CancellationToken ct)
     {
-        // Verify the company belongs to the current user
-        if (companyId != Guid.Parse(currentUser.Id!))
-            return Forbid();
-
         var result = await sender.Send(new GetCompanyPaymentsQuery(companyId), ct);
         return result.Match(
             response => Ok(response),

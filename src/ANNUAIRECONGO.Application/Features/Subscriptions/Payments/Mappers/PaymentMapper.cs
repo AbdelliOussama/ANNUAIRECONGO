@@ -20,7 +20,7 @@ public static class PaymentMapper
             payment.PaidAt
         );
     }
-    public static List<PaymentDto> ToDtoList(IEnumerable<Payment> payments)
+    public static List<PaymentDto> ToDtos(this IEnumerable<Payment> payments)
     {
         return [..payments.Select(p => ToDto(p))];
     }
