@@ -113,5 +113,9 @@ public static class CompanyErrors
     public static Error ReasonRequired = Error.Validation(
         "Company.ReasonRequired",
         "Reason is required.");
+    
+    public static Error InvalidDocumentType(string documentType) => Error.Validation(
+        "Company.InvalidDocumentType",
+        $"'{documentType}' is not a valid document type.");
 
 }

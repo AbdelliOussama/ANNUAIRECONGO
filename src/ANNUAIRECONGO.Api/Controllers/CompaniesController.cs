@@ -23,6 +23,9 @@ using Microsoft.AspNetCore.Authorization;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.AddImage;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Images;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.RemoveImage;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.AddDocument;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.RemoveDocument;
+using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -392,5 +395,43 @@ public sealed class CompaniesController(ISender sender) : ApiController
             Problem
         );
     }
-     // ****************** Company Images ******************
+      // ****************** Company Images ******************
+
+      // ****************** Company Documents ******************
+    [HttpPost("{id:guid}/AddDocument" , Name = "AddDocument")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Add document for a company by id.")]
+    [EndpointDescription("This endpoint adds a document for a company by id.")]
+    [EndpointName("AddDocument")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
+    public async Task<IActionResult> AddDocument(Guid id, [FromBody] AddDocumentRequest commandRequest, CancellationToken ct)
+    {
+        var result = await sender.Send(new AddDocumentCommand(id,commandRequest.DocumentUrl,commandRequest.DocumentType,commandRequest.Description), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
+
+    [HttpDelete("{id:guid}/RemoveDocument" , Name = "RemoveDocument")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Remove document for a company by id.")]
+    [EndpointDescription("This endpoint removes a document for a company by id.")]
+    [EndpointName("RemoveDocument")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles ="EntrepriseOwner")]
+    public async Task<IActionResult> RemoveDocument(Guid id, [FromBody] Guid documentId, CancellationToken ct)
+    {
+        var command = new RemoveDocumentCommand(id, documentId);
+        var result = await sender.Send(command, ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+      // ****************** Company Documents ******************
 }
