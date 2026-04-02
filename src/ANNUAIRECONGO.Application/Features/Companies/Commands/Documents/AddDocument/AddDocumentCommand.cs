@@ -3,4 +3,4 @@ using MediatR;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.AddDocument;
 
-public sealed record AddDocumentCommand(Guid CompanyId, string DocumentUrl, string DocumentType, string? Description) : IRequest<Result<Updated>>;
+public sealed record AddDocumentCommand(Guid CompanyId, string DocumentUrl, string DocumentType, string? Description, bool? isPublic = false) : IRequest<Result<Updated>>;

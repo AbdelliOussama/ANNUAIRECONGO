@@ -15,7 +15,7 @@ public sealed record AddReportCommandHandler(IAppDbContext Context, ILogger<AddR
 
     public async Task<Result<Updated>> Handle(AddReportCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {
@@ -44,14 +44,7 @@ public sealed record AddReportCommandHandler(IAppDbContext Context, ILogger<AddR
             return CompanyErrors.InvalidReportData;
         }
 
-        // Call AddReport with reporterIp and reason parameters
-        var result = company.AddReport(request.ReporterIp, request.Reason);
-        if (result.IsError)
-        {
-            _logger.LogWarning("Failed to add report for company with id {CompanyId}. Errors: {Errors}", request.CompanyId, result.Errors);
-            return result;
-        }
-
+        await _context.CompanyReports.AddAsync(report.Value, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Report added to company with id {CompanyId}", request.CompanyId);

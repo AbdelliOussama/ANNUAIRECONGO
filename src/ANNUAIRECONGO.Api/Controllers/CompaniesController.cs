@@ -439,7 +439,7 @@ public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest 
 [Authorize(Roles ="EntrepriseOwner")]
 public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
 {
-    var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.Caption), ct);
+    var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.DisplayOrder,commandRequest.Caption), ct);
     return result.Match(
         response => Ok(response),
         Problem

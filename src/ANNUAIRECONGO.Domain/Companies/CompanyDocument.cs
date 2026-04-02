@@ -10,12 +10,12 @@ public class CompanyDocument : Entity
     public Guid CompanyId { get; private set; }
     public DocumentType DocType { get; private set; }
     public string FileUrl { get; private set; } = string.Empty;
-    public bool IsPublic { get; private set; }
+    public bool? IsPublic { get; private set; }
     public DateTime UploadedAt { get; private set; }
 
     private CompanyDocument() { }
 
-    private CompanyDocument(Guid companyId, DocumentType docType, string fileUrl, bool isPublic)
+    private CompanyDocument(Guid companyId, DocumentType docType, string fileUrl, bool? isPublic)
     {
         CompanyId = companyId;
         DocType = docType;
@@ -28,7 +28,7 @@ public class CompanyDocument : Entity
         Guid companyId,
         DocumentType docType,
         string fileUrl,
-        bool isPublic = false)
+        bool? isPublic = false)
     {
         if (string.IsNullOrWhiteSpace(fileUrl))
             return CompanyErrors.FileUrlRequired;

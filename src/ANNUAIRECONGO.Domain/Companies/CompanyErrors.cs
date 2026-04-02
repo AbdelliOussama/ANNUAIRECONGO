@@ -125,4 +125,9 @@ public static class CompanyErrors
     public static Result<Updated> InvalidReportData => Error.Validation(
         "Company.InvalidReportData",
         "The provided report data is invalid.");
+
+    public static Error ImagewithTheSameUrlExists = Error.Conflict(
+        "Company.ImageWithTheSameUrlExists",
+        "An image with the same URL already exists for this company.");
+
 }

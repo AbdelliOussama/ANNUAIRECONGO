@@ -21,7 +21,7 @@ public sealed record UpdateContactCommandHandler(
 
     public async Task<Result<Updated>> Handle(UpdateContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Contacts)
+        var company = await _context.Companies.AsNoTracking().Include(c => c.Contacts)
                                             .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
@@ -35,15 +35,14 @@ public sealed record UpdateContactCommandHandler(
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
-        var companyContact = CompanyContact.Create(Guid.NewGuid(),request.Type,request.Value,request.IsPrimary);
-
-        var result = company.UpdateContact(request.ContactId,companyContact.Value);
-        if (result.IsError)
+        var contact = company.Contacts.FirstOrDefault(c => c.Id == request.ContactId);
+        if (contact is null)
         {
-            _logger.LogWarning("Failed to update contact for company with id {CompanyId}", request.CompanyId);
-            return result.Errors;
+            _logger.LogWarning("Contact with id {ContactId} not found on company with id {CompanyId}", request.ContactId, request.CompanyId);
+            return CompanyErrors.ContactNotFound;
         }
-
+        contact.Update(request.Type, request.Value,request.IsPrimary);
+        _context.CompanyContacts.Update(contact);
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("company");
         return Result.Updated;

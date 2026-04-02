@@ -15,7 +15,7 @@ public sealed record RemoveDocumentCommandHandler(ILogger<RemoveDocumentCommandH
 
     public async Task<Result<Updated>> Handle(RemoveDocumentCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.AsNoTracking().Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
@@ -27,14 +27,15 @@ public sealed record RemoveDocumentCommandHandler(ILogger<RemoveDocumentCommandH
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        var result = company.RemoveDocument(request.DocumentId);
-        if (result.IsError)
-        {
-            _logger.LogWarning("Failed to remove document from company with id {CompanyId}. Reason: {Reason}", request.CompanyId, result.Errors.First().Description);
-            return result.Errors.First();
+        var document = company.Documents.FirstOrDefault(d => d.Id == request.DocumentId);
+        if (document is null)        {
+            _logger.LogWarning("Document with id {DocumentId} not found in company with id {CompanyId}", request.DocumentId, request.CompanyId);
+            return CompanyErrors.DocumentNotFound;
         }
-        _logger.LogInformation("Document removed from company with id {CompanyId}", request.CompanyId);
+        _context.CompanyDocuments.Remove(document);
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Document removed from company with id {CompanyId}", request.CompanyId);
+
         return Result.Updated;
     }
 }

@@ -21,7 +21,7 @@ public sealed record AddContactCommandHandler(
 
     public async Task<Result<Updated>> Handle(AddContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await context.Companies.Include(c => c.Contacts)
+        var company = await context.Companies.AsNoTracking().Include(c => c.Contacts)
                                             .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
@@ -38,14 +38,7 @@ public sealed record AddContactCommandHandler(
         var contactResult = CompanyContact.Create(request.CompanyId, request.Type, request.Value, request.IsPrimary);
         if (contactResult.IsError)
             return contactResult.Errors;
-
-        var result = company.AddContact(contactResult.Value);
-        if (result.IsError)
-        {
-            _logger.LogError("Failed to add contact to company with id {CompanyId} Errors = {2}", request.CompanyId,result.Errors);
-            return result.Errors;
-        }
-
+        await _context.CompanyContacts.AddAsync(contactResult.Value, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync("company");
         return Result.Updated;

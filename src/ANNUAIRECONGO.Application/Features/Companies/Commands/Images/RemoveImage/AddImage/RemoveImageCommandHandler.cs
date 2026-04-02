@@ -15,7 +15,9 @@ public sealed record RemoveImageCommandHandler(ILogger<RemoveImageCommandHandler
 
     public async Task<Result<Updated>> Handle(RemoveImageCommand request, CancellationToken cancellationToken)
     {
-        var company  = await _context.Companies.Include(c => c.Images).FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
+        var company  = await _context.Companies.AsNoTracking()
+            .Include(c => c.Images)
+            .FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
@@ -27,14 +29,16 @@ public sealed record RemoveImageCommandHandler(ILogger<RemoveImageCommandHandler
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        var result = company.RemoveImage(request.ImageId);
-        if(result.IsError)
+        var image = company.Images.FirstOrDefault(i => i.Id == request.ImageId);
+        if (image is null)
         {
-            _logger.LogWarning("Failed to remove image from company with id {CompanyId}. Reason: {Reason}", request.CompanyId, result.Errors.First().Description);
-            return result.Errors.First();
+            _logger.LogWarning("Image with id {ImageId} not found", request.ImageId);
+            return CompanyErrors.ImageNotFound;
         }
-        _logger.LogInformation("Image removed from company with id {CompanyId}", request.CompanyId);
+        await _context.CompanyImages.Where(i => i.Id == request.ImageId).ExecuteDeleteAsync(cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Image removed from company with id {CompanyId}", request.CompanyId);
+
         return Result.Updated;
     }
 }

@@ -9,11 +9,11 @@ public class CompanyImage : Entity
     public Guid CompanyId { get; private set; }
     public string ImageUrl { get; private set; } = string.Empty;
     public string? Caption { get; private set; }
-    public int DisplayOrder { get; private set; }
+    public int? DisplayOrder { get; private set; }
     public DateTime UploadedAt { get; private set; }
 
     private CompanyImage() { }
-    private CompanyImage(Guid companyId, string imageUrl, int displayOrder, string? caption)
+    private CompanyImage(Guid companyId, string imageUrl, int? displayOrder, string? caption)
     {
         CompanyId = companyId;
         ImageUrl = imageUrl;
@@ -25,7 +25,7 @@ public class CompanyImage : Entity
     public static Result<CompanyImage> Create(
         Guid companyId,
         string imageUrl,
-        int displayOrder,
+        int? displayOrder,
         string? caption = null)
     {
         if (string.IsNullOrWhiteSpace(imageUrl))

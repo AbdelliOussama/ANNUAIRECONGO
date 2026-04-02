@@ -20,7 +20,7 @@ public sealed record RemoveContactCommandHandler(
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(RemoveContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Contacts)
+        var company = await _context.Companies.AsNoTracking().Include(c => c.Contacts)
                                             .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
@@ -34,13 +34,14 @@ public sealed record RemoveContactCommandHandler(
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
-
-        var result = company.RemoveContact(request.ContactId);
-        if (result.IsError)
+        var contact = company.Contacts.FirstOrDefault(c => c.Id == request.ContactId);
+        if (contact is null)
         {
-            return result.Errors;
+            _logger.LogWarning("Contact with id = {ContactId} not found on company with id = {CompanyId}", request.ContactId, request.CompanyId);
+            return CompanyErrors.ContactNotFound;
         }
-
+        await _context.CompanyContacts.Where(c => c.Id == contact.Id).ExecuteDeleteAsync(cancellationToken);
+        _logger.LogInformation("Contact with id = {ContactId} removed from company with id = {CompanyId}", request.ContactId, request.CompanyId);
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("company");
         return Result.Updated;

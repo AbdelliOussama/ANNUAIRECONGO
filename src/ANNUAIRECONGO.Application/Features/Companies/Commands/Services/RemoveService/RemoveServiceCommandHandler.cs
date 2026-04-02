@@ -15,7 +15,7 @@ public sealed record RemoveServiceCommandHandler(IAppDbContext Context, ILogger<
 
     public async Task<Result<Updated>> Handle(RemoveServiceCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Services).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.AsNoTracking().Include(c => c.Services).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {
@@ -30,13 +30,14 @@ public sealed record RemoveServiceCommandHandler(IAppDbContext Context, ILogger<
             return CompanyErrors.NotOwner;
         }
 
-        var result = company.RemoveService(request.ServiceId);
-        if (result.IsError)
-        {
-            _logger.LogWarning("Failed to remove service with id {ServiceId} from company with id {CompanyId}. Errors: {Errors}", request.ServiceId, request.CompanyId, result.Errors);
-            return result;
-        }
+        var service = company.Services.FirstOrDefault(s => s.Id == request.ServiceId);
 
+        if (service is null)
+        {
+            _logger.LogWarning("Service with id {ServiceId} not found in company with id {CompanyId}", request.ServiceId, request.CompanyId);
+            return CompanyErrors.ServiceNotFound;
+        }
+        await _context.CompanyServices.Where(s => s.Id == request.ServiceId).ExecuteDeleteAsync(cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Service with id {ServiceId} removed from company with id {CompanyId}", request.ServiceId, request.CompanyId);

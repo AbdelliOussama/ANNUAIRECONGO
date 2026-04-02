@@ -17,7 +17,7 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
 
     public async Task<Result<Updated>> Handle(AddDocumentCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.AsNoTracking().Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
@@ -38,19 +38,8 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        // Convert string to DocumentType enum
-        if (!Enum.TryParse<DocumentType>(request.DocumentType, true, out var documentType))
-        {
-            _logger.LogWarning("Invalid document type: {DocumentType}", request.DocumentType);
-            return CompanyErrors.InvalidDocumentType(request.DocumentType);
-        }
 
-        var result = company.AddDocument(documentType, request.DocumentUrl, false, subscription.Plan);
-        if (result.IsError)
-        {
-            _logger.LogWarning("Failed to add document to company with id {CompanyId}. Reason: {Reason}", request.CompanyId, result.Errors.First().Description);
-            return result.Errors.First();
-        }
+        var document = CompanyDocument.Create(request.CompanyId,(DocumentType)Enum.Parse(typeof(DocumentType), request.DocumentType, true),request.DocumentUrl,request.isPublic);
         _logger.LogInformation("Document added to company with id {CompanyId}", request.CompanyId);
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Updated;

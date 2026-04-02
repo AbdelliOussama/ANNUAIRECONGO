@@ -15,7 +15,9 @@ public sealed record AddServiceCommandHandler(IAppDbContext Context, ILogger<Add
 
     public async Task<Result<Updated>> Handle(AddServiceCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.Include(c => c.Services).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.AsNoTracking()
+            .Include(c => c.Services)
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {
@@ -36,10 +38,7 @@ public sealed record AddServiceCommandHandler(IAppDbContext Context, ILogger<Add
             _logger.LogWarning("Failed to create service for company with id {CompanyId}. Errors: {Errors}", request.CompanyId, service.Errors);
             return CompanyErrors.InvalidServiceData;
         }
-        company.AddService(service.Value);
-        // await _context.CompanyServices.AddAsync(service.Value, cancellationToken);
-
-
+        await _context.CompanyServices.AddAsync(service.Value, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Service with id {ServiceId} added to company with id {CompanyId}", service.Value.Id, request.CompanyId);

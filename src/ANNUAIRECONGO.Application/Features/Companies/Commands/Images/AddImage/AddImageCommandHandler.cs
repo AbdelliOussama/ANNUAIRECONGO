@@ -16,7 +16,7 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
 
     public async Task<Result<Updated>> Handle(AddImageCommand request, CancellationToken cancellationToken)
     {
-        var company  = await _context.Companies.FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
+        var company  = await _context.Companies.AsNoTracking().Include(c => c.Images).FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
@@ -37,14 +37,27 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        var result = company.AddImage(request.ImageUrl, request.Caption, subscription.Plan);
-        if(result.IsError)
+        if(company.Images.Count >= subscription.Plan.MaxImages)
         {
-            _logger.LogWarning("Failed to add image to company with id {CompanyId}. Reason: {Reason}", request.CompanyId, result.Errors.First().Description);
-            return result.Errors.First();
+            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of images allowed by the subscription plan", request.CompanyId);
+            return CompanyErrors.ImageLimitReached;
         }
-        _logger.LogInformation("Image added to company with id {CompanyId}", request.CompanyId);
+        if(company.Images.Any(i => i.ImageUrl == request.ImageUrl))
+        {
+            _logger.LogWarning("Company with id {CompanyId} already has an image with url {ImageUrl}", request.CompanyId, request.ImageUrl);
+            return CompanyErrors.ImagewithTheSameUrlExists;
+        }
+        var imageResult = CompanyImage.Create(request.CompanyId,request.ImageUrl,request.DisplayOrder,request.Caption);
+        if(imageResult.IsError)
+        {
+            _logger.LogWarning("Failed to create image for company with id {CompanyId}. Reason: {Reason}", request.CompanyId, imageResult.Errors.First().Description);
+            return imageResult.Errors.First();
+        }
+        var image = imageResult.Value;
+        await _context.CompanyImages.AddAsync(image, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Image added to company with id {CompanyId}", request.CompanyId);
+
         return Result.Updated;
     }
 }
