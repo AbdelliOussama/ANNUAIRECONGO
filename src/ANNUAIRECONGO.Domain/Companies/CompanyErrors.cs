@@ -118,4 +118,11 @@ public static class CompanyErrors
         "Company.InvalidDocumentType",
         $"'{documentType}' is not a valid document type.");
 
+    public static Result<Updated> InvalidServiceData => Error.Validation(
+        "Company.InvalidServiceData",
+        "The provided service data is invalid.");
+
+    public static Result<Updated> InvalidReportData => Error.Validation(
+        "Company.InvalidReportData",
+        "The provided report data is invalid.");
 }

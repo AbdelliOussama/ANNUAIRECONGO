@@ -1,5 +1,6 @@
 using ANNUAIRECONGO.Domain.Companies.Enums;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
+using ANNUAIRECONGO.Application.Features.Companies.Dtos.Services;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Dtos;
 public class CompanyDto
@@ -23,4 +24,5 @@ public class CompanyDto
     public bool IsFeatured { get; set; }
     public Guid? ActiveSubscriptionId { get; set; }
     public List<SectorDto> Sectors { get; set; } = new();
+    public List<ServiceDto> Services { get; set; } = new();
 }

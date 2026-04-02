@@ -25,7 +25,13 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.Images;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Images.RemoveImage;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.AddDocument;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.RemoveDocument;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Services.AddService;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Services.RemoveService;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Reports.AddReport;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
+using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
+using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
+using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -304,79 +310,141 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    // ****************** Company Contacts ******************
-    [HttpPost("{id:guid}/AddContact" , Name = "AddContact")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Add contact for a company by id.")]
-    [EndpointDescription("This endpoint add contact for a company by id.")]
-    [EndpointName("AddContact")]
-    [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactRequest commandRequest, CancellationToken ct)
-    {
-        var command = new AddContactCommand(id,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
-        var result = await sender.Send(command, ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
+// ****************** Company Contacts ******************
+[HttpPost("{id:guid}/AddContact" , Name = "AddContact")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Add contact for a company by id.")]
+[EndpointDescription("This endpoint add contact for a company by id.")]
+[EndpointName("AddContact")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactRequest commandRequest, CancellationToken ct)
+{
+    var command = new AddContactCommand(id,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
 
-    [HttpDelete("{id:guid}/RemoveContact" , Name = "RemoveContact")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Remove contact for a company by id.")]
-    [EndpointDescription("This endpoint remove contact for a company by id.")]
-    [EndpointName("RemoveContact")]
-    [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> RemoveContact(Guid id, [FromBody] Guid contactId, CancellationToken ct)
-    {
-        var command = new RemoveContactCommand(id, contactId);
-        var result = await sender.Send(command, ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
+[HttpDelete("{id:guid}/RemoveContact" , Name = "RemoveContact")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Remove contact for a company by id.")]
+[EndpointDescription("This endpoint remove contact for a company by id.")]
+[EndpointName("RemoveContact")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> RemoveContact(Guid id, [FromBody] Guid contactId, CancellationToken ct)
+{
+    var command = new RemoveContactCommand(id, contactId);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
 
-    [HttpPut("{id:guid}/UpdateContact" , Name = "UpdateContact")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Update contact for a company by id.")]
-    [EndpointDescription("This endpoint update contact for a company by id.")]
-    [EndpointName("UpdateContact")]
-    [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactRequest commandRequest, CancellationToken ct)
-    {
-        var command = new UpdateContactCommand(id,commandRequest.ContactId,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
-        var result = await sender.Send(command, ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
-    // ****************** Company Contacts ******************
+[HttpPut("{id:guid}/UpdateContact" , Name = "UpdateContact")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Update contact for a company by id.")]
+[EndpointDescription("This endpoint update contact for a company by id.")]
+[EndpointName("UpdateContact")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactRequest commandRequest, CancellationToken ct)
+{
+    var command = new UpdateContactCommand(id,commandRequest.ContactId,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+// ****************** Company Contacts ******************
 
-    // ****************** Company Images ******************
-    [HttpPost("{id:guid}/AddImage" , Name = "AddImage")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Add image for a company by id.")]
-    [EndpointDescription("This endpoint add image for a company by id.")]
-    [EndpointName("AddImage")]
-    [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
-    {
-        var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.Caption), ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
+// ****************** Company Services ******************
+[HttpPost("{id:guid}/AddService" , Name = "AddService")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Add service for a company by id.")]
+[EndpointDescription("This endpoint add service for a company by id.")]
+[EndpointName("AddService")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceRequest commandRequest, CancellationToken ct)
+{
+    var command = new AddServiceCommand(id,commandRequest.Title,commandRequest.Description);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+
+[HttpDelete("{id:guid}/RemoveService" , Name = "RemoveService")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Remove service for a company by id.")]
+[EndpointDescription("This endpoint remove service for a company by id.")]
+[EndpointName("RemoveService")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> RemoveService(Guid id, [FromBody] RemoveServiceRequest commandRequest, CancellationToken ct)
+{
+    var command = new RemoveServiceCommand(id,commandRequest.ServiceId);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+// ****************** Company Services ******************
+
+// ****************** Company Reports ******************
+[HttpPost("{id:guid}/AddReport" , Name = "AddReport")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Add report for a company by id.")]
+[EndpointDescription("This endpoint adds a report for a company by id.")]
+[EndpointName("AddReport")]
+[MapToApiVersion("1.0")]
+// Allow both authenticated and anonymous users to report companies
+[AllowAnonymous]
+public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest commandRequest, CancellationToken ct)
+{
+    var command = new AddReportCommand(id, commandRequest.ReporterIp, commandRequest.Reason);
+    var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+// ****************** Company Reports ******************
+
+// ****************** Company Images ******************
+[HttpPost("{id:guid}/AddImage" , Name = "AddImage")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Add image for a company by id.")]
+[EndpointDescription("This endpoint add image for a company by id.")]
+[EndpointName("AddImage")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles ="EntrepriseOwner")]
+public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
+{
+    var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.Caption), ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
 
 
     [HttpDelete("{id:guid}/RemoveImage" , Name = "RemoveImage")]
