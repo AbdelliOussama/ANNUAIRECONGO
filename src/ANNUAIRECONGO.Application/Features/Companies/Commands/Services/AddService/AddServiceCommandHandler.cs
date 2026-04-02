@@ -37,6 +37,9 @@ public sealed record AddServiceCommandHandler(IAppDbContext Context, ILogger<Add
             return CompanyErrors.InvalidServiceData;
         }
         company.AddService(service.Value);
+        // await _context.CompanyServices.AddAsync(service.Value, cancellationToken);
+
+
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Service with id {ServiceId} added to company with id {CompanyId}", service.Value.Id, request.CompanyId);

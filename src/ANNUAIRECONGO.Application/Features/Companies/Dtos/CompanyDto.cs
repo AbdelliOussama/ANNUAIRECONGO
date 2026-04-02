@@ -1,6 +1,7 @@
 using ANNUAIRECONGO.Domain.Companies.Enums;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
 using ANNUAIRECONGO.Application.Features.Companies.Dtos.Services;
+using ANNUAIRECONGO.Domain.Companies;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Dtos;
 public class CompanyDto
@@ -25,4 +26,7 @@ public class CompanyDto
     public Guid? ActiveSubscriptionId { get; set; }
     public List<SectorDto> Sectors { get; set; } = new();
     public List<ServiceDto> Services { get; set; } = new();
+    // public List<DocumentDto> Documents { get; set; } = new();
+    // public List<CompanyImageDto> Images { get; set; } = new();
+    // public List<ContactDto> Contacts { get; set; } = new();
 }
