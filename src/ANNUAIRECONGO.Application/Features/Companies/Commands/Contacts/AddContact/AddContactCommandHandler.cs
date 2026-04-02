@@ -21,8 +21,8 @@ public sealed record AddContactCommandHandler(
 
     public async Task<Result<Updated>> Handle(AddContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await context.Companies.Include(c => c.Contacts)
+                                            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {

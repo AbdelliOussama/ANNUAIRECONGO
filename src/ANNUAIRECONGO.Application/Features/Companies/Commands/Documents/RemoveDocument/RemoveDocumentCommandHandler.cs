@@ -15,7 +15,7 @@ public sealed record RemoveDocumentCommandHandler(ILogger<RemoveDocumentCommandH
 
     public async Task<Result<Updated>> Handle(RemoveDocumentCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.Include(c => c.Documents).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);

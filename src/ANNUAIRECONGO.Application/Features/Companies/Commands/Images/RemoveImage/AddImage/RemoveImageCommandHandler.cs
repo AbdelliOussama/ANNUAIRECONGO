@@ -15,7 +15,7 @@ public sealed record RemoveImageCommandHandler(ILogger<RemoveImageCommandHandler
 
     public async Task<Result<Updated>> Handle(RemoveImageCommand request, CancellationToken cancellationToken)
     {
-        var company  = await _context.Companies.FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
+        var company  = await _context.Companies.Include(c => c.Images).FirstOrDefaultAsync(c =>c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);

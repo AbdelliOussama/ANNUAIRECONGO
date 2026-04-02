@@ -16,6 +16,7 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
     public async Task<Result<List<SubscriptionDto>>> Handle(GetCompanySubscriptionsQuery request, CancellationToken cancellationToken)
     {
         var subscriptions = await _context.Subscriptions
+            .Include(s => s.Plan)
             .Where(s => s.CompanyId == request.CompanyId)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

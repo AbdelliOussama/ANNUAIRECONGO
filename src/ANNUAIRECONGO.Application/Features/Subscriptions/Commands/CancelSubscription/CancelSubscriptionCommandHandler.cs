@@ -6,15 +6,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Hybrid;
 using ANNUAIRECONGO.Domain.Subscriptions.Events;
+using ANNUAIRECONGO.Domain.Companies;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Commands.CancelSubscription;
 
 public sealed class CancelSubscriptionCommandHandler(ILogger<CancelSubscriptionCommandHandler>logger,HybridCache cache,
-    IAppDbContext context) : IRequestHandler<CancelSubscriptionCommand, Result<Updated>>
+    IAppDbContext context,IUser user) : IRequestHandler<CancelSubscriptionCommand, Result<Updated>>
 {
     private readonly ILogger<CancelSubscriptionCommandHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
+    private readonly IUser _user = user;
+
 
 
     public async Task<Result<Updated>> Handle(CancelSubscriptionCommand request, CancellationToken cancellationToken)
@@ -27,6 +30,11 @@ public sealed class CancelSubscriptionCommandHandler(ILogger<CancelSubscriptionC
         {
             logger.LogWarning("Subscription with ID {SubscriptionId} not found for cancellation.", request.SubscriptionId);
             return SubscriptionErrors.NotFound(request.SubscriptionId);
+        }
+        var IsUserCompanyOwner = subscription.Company.OwnerId.ToString() == _user.Id;
+        if (!IsUserCompanyOwner)
+        {            logger.LogWarning("User with ID {UserId} is not authorized to cancel subscription with ID {SubscriptionId}.", _user.Id, request.SubscriptionId);
+            return CompanyErrors.NotOwner;
         }
 
         var cancelResult = subscription.Cancel();

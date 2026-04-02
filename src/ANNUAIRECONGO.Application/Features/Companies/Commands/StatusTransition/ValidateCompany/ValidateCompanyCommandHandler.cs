@@ -16,7 +16,7 @@ public sealed record ValidateCompanyCommandHandler(ILogger<ValidateCompanyComman
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(ValidateCompanyCommand request, CancellationToken cancellationToken)
     {
-        var company =await  _context.Companies.FirstOrDefaultAsync(x => x.Id == request.CompanyId);
+        var company =await  _context.Companies.FirstOrDefaultAsync(x => x.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogError("Company with id {CompanyId} not found", request.CompanyId);

@@ -32,7 +32,7 @@ public sealed class HandlePaymentSucceededAutoActivate(
         if (activateResult.IsError)
         {
             logger.LogError("Could not activate subscription {Id}: {Error}",
-                subscription.Id, activateResult.TopError.Description);
+                subscription.Id,activateResult.Errors.First().Description);
             return;
         }
 

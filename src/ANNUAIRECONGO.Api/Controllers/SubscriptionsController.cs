@@ -48,9 +48,6 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> CancelSubscription([FromRoute] Guid subscriptionId, CancellationToken ct)
     {
-        // Verify the company belongs to the current user
-
-
         var result = await sender.Send(new CancelSubscriptionCommand(subscriptionId), ct);
         return result.Match(
             response => Ok(response),

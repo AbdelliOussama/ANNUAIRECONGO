@@ -15,7 +15,7 @@ public sealed record RemoveServiceCommandHandler(IAppDbContext Context, ILogger<
 
     public async Task<Result<Updated>> Handle(RemoveServiceCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.Include(c => c.Services).FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {

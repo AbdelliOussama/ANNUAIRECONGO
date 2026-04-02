@@ -30,4 +30,8 @@ public static class CityErrors
     public static Error RegionNotFound(Guid regionId) =>Error.NotFound(
         "City.RegionNotFound",
         $"Region with id '{regionId}' was not found.");
+
+    public static Error CitiesNotFoundForRegion(Guid regionId) =>Error.NotFound(
+        "City.CitiesNotFoundForRegion",
+        $"No cities found for region with id '{regionId}'.");
 }

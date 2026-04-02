@@ -419,7 +419,7 @@ public async Task<IActionResult> RemoveService(Guid id, [FromBody] RemoveService
 [AllowAnonymous]
 public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest commandRequest, CancellationToken ct)
 {
-    var command = new AddReportCommand(id, commandRequest.ReporterIp, commandRequest.Reason);
+    var command = new AddReportCommand(id, HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, commandRequest.Reason);
     var result = await sender.Send(command, ct);
     return result.Match(
         response => Ok(response),

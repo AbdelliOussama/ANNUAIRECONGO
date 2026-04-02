@@ -20,8 +20,8 @@ public sealed record RemoveContactCommandHandler(
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(RemoveContactCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var company = await _context.Companies.Include(c => c.Contacts)
+                                            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
 
         if (company is null)
         {
