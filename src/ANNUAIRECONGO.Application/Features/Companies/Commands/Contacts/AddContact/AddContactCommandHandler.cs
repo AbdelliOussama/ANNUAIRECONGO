@@ -35,6 +35,11 @@ public sealed record AddContactCommandHandler(
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
+        if(company.Contacts.Any(c => c.Value == request.Value && c.Type == request.Type))
+        {
+            _logger.LogWarning("Company with id = {CompanyId} already has a contact with value = {ContactValue} and type = {ContactType}", request.CompanyId, request.Value, request.Type);
+            return CompanyErrors.ContactAlreadyExists;
+        }
         var contactResult = CompanyContact.Create(request.CompanyId, request.Type, request.Value, request.IsPrimary);
         if (contactResult.IsError)
             return contactResult.Errors;

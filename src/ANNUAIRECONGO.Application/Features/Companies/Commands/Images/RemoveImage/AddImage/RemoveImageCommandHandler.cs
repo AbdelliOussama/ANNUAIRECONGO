@@ -36,7 +36,6 @@ public sealed record RemoveImageCommandHandler(ILogger<RemoveImageCommandHandler
             return CompanyErrors.ImageNotFound;
         }
         await _context.CompanyImages.Where(i => i.Id == request.ImageId).ExecuteDeleteAsync(cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Image removed from company with id {CompanyId}", request.CompanyId);
 
         return Result.Updated;

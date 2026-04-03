@@ -31,7 +31,6 @@ public sealed class BusinessOwnersControllers : ApiController
     [EndpointDescription("This endpoint returns a list of all business owners.")]
     [EndpointName("GetBusinessOwners")]
     [MapToApiVersion("1.0")]
-    [OutputCache(Duration =60)]
     public async Task<IActionResult> GetBusinessOwners(CancellationToken ct)
     {
         var result = await _sender.Send(new GetBusinessOwnersQuery(), ct);

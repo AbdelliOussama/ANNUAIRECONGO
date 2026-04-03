@@ -42,8 +42,12 @@ public sealed record UpdateContactCommandHandler(
             return CompanyErrors.ContactNotFound;
         }
         contact.Update(request.Type, request.Value,request.IsPrimary);
-        _context.CompanyContacts.Update(contact);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.CompanyContacts
+            .Where(c => c.Id == request.ContactId)
+            .ExecuteUpdateAsync(s => s
+            .SetProperty(c => c.Type, request.Type)
+            .SetProperty(c => c.Value, request.Value)
+            .SetProperty(c => c.IsPrimary, request.IsPrimary), cancellationToken);
         await _cache.RemoveByTagAsync("company");
         return Result.Updated;
     }

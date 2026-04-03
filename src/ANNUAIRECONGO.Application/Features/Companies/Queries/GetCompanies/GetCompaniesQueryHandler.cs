@@ -23,7 +23,6 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             .ThenInclude(cs => cs.Sector)
             .Include(c => c.City)
             .ThenInclude(c => c.Region)
-            .Include(c => c.Services)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))

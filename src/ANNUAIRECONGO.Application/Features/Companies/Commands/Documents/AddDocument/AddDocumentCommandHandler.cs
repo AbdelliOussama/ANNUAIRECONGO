@@ -38,10 +38,23 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
+        // Check if the company has reached the maximum number of documents allowed by the subscription plan
+        if (company.Documents.Count >= subscription.Plan.MaxDocuments)
+        {
+            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of documents allowed by the subscription plan", request.CompanyId);
+            return CompanyErrors.DocumentLimitReached;
+        }
+        var documentResult = CompanyDocument.Create(request.CompanyId,(DocumentType)Enum.Parse(typeof(DocumentType), request.DocumentType, true),request.DocumentUrl,request.isPublic);
 
-        var document = CompanyDocument.Create(request.CompanyId,(DocumentType)Enum.Parse(typeof(DocumentType), request.DocumentType, true),request.DocumentUrl,request.isPublic);
-        _logger.LogInformation("Document added to company with id {CompanyId}", request.CompanyId);
+        if (documentResult.IsError)
+        {
+            _logger.LogWarning("Failed to create document for company with id {CompanyId}. Error: {Error}", request.CompanyId, documentResult.Errors);
+            return documentResult.Errors.First();
+        }
+        await _context.CompanyDocuments.AddAsync(documentResult.Value, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Document added to company with id {CompanyId}", request.CompanyId);
+
         return Result.Updated;
     }
 }

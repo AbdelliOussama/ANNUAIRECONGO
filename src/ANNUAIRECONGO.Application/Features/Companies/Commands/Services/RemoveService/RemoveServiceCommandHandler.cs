@@ -38,8 +38,6 @@ public sealed record RemoveServiceCommandHandler(IAppDbContext Context, ILogger<
             return CompanyErrors.ServiceNotFound;
         }
         await _context.CompanyServices.Where(s => s.Id == request.ServiceId).ExecuteDeleteAsync(cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
         _logger.LogInformation("Service with id {ServiceId} removed from company with id {CompanyId}", request.ServiceId, request.CompanyId);
 
         return Result.Updated;

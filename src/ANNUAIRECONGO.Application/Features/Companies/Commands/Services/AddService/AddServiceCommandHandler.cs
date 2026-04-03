@@ -31,6 +31,11 @@ public sealed record AddServiceCommandHandler(IAppDbContext Context, ILogger<Add
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _user.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
+        if(company.Services.Any(s => s.Title == request.Title))
+        {
+            _logger.LogWarning("Service with title {Title} already exists for company with id {CompanyId}", request.Title, request.CompanyId);
+            return CompanyErrors.ServiceAlreadyExists;
+        }
 
         var service = CompanyService.Create(Guid.NewGuid(), request.CompanyId, request.Title, request.Description);
         if (service.IsError)

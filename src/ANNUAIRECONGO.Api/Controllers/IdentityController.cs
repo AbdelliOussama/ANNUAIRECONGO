@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ANNUAIRECONGO.Application.Features.Identity;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUserInfo;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.RefreshTokens;
@@ -62,6 +63,21 @@ public sealed class IdentityController(ISender sender) : ApiController
 
         return result.Match(
             response => Ok(response),
+            Problem);
+    }
+
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Registers a new user and creates associated business owner profile.")]
+    [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
+    [EndpointName("Register")]
+    public async Task<IActionResult> Register([FromBody] RegisterCommand request, CancellationToken ct)
+    {
+        var result = await sender.Send(request, ct);
+        return result.Match(
+            userId => Created($"identity/{userId}", userId),
             Problem);
     }
 }

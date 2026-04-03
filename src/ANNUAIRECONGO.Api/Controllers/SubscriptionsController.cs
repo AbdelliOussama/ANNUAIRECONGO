@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.Subscribe;
 using ANNUAIRECONGO.Contracts.Requests.Subscriptions;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RefundPayment;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RejectPayment;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -83,9 +85,47 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [EndpointDescription("This endpoint confirms a payment with the payment gateway reference.")]
     [EndpointName("ConfirmPayment")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId, [FromBody] string gatewayReference, CancellationToken ct)
+    public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId,CancellationToken ct)
     {
         var command = new ConfirmPaymentCommand(paymentId);
+        var result = await sender.Send(command, ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
+    [HttpPut("payments/{paymentId:guid}/Refund")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Refund a payment.")]
+    [EndpointDescription("This endpoint refunds a payment with the payment gateway reference.")]
+    [EndpointName("RefundPayment")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> RefundPayment([FromRoute] Guid paymentId,  CancellationToken ct)
+    {
+        var command = new RefundPaymentCommand(paymentId);
+        var result = await sender.Send(command, ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
+    [HttpPut("payments/{paymentId:guid}/Reject")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Reject a payment.")]
+    [EndpointDescription("This endpoint rejects a payment with the payment gateway reference.")]
+    [EndpointName("RejectPayment")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> RejectPayment([FromRoute] Guid paymentId, [FromBody] string reason, CancellationToken ct)
+    {
+        var command = new RejectPaymentCommand(paymentId, reason);
         var result = await sender.Send(command, ct);
         return result.Match(
             response => Ok(response),

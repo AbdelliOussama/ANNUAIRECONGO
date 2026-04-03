@@ -30,13 +30,13 @@ public static class CompanyMapper
             IsFeatured = company.IsFeatured,
             ActiveSubscriptionId = company.ActiveSubscriptionId,
             Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
-            Services = company.Services.Select(s => new ServiceDto
-            {
-                Id = s.Id,
-                CompanyId = s.CompanyId,
-                Title = s.Title,
-                Description = s.Description
-            }).ToList()
+            // Services = company.Services.Select(s => new ServiceDto
+            // {
+            //     Id = s.Id,
+            //     CompanyId = s.CompanyId,
+            //     Title = s.Title,
+            //     Description = s.Description
+            // }).ToList()
         };
     }
     public static List<CompanyDto> ToDTos(this IEnumerable<Company> companies)
