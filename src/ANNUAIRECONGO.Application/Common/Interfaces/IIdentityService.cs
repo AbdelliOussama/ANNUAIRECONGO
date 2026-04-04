@@ -14,4 +14,5 @@ public interface IIdentityService
     Task<Result<AppUserDto>> GetUserByIdAsync(string userId);
 
     Task<string?> GetUserNameAsync(string userId);
+    Task<Result<Guid>> RegisterAsync(string email, string password, string firstName, string lastName, string phoneNumber, string? companyPosition, CancellationToken cancellationToken);
 }

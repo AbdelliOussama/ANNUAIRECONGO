@@ -1,7 +1,9 @@
 
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
+using ANNUAIRECONGO.Domain.BusinessOwners;
 using ANNUAIRECONGO.Domain.Common.Results;
+using ANNUAIRECONGO.Domain.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
@@ -13,14 +15,18 @@ public class IdentityService : IIdentityService
         private readonly UserManager<AppUser> _userManager;
         private readonly IUserClaimsPrincipalFactory<AppUser> _claimsPrincipalFactory;
         private readonly IAuthorizationService _authorizationService;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IAppDbContext _context;
     #endregion
 
     #region  Constructors
-        public IdentityService(UserManager<AppUser> userManager, IUserClaimsPrincipalFactory<AppUser> claimsPrincipalFactory, IAuthorizationService authorizationService)
+        public IdentityService(UserManager<AppUser> userManager, IUserClaimsPrincipalFactory<AppUser> claimsPrincipalFactory, IAuthorizationService authorizationService,RoleManager<IdentityRole> roleManager,IAppDbContext context)
         {
             _userManager = userManager;
             _claimsPrincipalFactory = claimsPrincipalFactory;
             _authorizationService = authorizationService;
+            _roleManager = roleManager;
+            _context  = context;
         }
     #endregion
 
@@ -80,5 +86,63 @@ public class IdentityService : IIdentityService
         var user =await _userManager.FindByIdAsync(userId);
         return user !=null && await _userManager.IsInRoleAsync(user,role);
 
+    }
+
+    public async Task<Result<Guid>> RegisterAsync(
+        string email,
+        string password,
+        string firstName,
+        string lastName,
+        string phoneNumber,
+        string? companyPosition,
+        CancellationToken cancellationToken)
+    {
+        var existingUser = await _userManager.FindByEmailAsync(email);
+        if (existingUser != null)
+        {
+            return IdentityErrors.EmailAlreadyExists;
+        }
+
+        var appUser = new AppUser
+        {
+            Id = Guid.NewGuid().ToString(),
+            Email = email,
+            UserName = email,
+            EmailConfirmed = true
+        };
+
+        var createResult = await _userManager.CreateAsync(appUser, password);
+        if (!createResult.Succeeded)
+        {
+            return IdentityErrors.UserCreationFailed;
+        }
+
+        var businessOwnerRole = await _roleManager.FindByNameAsync(nameof(Role.EntrepriseOwner));
+        if (businessOwnerRole == null)
+        {
+            businessOwnerRole = new IdentityRole(nameof(Role.EntrepriseOwner));
+            await _roleManager.CreateAsync(businessOwnerRole);
+        }
+
+        await _userManager.AddToRoleAsync(appUser, businessOwnerRole.Name);
+
+        var businessOwnerResult = BusinessOwner.Create(
+            Guid.Parse(appUser.Id),
+            firstName,
+            lastName,
+            phoneNumber,
+            companyPosition,
+            Role.EntrepriseOwner);
+
+        if (businessOwnerResult.IsError)
+        {
+            await _userManager.DeleteAsync(appUser);
+            return businessOwnerResult.Errors;
+        }
+
+        _context.BusinessOwners.Add(businessOwnerResult.Value);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return businessOwnerResult.Value.Id;
     }
 }

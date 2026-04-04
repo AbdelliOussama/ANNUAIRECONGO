@@ -1,17 +1,6 @@
-using ANNUAIRECONGO.Domain.Common.Results;
 using FluentValidation;
-using MediatR;
 
 namespace ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
-
-public sealed record RegisterCommand(
-    string Email,
-    string Password,
-    string FirstName,
-    string LastName,
-    string PhoneNumber,
-    string? CompanyPosition
-) : IRequest<Result<Guid>>;
 
 public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
@@ -33,21 +22,5 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
 
         RuleFor(x => x.PhoneNumber)
             .NotEmpty().WithMessage("Phone number is required.");
-    }
-}
-
-public sealed class RegisterCommandHandler(
-    IRegistrationService registrationService) : IRequestHandler<RegisterCommand, Result<Guid>>
-{
-    public async Task<Result<Guid>> Handle(RegisterCommand request, CancellationToken cancellationToken)
-    {
-        return await registrationService.RegisterAsync(
-            request.Email,
-            request.Password,
-            request.FirstName,
-            request.LastName,
-            request.PhoneNumber,
-            request.CompanyPosition,
-            cancellationToken);
     }
 }

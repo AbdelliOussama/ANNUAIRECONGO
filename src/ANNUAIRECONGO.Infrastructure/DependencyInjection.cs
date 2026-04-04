@@ -78,8 +78,6 @@ public static class DependencyInjection
 
         services.AddTransient<IIdentityService, IdentityService>();
 
-        services.AddScoped<IRegistrationService, RegistrationService>();
-
         services.AddHybridCache(options => options.DefaultEntryOptions = new HybridCacheEntryOptions
         {
             Expiration = TimeSpan.FromMinutes(10), // L2, L3

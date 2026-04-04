@@ -10,6 +10,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ANNUAIRECONGO.Contracts.Requests.Identity;
 namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("identity")]
@@ -73,9 +74,9 @@ public sealed class IdentityController(ISender sender) : ApiController
     [EndpointSummary("Registers a new user and creates associated business owner profile.")]
     [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
     [EndpointName("Register")]
-    public async Task<IActionResult> Register([FromBody] RegisterCommand request, CancellationToken ct)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(request, ct);
+        var result = await sender.Send(new RegisterCommand(request.Email,request.Password,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition));
         return result.Match(
             userId => Created($"identity/{userId}", userId),
             Problem);
