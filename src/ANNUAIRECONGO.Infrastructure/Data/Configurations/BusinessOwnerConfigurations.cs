@@ -30,6 +30,8 @@ public class BusinessOwnerConfigurations : IEntityTypeConfiguration<BusinessOwne
         builder.Property(b => b.IsVerified)
             .IsRequired();
 
+        builder.Ignore(b => b.Role);
+
         builder.HasMany(b => b.Companies)
             .WithOne(c => c.Owner)
             .HasForeignKey(c => c.OwnerId)
