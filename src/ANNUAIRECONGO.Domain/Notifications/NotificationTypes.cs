@@ -12,4 +12,5 @@ public static class NotificationTypes
     public const string SubscriptionExpired   = "subscription_expired";
     public const string PaymentSucceeded      = "payment_succeeded";
     public const string PaymentFailed         = "payment_failed";
+    public const string SubscriptionCancelled = "subscription_cancelled";
 }
