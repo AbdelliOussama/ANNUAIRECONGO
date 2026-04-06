@@ -30,6 +30,7 @@ public static class CompanyMapper
             IsFeatured = company.IsFeatured,
             ActiveSubscriptionId = company.ActiveSubscriptionId,
             Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
+
             // Services = company.Services.Select(s => new ServiceDto
             // {
             //     Id = s.Id,

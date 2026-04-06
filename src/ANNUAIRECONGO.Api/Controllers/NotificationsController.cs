@@ -1,7 +1,6 @@
 using ANNUAIRECONGO.Application.Features.Notifications.Commands.DeleteNotification;
 using ANNUAIRECONGO.Application.Features.Notifications.Commands.MarkAllRead;
 using ANNUAIRECONGO.Application.Features.Notifications.Commands.MarkAsRead;
-using ANNUAIRECONGO.Application.Features.Notifications.Dtos;
 using ANNUAIRECONGO.Application.Features.Notifications.Queries.GetMyNotifications;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using Asp.Versioning;

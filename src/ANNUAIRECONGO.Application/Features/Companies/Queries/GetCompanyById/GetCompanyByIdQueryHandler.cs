@@ -21,9 +21,8 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
             .ThenInclude(c => c.Region)
             .Include(c => c.CompanySectors)
             .ThenInclude(cs => cs.Sector)
-            .Include(c =>c.Services)
+            // .Include(c =>c.Services)
             .FirstOrDefaultAsync(c => c.Id == request.id, cancellationToken);
-            
         if (company is null)
         {
             logger.LogWarning("Company with id {Id} not found", request.id);

@@ -67,7 +67,6 @@ public sealed class SubscriptionsController(ISender sender, IUser currentUser) :
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanySubscriptions([FromRoute] Guid companyId, CancellationToken ct)
     {
-        // Verify the company belongs to the current user
 
         var result = await sender.Send(new GetCompanySubscriptionsQuery(companyId), ct);
         return result.Match(

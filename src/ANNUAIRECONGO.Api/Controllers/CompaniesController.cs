@@ -476,7 +476,7 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> AddDocument(Guid id, [FromBody] AddDocumentRequest commandRequest, CancellationToken ct)
     {
-        var result = await sender.Send(new AddDocumentCommand(id,commandRequest.DocumentUrl,commandRequest.DocumentType,commandRequest.Description), ct);
+        var result = await sender.Send(new AddDocumentCommand(id,commandRequest.DocumentUrl,commandRequest.DocumentType,commandRequest.Description,commandRequest.IsPublic), ct);
         return result.Match(
             response => Ok(response),
             Problem

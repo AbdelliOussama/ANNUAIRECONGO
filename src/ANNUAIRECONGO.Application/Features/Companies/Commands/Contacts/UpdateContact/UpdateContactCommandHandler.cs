@@ -41,7 +41,6 @@ public sealed record UpdateContactCommandHandler(
             _logger.LogWarning("Contact with id {ContactId} not found on company with id {CompanyId}", request.ContactId, request.CompanyId);
             return CompanyErrors.ContactNotFound;
         }
-        contact.Update(request.Type, request.Value,request.IsPrimary);
         await _context.CompanyContacts
             .Where(c => c.Id == request.ContactId)
             .ExecuteUpdateAsync(s => s

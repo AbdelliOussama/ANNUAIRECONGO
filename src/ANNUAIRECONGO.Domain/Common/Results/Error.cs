@@ -1,3 +1,4 @@
+using AnnuaireCongo.Domain.Notifications;
 using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Domain.Common.Results;
@@ -43,4 +44,5 @@ public readonly record struct Error
 
     public static Error Create(int type, string code, string description)
         => new(code, description, (ErrorKind)type);
+
 }
