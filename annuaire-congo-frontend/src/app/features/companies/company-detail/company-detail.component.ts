@@ -1,0 +1,593 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { CompanyService } from '@core/services/company.service';
+import { Company, ContactType } from '@core/models/company.model';
+import { AuthService } from '@core/services/auth.service';
+
+@Component({
+  selector: 'app-company-detail',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatDividerModule,
+    MatMenuModule,
+    MatTooltipModule
+  ],
+  template: `
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+      </div>
+    } @else if (company()) {
+      <div class="company-detail-container">
+        <div class="company-header">
+          @if (company()!.coverUrl) {
+            <div class="cover-image" [style.backgroundImage]="'url(' + company()!.coverUrl + ')'"></div>
+          } @else {
+            <div class="cover-image-placeholder">
+              <mat-icon>business</mat-icon>
+            </div>
+          }
+          <div class="company-info">
+            @if (company()!.logoUrl) {
+              <img [src]="company()!.logoUrl" [alt]="company()!.name" class="company-logo">
+            }
+            <div class="info-content">
+              <h1>{{ company()!.name }}</h1>
+              <div class="sectors">
+                @for (sector of company()!.sectors; track sector.sectorId) {
+                  <mat-chip>{{ sector.name }}</mat-chip>
+                }
+              </div>
+              @if (company()!.cityName) {
+                <div class="location">
+                  <mat-icon>location_on</mat-icon>
+                  {{ company()!.address }}{{ company()!.address && company()!.cityName ? ', ' : '' }}{{ company()!.cityName }}
+                </div>
+              }
+            </div>
+            @if (company()!.isFeatured) {
+              <div class="featured-badge">
+                <mat-icon>star</mat-icon>
+                Featured Company
+              </div>
+            }
+          </div>
+        </div>
+
+        <mat-tab-group class="company-tabs">
+          <mat-tab label="About">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  <h3>Description</h3>
+                  <p>{{ company()!.description || 'No description available.' }}</p>
+                  
+                  <mat-divider></mat-divider>
+                  
+                  <h3>Services</h3>
+                  @if (company()!.services.length > 0) {
+                    <ul class="services-list">
+                      @for (service of company()!.services; track service.id) {
+                        <li>
+                          <strong>{{ service.title }}</strong>
+                          @if (service.description) {
+                            <p>{{ service.description }}</p>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="empty-text">No services registered.</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Contact">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  <h3>Contact Information</h3>
+                  @if (company()!.contacts.length > 0) {
+                    <div class="contacts-list">
+                      @for (contact of company()!.contacts; track contact.id) {
+                        <div class="contact-item" (click)="contactAction(contact)">
+                          <mat-icon>{{ getContactIcon(contact.type) }}</mat-icon>
+                          <div class="contact-info">
+                            <span class="contact-type">{{ getContactTypeName(contact.type) }}</span>
+                            <span class="contact-value">{{ contact.value }}</span>
+                            @if (contact.isPrimary) {
+                              <span class="primary-badge">Primary</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="empty-text">No contacts registered.</p>
+                  }
+
+                  @if (company()!.address) {
+                    <mat-divider></mat-divider>
+                    <h3>Address</h3>
+                    <div class="address">
+                      <mat-icon>place</mat-icon>
+                      <span>{{ company()!.address }}{{ company()!.cityName ? ', ' + company()!.cityName : '' }}</span>
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Gallery">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  <h3>Photos</h3>
+                  @if (company()!.images.length > 0) {
+                    <div class="gallery-grid">
+                      @for (image of company()!.images; track image.id) {
+                        <div class="gallery-item">
+                          <img [src]="image.imageUrl" [alt]="image.caption || company()!.name">
+                          @if (image.caption) {
+                            <span class="caption">{{ image.caption }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="empty-text">No photos available.</p>
+                  }
+
+                  <mat-divider></mat-divider>
+
+                  <h3>Documents</h3>
+                  @if (company()!.documents.length > 0) {
+                    <div class="documents-list">
+                      @for (doc of company()!.documents; track doc.id) {
+                        <a [href]="doc.documentUrl" target="_blank" class="document-item">
+                          <mat-icon>description</mat-icon>
+                          <span>{{ doc.documentType }}</span>
+                          @if (doc.description) {
+                            <span class="doc-description">{{ doc.description }}</span>
+                          }
+                        </a>
+                      }
+                    </div>
+                  } @else {
+                    <p class="empty-text">No documents available.</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    } @else {
+      <div class="not-found">
+        <mat-icon>error_outline</mat-icon>
+        <h2>Company not found</h2>
+        <button mat-raised-button color="primary" routerLink="/">Back to Home</button>
+      </div>
+    }
+  `,
+  styles: [`
+    .loading-container, .not-found {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: rgba(0, 0, 0, 0.38);
+      }
+    }
+
+    .company-detail-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .company-header {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .cover-image, .cover-image-placeholder {
+      height: 200px;
+      border-radius: 12px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .cover-image-placeholder {
+      background: linear-gradient(135deg, #1e88e5, #43a047);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: white;
+        opacity: 0.7;
+      }
+    }
+
+    .company-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      margin-top: -40px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .company-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: white;
+      border: 2px solid #e0e0e0;
+    }
+
+    .info-content {
+      flex: 1;
+      padding-top: 40px;
+
+      h1 {
+        font-size: 28px;
+        font-weight: 500;
+        margin-bottom: 12px;
+      }
+    }
+
+    .sectors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: rgba(0, 0, 0, 0.6);
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .featured-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      background: #ff9800;
+      color: white;
+      border-radius: 20px;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .company-tabs {
+      margin-bottom: 24px;
+    }
+
+    .tab-content {
+      padding: 24px 0;
+    }
+
+    mat-card {
+      border-radius: 12px !important;
+    }
+
+    mat-card-content {
+      h3 {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: #1e88e5;
+      }
+
+      p {
+        color: rgba(0, 0, 0, 0.87);
+        line-height: 1.6;
+      }
+    }
+
+    mat-divider {
+      margin: 24px 0;
+    }
+
+    .services-list {
+      list-style: none;
+      padding: 0;
+
+      li {
+        padding: 12px;
+        background: #f5f5f5;
+        border-radius: 8px;
+        margin-bottom: 12px;
+
+        strong {
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
+
+    .contacts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #e3f2fd;
+      }
+
+      mat-icon {
+        color: #1e88e5;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-type {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .contact-value {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .primary-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: #43a047;
+      color: white;
+      border-radius: 10px;
+      width: fit-content;
+      margin-top: 4px;
+    }
+
+    .address {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+
+      mat-icon {
+        color: #1e88e5;
+      }
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .gallery-item {
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+
+      img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+      }
+
+      .caption {
+        display: block;
+        padding: 8px;
+        font-size: 12px;
+        background: #f5f5f5;
+      }
+    }
+
+    .documents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .document-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #e3f2fd;
+      }
+
+      mat-icon {
+        color: #1e88e5;
+      }
+
+      .doc-description {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .empty-text {
+      color: rgba(0, 0, 0, 0.38);
+      font-style: italic;
+    }
+
+    @media (max-width: 600px) {
+      .company-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .info-content {
+        padding-top: 16px;
+      }
+
+      .location {
+        justify-content: center;
+      }
+    }
+  `]
+})
+export class CompanyDetailComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly companyService = inject(CompanyService);
+  private readonly authService = inject(AuthService);
+
+  company = signal<Company | null>(null);
+  isLoading = signal<boolean>(true);
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadCompany(id);
+    } else {
+      this.isLoading.set(false);
+    }
+  }
+
+  loadCompany(id: string): void {
+    this.companyService.getCompanyById(id).subscribe({
+      next: (data) => {
+        this.company.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading company:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  getContactIcon(type: ContactType): string {
+    const icons: Record<number, string> = {
+      [ContactType.Phone]: 'phone',
+      [ContactType.Email]: 'email',
+      [ContactType.Website]: 'language',
+      [ContactType.Facebook]: 'facebook',
+      [ContactType.Instagram]: 'camera_alt',
+      [ContactType.LinkedIn]: 'business',
+      [ContactType.WhatsApp]: 'chat',
+      [ContactType.Twitter]: 'alternate_email'
+    };
+    return icons[type] || 'contact_phone';
+  }
+
+  getContactTypeName(type: ContactType): string {
+    const names: Record<number, string> = {
+      [ContactType.Phone]: 'Phone',
+      [ContactType.Email]: 'Email',
+      [ContactType.Website]: 'Website',
+      [ContactType.Facebook]: 'Facebook',
+      [ContactType.Instagram]: 'Instagram',
+      [ContactType.LinkedIn]: 'LinkedIn',
+      [ContactType.WhatsApp]: 'WhatsApp',
+      [ContactType.Twitter]: 'Twitter'
+    };
+    return names[type] || 'Contact';
+  }
+
+  contactAction(contact: { type: ContactType; value: string }): void {
+    switch (contact.type) {
+      case ContactType.Phone:
+      case ContactType.WhatsApp:
+        window.open(`tel:${contact.value}`);
+        break;
+      case ContactType.Email:
+        window.open(`mailto:${contact.value}`);
+        break;
+      case ContactType.Website:
+        let url = contact.value;
+        if (!url.startsWith('http')) {
+          url = 'https://' + url;
+        }
+        window.open(url, '_blank');
+        break;
+      case ContactType.Facebook:
+      case ContactType.Instagram:
+      case ContactType.LinkedIn:
+      case ContactType.Twitter:
+        window.open(contact.value, '_blank');
+        break;
+    }
+  }
+}

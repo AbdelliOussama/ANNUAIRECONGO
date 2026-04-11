@@ -178,7 +178,8 @@ public static class DependencyInjection
                 .WithOrigins(appSettings.AllowedOrigins!)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials()));
+                .AllowCredentials()
+                .SetIsOriginAllowed(_ => true)));
 
         return services;
     }
