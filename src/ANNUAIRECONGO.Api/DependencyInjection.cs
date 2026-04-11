@@ -56,14 +56,14 @@ public static class DependencyInjection
         .WithTracing(tracing =>
         {
             tracing.AddAspNetCoreInstrumentation()
-                   .AddHttpClientInstrumentation();
+                    .AddHttpClientInstrumentation();
 
             tracing.AddOtlpExporter();
         })
         .WithMetrics(metrics =>
         {
             metrics.AddAspNetCoreInstrumentation()
-                   .AddHttpClientInstrumentation();
+                    .AddHttpClientInstrumentation();
 
             metrics.AddOtlpExporter()
                    .AddPrometheusExporter(); // endpoint exposed via app.MapPrometheusScrapingEndpoint()
