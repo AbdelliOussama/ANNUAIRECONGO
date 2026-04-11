@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -7,7 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '@core/services/auth.service';
+import { NotificationService } from '@core/services/notification.service';
+import { Notification } from '@core/models/company.model';
 
 @Component({
   selector: 'app-layout',
@@ -20,7 +23,8 @@ import { AuthService } from '@core/services/auth.service';
     MatIconModule,
     MatMenuModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+    MatBadgeModule
   ],
   template: `
     <mat-sidenav-container class="sidenav-container">
@@ -48,6 +52,15 @@ import { AuthService } from '@core/services/auth.service';
             </a>
           }
           @if (authService.isAuthenticated()) {
+            <mat-divider></mat-divider>
+            <a mat-list-item routerLink="/notifications" (click)="sidenav.close()">
+              <mat-icon matListItemIcon [matBadge]="unreadCount() > 0 ? unreadCount() : ''" matBadgeColor="warn">notifications</mat-icon>
+              <span matListItemTitle>Notifications</span>
+            </a>
+            <a mat-list-item routerLink="/profile" (click)="sidenav.close()">
+              <mat-icon matListItemIcon>person</mat-icon>
+              <span matListItemTitle>Profile</span>
+            </a>
             @if (authService.isAdmin()) {
               <mat-divider></mat-divider>
               <div class="sidenav-section-title">Administration</div>
@@ -55,9 +68,17 @@ import { AuthService } from '@core/services/auth.service';
                 <mat-icon matListItemIcon>category</mat-icon>
                 <span matListItemTitle>Sectors</span>
               </a>
+              <a mat-list-item routerLink="/admin/geography" (click)="sidenav.close()">
+                <mat-icon matListItemIcon>public</mat-icon>
+                <span matListItemTitle>Geography</span>
+              </a>
               <a mat-list-item routerLink="/admin/companies" (click)="sidenav.close()">
                 <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
-                <span matListItemTitle>Manage Companies</span>
+                <span matListItemTitle>Companies</span>
+              </a>
+              <a mat-list-item routerLink="/admin/plans" (click)="sidenav.close()">
+                <mat-icon matListItemIcon>layers</mat-icon>
+                <span matListItemTitle>Plans</span>
               </a>
             }
             @if (authService.isEntrepriseOwner()) {
@@ -66,10 +87,6 @@ import { AuthService } from '@core/services/auth.service';
               <a mat-list-item routerLink="/dashboard" (click)="sidenav.close()">
                 <mat-icon matListItemIcon>dashboard</mat-icon>
                 <span matListItemTitle>Dashboard</span>
-              </a>
-              <a mat-list-item routerLink="/my-company" (click)="sidenav.close()">
-                <mat-icon matListItemIcon>business</mat-icon>
-                <span matListItemTitle>My Profile</span>
               </a>
             }
           }
@@ -84,6 +101,9 @@ import { AuthService } from '@core/services/auth.service';
           <span class="logo" routerLink="/">Annuaire Congo</span>
           <span class="spacer"></span>
           @if (authService.isAuthenticated()) {
+            <button mat-icon-button routerLink="/notifications" [matBadge]="unreadCount() > 0 ? unreadCount() : ''" matBadgeColor="warn">
+              <mat-icon>notifications</mat-icon>
+            </button>
             <button mat-button [matMenuTriggerFor]="userMenu">
               <mat-icon>account_circle</mat-icon>
               {{ authService.currentUser()?.firstName }}
@@ -92,6 +112,10 @@ import { AuthService } from '@core/services/auth.service';
               <button mat-menu-item routerLink="/dashboard">
                 <mat-icon>dashboard</mat-icon>
                 <span>Dashboard</span>
+              </button>
+              <button mat-menu-item routerLink="/profile">
+                <mat-icon>person</mat-icon>
+                <span>Profile</span>
               </button>
               <button mat-menu-item (click)="logout()">
                 <mat-icon>logout</mat-icon>
@@ -115,7 +139,7 @@ import { AuthService } from '@core/services/auth.service';
         </main>
 
         <footer class="footer">
-          <p>&copy; 2024 Annuaire Congo. All rights reserved.</p>
+          <p>&copy; 2026 Annuaire Congo. All rights reserved.</p>
         </footer>
       </mat-sidenav-content>
     </mat-sidenav-container>
@@ -134,7 +158,7 @@ import { AuthService } from '@core/services/auth.service';
       padding: 24px 16px;
       background: linear-gradient(135deg, #1e88e5, #43a047);
       color: white;
-      
+
       h2 {
         margin: 0;
         font-size: 20px;
@@ -178,7 +202,7 @@ import { AuthService } from '@core/services/auth.service';
       text-align: center;
       background: #fff;
       border-top: 1px solid rgba(0, 0, 0, 0.12);
-      
+
       p {
         margin: 0;
         color: rgba(0, 0, 0, 0.54);
@@ -191,8 +215,23 @@ import { AuthService } from '@core/services/auth.service';
     }
   `]
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit {
   authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+
+  unreadCount = signal(0);
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      this.loadNotifications();
+    }
+  }
+
+  loadNotifications(): void {
+    this.notificationService.getMyNotifications().subscribe(data => {
+      this.unreadCount.set(data.filter(n => !n.isRead).length);
+    });
+  }
 
   logout(): void {
     this.authService.logout();

@@ -1,11 +1,11 @@
 {
   "/api": {
-    "target": "http://localhost:5262",
+    "target": "https://localhost:7139",
     "secure": false,
     "changeOrigin": true
   },
   "/identity": {
-    "target": "http://localhost:5262",
+    "target": "https://localhost:7139",
     "secure": false,
     "changeOrigin": true
   }

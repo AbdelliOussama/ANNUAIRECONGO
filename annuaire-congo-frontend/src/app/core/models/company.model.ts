@@ -94,12 +94,109 @@ export enum CompanyStatus {
 
 export interface Subscription {
   id: string;
+  companyId: string;
   planId: string;
-  planName: string;
+  planName: PlanName;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
+  payments: Payment[];
+}
+
+export enum PlanName {
+  Free = 0,
+  Basic = 1,
+  Premium = 2,
+  Enterprise = 3
+}
+
+export enum PaymentMethod {
+  None = 0,
+  CreditCard = 1,
+  MobileMoney = 2,
+  BankTransfer = 3
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  paymentGatewayReference?: string;
+  createdAt: string;
+}
+
+export enum PaymentStatus {
+  Pending = 0,
+  Processing = 1,
+  Completed = 2,
+  Failed = 3,
+  Refunded = 4,
+  Rejected = 5
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  createdAt: string;
+  link?: string;
+}
+
+export enum NotificationType {
+  Info = 0,
+  Success = 1,
+  Warning = 2,
+  Error = 3
+}
+
+export interface PlatformStats {
+  totalCompanies: number;
+  totalValidatedCompanies: number;
+  totalBusinessOwners: number;
+  totalRegions: number;
+  totalSectors: number;
+}
+
+export interface RegionStats {
+  regionId: string;
+  regionName: string;
+  companyCount: number;
+}
+
+export interface SectorStats {
+  sectorId: string;
+  sectorName: string;
+  companyCount: number;
+}
+
+export interface BusinessOwner {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  companyPosition?: string;
+  createdAt: string;
+  companyCount?: number;
+}
+
+export interface Plan {
+  id: string;
+  name: PlanName;
+  price: number;
+  durationDays: number;
+  maxImages: number;
+  maxDocuments: number;
+  hasAnalytics: boolean;
+  hasFeaturedBadge: boolean;
+  searchPriority: number;
+  isActive: boolean;
 }
 
 export interface PaginatedResponse<T> {

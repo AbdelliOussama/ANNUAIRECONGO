@@ -86,8 +86,11 @@ export class AuthService {
   }
 
   private storeTokens(response: TokenResponse): void {
-    localStorage.setItem(TOKEN_KEY, response.accessToken || '');
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken || '');
+    const token = response.accessToken?.trim() || '';
+    const refreshToken = response.refreshToken?.trim() || '';
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    console.log('[AuthService] Token stored, length:', token.length);
   }
 
   private getStoredUser(): User | null {
