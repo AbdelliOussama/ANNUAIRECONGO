@@ -156,7 +156,7 @@ import { Notification } from '@core/models/company.model';
 
     .sidenav-header {
       padding: 24px 16px;
-      background: linear-gradient(135deg, #1e88e5, #43a047);
+      background: linear-gradient(135deg, #f57c00, #2e7d32);
       color: white;
 
       h2 {

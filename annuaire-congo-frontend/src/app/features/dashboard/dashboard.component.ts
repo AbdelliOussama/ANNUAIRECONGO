@@ -170,7 +170,7 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
       .stat-value {
         font-size: 36px;
         font-weight: bold;
-        color: #1976d2;
+        color: #f57c00;
       }
     }
 
@@ -193,7 +193,7 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
       
       .count {
         font-weight: bold;
-        color: #1976d2;
+        color: #f57c00;
       }
     }
 

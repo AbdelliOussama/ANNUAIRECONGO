@@ -149,7 +149,7 @@ import { AuthService } from '@core/services/auth.service';
       font-size: 14px;
 
       a {
-        color: #1e88e5;
+        color: #f57c00;
         text-decoration: none;
         font-weight: 500;
         

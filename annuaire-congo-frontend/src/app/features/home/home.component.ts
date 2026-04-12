@@ -14,25 +14,27 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CompanyService } from '@core/services/company.service';
 import { SectorService } from '@core/services/sector.service';
 import { GeographyService } from '@core/services/sector.service';
-import { Company, Sector, Region } from '@core/models/company.model';
+import { Company, Sector, Region, City } from '@core/models/company.model';
+import { MapSelectorComponent } from '@shared/map/map-selector.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatPaginatorModule
-  ],
+   imports: [
+     CommonModule,
+     RouterModule,
+     FormsModule,
+     MatCardModule,
+     MatButtonModule,
+     MatIconModule,
+     MatInputModule,
+     MatFormFieldModule,
+     MatSelectModule,
+     MatChipsModule,
+     MatProgressSpinnerModule,
+     MatPaginatorModule,
+     MapSelectorComponent
+   ],
   template: `
     <div class="home-container">
       <section class="hero-section">
@@ -50,51 +52,34 @@ import { Company, Sector, Region } from '@core/models/company.model';
               Search
             </button>
           </div>
+        </div>
+      </section>
 
-          <div class="quick-filters">
-            @for (sector of sectors().slice(0, 6); track sector.sectorId) {
-              <mat-chip-option (click)="filterBySector(sector.sectorId)">
-                {{ sector.name }}
-              </mat-chip-option>
-            }
-          </div>
+      <section class="map-section">
+        <div class="map-container">
+          <app-map-selector 
+            [regions]="regions()" 
+            [cities]="cities()"
+            (regionSelected)="onRegionSelectedFromMap($event)"
+            (citySelected)="onCitySelectedFromMap($event)"
+          ></app-map-selector>
         </div>
       </section>
 
       <section class="companies-section">
         <div class="section-header">
           <h2>Companies</h2>
-          <div class="filters">
-            <mat-form-field appearance="outline">
-              <mat-label>Sector</mat-label>
-              <mat-select [(ngModel)]="selectedSectorId" (selectionChange)="searchCompanies()">
-                <mat-option [value]="null">All sectors</mat-option>
-                @for (sector of sectors(); track sector.sectorId) {
-                  <mat-option [value]="sector.sectorId">{{ sector.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Region</mat-label>
-              <mat-select [(ngModel)]="selectedRegionId" (selectionChange)="onRegionChange()">
-                <mat-option [value]="null">All regions</mat-option>
-                @for (region of regions(); track region.id) {
-                  <mat-option [value]="region.id">{{ region.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>City</mat-label>
-              <mat-select [(ngModel)]="selectedCityId" [disabled]="!selectedRegionId" (selectionChange)="searchCompanies()">
-                <mat-option [value]="null">All cities</mat-option>
-                @for (city of cities(); track city.id) {
-                  <mat-option [value]="city.id">{{ city.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
+         <div class="filters">
+           <mat-form-field appearance="outline">
+             <mat-label>Sector</mat-label>
+             <mat-select [(ngModel)]="selectedSectorId" (selectionChange)="searchCompanies()">
+               <mat-option [value]="null">All sectors</mat-option>
+               @for (sector of sectors(); track sector.sectorId) {
+                 <mat-option [value]="sector.sectorId">{{ sector.name }}</mat-option>
+               }
+             </mat-select>
+           </mat-form-field>
+         </div>
         </div>
 
         @if (isLoading()) {
@@ -111,20 +96,22 @@ import { Company, Sector, Region } from '@core/models/company.model';
           <div class="companies-grid">
             @for (company of companies(); track company.id) {
               <mat-card class="company-card" [routerLink]="['/companies', company.id]">
-                @if (company.coverUrl) {
-                  <img mat-card-image [src]="company.coverUrl" [alt]="company.name" class="company-cover">
-                } @else {
-                  <div class="company-cover-placeholder">
-                    <mat-icon>business</mat-icon>
-                  </div>
-                }
-                <mat-card-content>
+                <div class="cover-container">
+                  @if (company.coverUrl) {
+                    <img [src]="company.coverUrl" [alt]="company.name" class="company-cover">
+                  } @else {
+                    <div class="company-cover-placeholder">
+                      <mat-icon>business</mat-icon>
+                    </div>
+                  }
                   @if (company.logoUrl) {
                     <img [src]="company.logoUrl" [alt]="company.name" class="company-logo">
                   }
+                </div>
+                <mat-card-content>
                   <h3>{{ company.name }}</h3>
                   @if (company.description) {
-                    <p class="description">{{ company.description | slice:0:100 }}...</p>
+                    <p class="description">{{ company.description | slice:0:80 }}...</p>
                   }
                   <div class="sectors">
                     @for (sector of company.sectors.slice(0, 2); track sector.sectorId) {
@@ -166,10 +153,25 @@ import { Company, Sector, Region } from '@core/models/company.model';
     }
 
     .hero-section {
-      background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+      background: linear-gradient(135deg, #f57c00 0%, #e65100 50%, #bf360c 100%);
       padding: 60px 24px;
       text-align: center;
       color: white;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(255, 152, 0, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(46, 125, 50, 0.2) 0%, transparent 50%);
+        pointer-events: none;
+      }
     }
 
     .hero-content {
@@ -223,6 +225,20 @@ import { Company, Sector, Region } from '@core/models/company.model';
       padding: 32px 24px;
     }
 
+    .map-section {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+
+      .map-container {
+        height: 400px;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+    }
+
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -248,61 +264,99 @@ import { Company, Sector, Region } from '@core/models/company.model';
     }
 
     .companies-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 24px;
-      margin-bottom: 24px;
-    }
+       display: grid;
+       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+       gap: 20px;
+       margin-bottom: 24px;
+     }
 
     .company-card {
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      border-radius: 12px !important;
-      overflow: hidden;
+       cursor: pointer;
+       transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+       border-radius: 16px !important;
+       overflow: hidden;
+       border: 1px solid rgba(0, 0, 0, 0.08);
+       background: white;
+       height: 100%;
+       display: flex;
+       flex-direction: column;
 
-      &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+       &:hover {
+         transform: translateY(-6px);
+         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+         border-color: rgba(30, 136, 229, 0.2);
+       }
+
+       &:active {
+         transform: translateY(-2px);
+       }
+
+       .cover-container {
+         position: relative;
+         height: 140px;
+         overflow: hidden;
+       }
+
+       .company-cover {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+       }
+
+       .company-logo {
+         position: absolute;
+         bottom: -30px;
+         left: 16px;
+         width: 60px;
+         height: 60px;
+         border-radius: 8px;
+         object-fit: cover;
+         background: white;
+         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+         border: 3px solid white;
+       }
+     }
+
+      .company-cover {
+        height: 160px;
+        object-fit: cover;
+        background-position: center;
+        background-repeat: no-repeat;
       }
-    }
 
-    .company-cover {
-      height: 140px;
-      object-fit: cover;
-    }
+      .company-cover-placeholder {
+        height: 160px;
+        background: linear-gradient(135deg, #fff8e1, #ffecb3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    .company-cover-placeholder {
-      height: 140px;
-      background: linear-gradient(135deg, #e3f2fd, #c8e6c9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      mat-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-        color: #1e88e5;
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          color: #ff9800;
+        }
       }
-    }
 
     mat-card-content {
-      padding: 16px !important;
-      position: relative;
+       padding: 16px !important;
+       position: relative;
+       min-height: 100px;
 
-      h3 {
-        font-size: 18px;
-        font-weight: 500;
-        margin-bottom: 8px;
-        margin-top: 32px;
-      }
+       h3 {
+         font-size: 18px;
+         font-weight: 500;
+         margin-bottom: 8px;
+       }
 
-      .description {
-        font-size: 14px;
-        color: rgba(0, 0, 0, 0.6);
-        margin-bottom: 12px;
-      }
-    }
+       .description {
+         font-size: 14px;
+         color: #666;
+         margin-bottom: 12px;
+         line-height: 1.4;
+       }
+     }
 
     .company-logo {
       position: absolute;
@@ -324,11 +378,14 @@ import { Company, Sector, Region } from '@core/models/company.model';
     }
 
     .sector-tag {
-      font-size: 12px;
-      padding: 4px 12px;
-      background: #e3f2fd;
-      color: #1e88e5;
-      border-radius: 16px;
+      font-size: 11px;
+      padding: 3px 10px;
+      background: #fff3e0;
+      color: #e65100;
+      border-radius: 14px;
+      font-weight: 500;
+      border: 1px solid #ffcc80;
+      white-space: nowrap;
     }
 
     .location {
@@ -410,7 +467,7 @@ export class HomeComponent implements OnInit {
   companies = signal<Company[]>([]);
   sectors = signal<Sector[]>([]);
   regions = signal<Region[]>([]);
-  cities = signal<{ id: string; name: string }[]>([]);
+  cities = signal<City[]>([]);
   totalCount = signal<number>(0);
   isLoading = signal<boolean>(false);
 
@@ -473,17 +530,36 @@ export class HomeComponent implements OnInit {
     this.searchCompanies();
   }
 
-  onRegionChange(): void {
-    this.selectedCityId = null;
-    this.cities.set([]);
-    if (this.selectedRegionId) {
-      this.geographyService.getCitiesByRegion(this.selectedRegionId).subscribe({
-        next: (data) => this.cities.set(data),
-        error: (err) => console.error('Error loading cities:', err)
-      });
-    }
-    this.searchCompanies();
-  }
+   onRegionChange(): void {
+     this.selectedCityId = null;
+     this.cities.set([]);
+     if (this.selectedRegionId) {
+       this.geographyService.getCitiesByRegion(this.selectedRegionId).subscribe({
+         next: (data) => this.cities.set(data),
+         error: (err) => console.error('Error loading cities:', err)
+       });
+     }
+     this.searchCompanies();
+   }
+
+   onRegionSelectedFromMap(regionId: string): void {
+     this.selectedRegionId = regionId;
+     this.selectedCityId = null;
+     this.cities.set([]);
+     if (regionId) {
+       this.geographyService.getCitiesByRegion(regionId).subscribe({
+         next: (data) => this.cities.set(data),
+         error: (err) => console.error('Error loading cities:', err)
+       });
+     }
+     this.searchCompanies();
+   }
+
+   onCitySelectedFromMap(selected: { regionId: string; cityId: string }): void {
+     this.selectedRegionId = selected.regionId;
+     this.selectedCityId = selected.cityId;
+     this.searchCompanies();
+   }
 
   onPageChange(event: PageEvent): void {
     this.pageNumber = event.pageIndex + 1;

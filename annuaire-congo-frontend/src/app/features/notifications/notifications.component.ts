@@ -80,7 +80,7 @@ import { Notification, NotificationType } from '@core/models/company.model';
     }
 
     .unread {
-      background: #e3f2fd;
+      background: #fff3e0;
     }
 
     mat-list-item {
@@ -88,10 +88,10 @@ import { Notification, NotificationType } from '@core/models/company.model';
       border-bottom: 1px solid #eee;
     }
 
-    .type-0 { color: #2196f3; }
-    .type-1 { color: #4caf50; }
-    .type-2 { color: #ff9800; }
-    .type-3 { color: #f44336; }
+    .type-0 { color: #1976d2; }
+    .type-1 { color: #2e7d32; }
+    .type-2 { color: #f57c00; }
+    .type-3 { color: #d32f2f; }
 
     .time {
       font-size: 12px;

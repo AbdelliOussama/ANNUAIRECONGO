@@ -10,6 +10,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CompanyService } from '@core/services/company.service';
 import { Company, ContactType } from '@core/models/company.model';
 import { AuthService } from '@core/services/auth.service';
@@ -28,7 +30,9 @@ import { AuthService } from '@core/services/auth.service';
     MatTabsModule,
     MatDividerModule,
     MatMenuModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   template: `
     @if (isLoading()) {
@@ -69,6 +73,10 @@ import { AuthService } from '@core/services/auth.service';
                 Featured Company
               </div>
             }
+            <button mat-button color="warn" class="report-btn" (click)="openReportDialog()">
+              <mat-icon>flag</mat-icon>
+              Report
+            </button>
           </div>
         </div>
 
@@ -242,16 +250,23 @@ import { AuthService } from '@core/services/auth.service';
     }
 
     .company-info {
-      display: flex;
-      align-items: flex-start;
-      gap: 24px;
-      margin-top: -40px;
-      padding: 24px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      position: relative;
-    }
+       display: flex;
+       align-items: flex-start;
+       gap: 24px;
+       margin-top: -40px;
+       padding: 24px;
+       background: white;
+       border-radius: 12px;
+       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+       position: relative;
+       flex-wrap: wrap;
+     }
+
+     .report-btn {
+       position: absolute;
+       bottom: 16px;
+       right: 16px;
+     }
 
     .company-logo {
       width: 100px;
@@ -512,9 +527,11 @@ export class CompanyDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly companyService = inject(CompanyService);
   private readonly authService = inject(AuthService);
+  private readonly snackBar = inject(MatSnackBar);
 
   company = signal<Company | null>(null);
   isLoading = signal<boolean>(true);
+  reportReason = '';
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -522,6 +539,20 @@ export class CompanyDetailComponent implements OnInit {
       this.loadCompany(id);
     } else {
       this.isLoading.set(false);
+    }
+  }
+
+  openReportDialog(): void {
+    const reason = prompt('Please enter the reason for reporting this company:');
+    if (reason && reason.trim()) {
+      this.companyService.reportCompany(this.company()!.id, reason.trim()).subscribe({
+        next: () => {
+          this.snackBar.open('Report submitted successfully', 'Close', { duration: 3000 });
+        },
+        error: (err) => {
+          this.snackBar.open('Failed to submit report', 'Close', { duration: 3000 });
+        }
+      });
     }
   }
 
