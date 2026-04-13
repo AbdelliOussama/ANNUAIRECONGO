@@ -20,6 +20,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/companies/company-detail/company-detail.component').then(m => m.CompanyDetailComponent)
       },
       {
+        path: 'cart',
+        loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent)
+      },
+      {
+        path: 'subscription',
+        loadComponent: () => import('./features/subscription/subscription-plans.component').then(m => m.SubscriptionPlansComponent)
+      },
+      {
+        path: 'payment-history',
+        loadComponent: () => import('./features/subscription/payment-history.component').then(m => m.PaymentHistoryComponent),
+        canActivate: [authGuard]
+      },
+      {
         path: 'login',
         loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
       },

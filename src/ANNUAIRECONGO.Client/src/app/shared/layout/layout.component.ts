@@ -8,6 +8,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '@core/services/auth.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Notification } from '@core/models/company.model';
@@ -24,7 +26,9 @@ import { Notification } from '@core/models/company.model';
     MatMenuModule,
     MatSidenavModule,
     MatListModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatTooltipModule,
+    MatDividerModule
   ],
   template: `
     <mat-sidenav-container class="sidenav-container">
@@ -41,7 +45,16 @@ import { Notification } from '@core/models/company.model';
             <mat-icon matListItemIcon>business</mat-icon>
             <span matListItemTitle>Companies</span>
           </a>
+          <a mat-list-item routerLink="/cart" (click)="sidenav.close()">
+            <mat-icon matListItemIcon>public</mat-icon>
+            <span matListItemTitle>Regions</span>
+          </a>
+          <a mat-list-item routerLink="/subscription" (click)="sidenav.close()">
+            <mat-icon matListItemIcon>shopping_cart</mat-icon>
+            <span matListItemTitle>Plans</span>
+          </a>
           @if (!authService.isAuthenticated()) {
+            <mat-divider></mat-divider>
             <a mat-list-item routerLink="/login" (click)="sidenav.close()">
               <mat-icon matListItemIcon>login</mat-icon>
               <span matListItemTitle>Login</span>
@@ -60,6 +73,10 @@ import { Notification } from '@core/models/company.model';
             <a mat-list-item routerLink="/profile" (click)="sidenav.close()">
               <mat-icon matListItemIcon>person</mat-icon>
               <span matListItemTitle>Profile</span>
+            </a>
+            <a mat-list-item routerLink="/payment-history" (click)="sidenav.close()">
+              <mat-icon matListItemIcon>receipt_long</mat-icon>
+              <span matListItemTitle>Payments</span>
             </a>
             @if (authService.isAdmin()) {
               <mat-divider></mat-divider>
@@ -100,14 +117,22 @@ import { Notification } from '@core/models/company.model';
           </button>
           <span class="logo" routerLink="/">Annuaire Congo</span>
           <span class="spacer"></span>
+          
+          <button mat-icon-button routerLink="/cart" matTooltip="Regions">
+            <mat-icon>public</mat-icon>
+          </button>
+          <button mat-icon-button routerLink="/subscription" matTooltip="Subscription Plans">
+            <mat-icon>shopping_cart</mat-icon>
+          </button>
+          
           @if (authService.isAuthenticated()) {
             <button mat-icon-button routerLink="/notifications" [matBadge]="unreadCount() > 0 ? unreadCount() : ''" matBadgeColor="warn">
               <mat-icon>notifications</mat-icon>
             </button>
              <button mat-button [matMenuTriggerFor]="userMenu">
-               <mat-icon>account_circle</mat-icon>
-               {{ authService.currentUser()?.email }}
-             </button>
+              <mat-icon>account_circle</mat-icon>
+              {{ authService.currentUser()?.email }}
+            </button>
             <mat-menu #userMenu="matMenu">
               <button mat-menu-item routerLink="/dashboard">
                 <mat-icon>dashboard</mat-icon>
@@ -117,6 +142,11 @@ import { Notification } from '@core/models/company.model';
                 <mat-icon>person</mat-icon>
                 <span>Profile</span>
               </button>
+              <button mat-menu-item routerLink="/payment-history">
+                <mat-icon>receipt_long</mat-icon>
+                <span>Payments</span>
+              </button>
+              <mat-divider></mat-divider>
               <button mat-menu-item (click)="logout()">
                 <mat-icon>logout</mat-icon>
                 <span>Logout</span>
@@ -139,7 +169,19 @@ import { Notification } from '@core/models/company.model';
         </main>
 
         <footer class="footer">
-          <p>&copy; 2026 Annuaire Congo. All rights reserved.</p>
+          <div class="footer-content">
+            <div class="footer-logo">
+              <mat-icon>business</mat-icon>
+              <span>Annuaire Congo</span>
+            </div>
+            <p>&copy; 2026 Annuaire Congo. All rights reserved.</p>
+            <div class="footer-links">
+              <a routerLink="/">Home</a>
+              <a routerLink="/companies">Companies</a>
+              <a routerLink="/cart">Regions</a>
+              <a routerLink="/subscription">Plans</a>
+            </div>
+          </div>
         </footer>
       </mat-sidenav-content>
     </mat-sidenav-container>
@@ -150,41 +192,53 @@ import { Notification } from '@core/models/company.model';
     }
 
     .sidenav {
-      width: 280px;
-      background: #fff;
+      width: 300px;
+      background: var(--surface-elevated);
     }
 
     .sidenav-header {
       padding: 24px 16px;
-      background: linear-gradient(135deg, #f57c00, #2e7d32);
+      background: var(--primary-gradient);
       color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
 
       h2 {
         margin: 0;
         font-size: 20px;
-        font-weight: 500;
+        font-weight: 600;
+      }
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
       }
     }
 
     .sidenav-section-title {
       padding: 16px 16px 8px;
-      font-size: 12px;
-      font-weight: 500;
-      color: rgba(0, 0, 0, 0.54);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .toolbar {
       position: sticky;
       top: 0;
       z-index: 1000;
+      box-shadow: var(--shadow-md);
     }
 
     .logo {
       margin-left: 8px;
       font-size: 20px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      color: white;
     }
 
     .spacer {
@@ -192,26 +246,80 @@ import { Notification } from '@core/models/company.model';
     }
 
     .content {
-      min-height: calc(100vh - 64px - 60px);
+      min-height: calc(100vh - 64px - 80px);
       padding: 24px;
-      background-color: #f5f5f5;
+      background-color: var(--background-color);
     }
 
     .footer {
-      padding: 20px;
+      padding: 32px 24px;
       text-align: center;
-      background: #fff;
-      border-top: 1px solid rgba(0, 0, 0, 0.12);
+      background: var(--surface-elevated);
+      border-top: 1px solid var(--border-light);
+
+      .footer-content {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .footer-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        
+        mat-icon {
+          color: var(--primary-color);
+        }
+        
+        span {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+      }
 
       p {
-        margin: 0;
-        color: rgba(0, 0, 0, 0.54);
+        margin: 0 0 16px 0;
+        color: var(--text-muted);
         font-size: 14px;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        
+        a {
+          color: var(--text-secondary);
+          font-size: 14px;
+          transition: color 0.2s ease;
+          
+          &:hover {
+            color: var(--primary-color);
+          }
+        }
       }
     }
 
     mat-divider {
       margin: 8px 0;
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 16px;
+      }
+      
+      .footer {
+        padding: 24px 16px;
+        
+        .footer-links {
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+      }
     }
   `]
 })
