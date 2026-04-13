@@ -17,19 +17,20 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
 
     public async Task<Result<List<SubscriptionDto>>> Handle(GetCompanySubscriptionsQuery request, CancellationToken cancellationToken)
     {
+        var company = await _context.Companies
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        
+        if (company is null)
+            return CompanyErrors.CompanyNotFound(request.CompanyId);
+        if (!company.IsOwnedBy(_currentUser.Id!))
+            return CompanyErrors.NotOwner;
+
         var subscriptions = await _context.Subscriptions
             .Include(s => s.Plan)
             .Include(s => s.Company)
             .Where(s => s.CompanyId == request.CompanyId)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-
-        var company = await context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
-        if (company is null)
-            return CompanyErrors.CompanyNotFound(request.CompanyId);
-        if (!company.IsOwnedBy(currentUser.Id!))
-            return CompanyErrors.NotOwner;
 
         if (subscriptions is null || !subscriptions.Any())
             return new List<SubscriptionDto>();

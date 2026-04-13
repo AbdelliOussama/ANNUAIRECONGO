@@ -17,6 +17,14 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
     private readonly IUser _currentUser = currentUser;
     public async Task<Result<List<PaymentDto>>> Handle(GetCompanyPaymentsQuery request, CancellationToken cancellationToken)
     {
+        var company = await _context.Companies
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+
+        if (company is null)
+            return CompanyErrors.CompanyNotFound(request.CompanyId);
+        if (!company.IsOwnedBy(_currentUser.Id!))
+            return CompanyErrors.NotOwner;
+
         var payments = await _context.Payments
             .Include(p => p.Subscription)
             .ThenInclude(s => s.Company)
@@ -24,11 +32,6 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var company = await _context.Companies
-        .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
-
-        if (!company.IsOwnedBy(currentUser.Id!))
-            return CompanyErrors.NotOwner;
         if (payments is null || !payments.Any())
         {
             _logger.LogInformation("No payments found for company {CompanyId}", request.CompanyId);
