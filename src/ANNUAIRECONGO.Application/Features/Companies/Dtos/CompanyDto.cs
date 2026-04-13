@@ -25,8 +25,8 @@ public class CompanyDto
     public bool IsFeatured { get; set; }
     public Guid? ActiveSubscriptionId { get; set; }
     public List<SectorDto> Sectors { get; set; } = new();
-    // public List<ServiceDto> Services { get; set; } = new();
-    // public List<DocumentDto> Documents { get; set; } = new();
-    // public List<CompanyImageDto> Images { get; set; } = new();
-    // public List<ContactDto> Contacts { get; set; } = new();
+    public List<ServiceDto> Services { get; set; } = new();
+    public List<DocumentDto> Documents { get; set; } = new();
+    public List<CompanyImageDto> Images { get; set; } = new();
+    public List<ContactDto> Contacts { get; set; } = new();
 }

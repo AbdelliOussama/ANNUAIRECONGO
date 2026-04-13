@@ -30,14 +30,39 @@ public static class CompanyMapper
             IsFeatured = company.IsFeatured,
             ActiveSubscriptionId = company.ActiveSubscriptionId,
             Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
-
-            // Services = company.Services.Select(s => new ServiceDto
-            // {
-            //     Id = s.Id,
-            //     CompanyId = s.CompanyId,
-            //     Title = s.Title,
-            //     Description = s.Description
-            // }).ToList()
+            Services = company.Services.Select(s => new ServiceDto
+            {
+                Id = s.Id,
+                CompanyId = s.CompanyId,
+                Title = s.Title,
+                Description = s.Description
+            }).ToList(),
+            Contacts = company.Contacts.Select(c => new ContactDto
+            {
+                Id = c.Id,
+                CompanyId = c.CompanyId,
+                Type = c.Type,
+                Value = c.Value,
+                IsPrimary = c.IsPrimary
+            }).ToList(),
+            Images = company.Images.Select(i => new CompanyImageDto
+            {
+                Id = i.Id,
+                CompanyId = i.CompanyId,
+                ImageUrl = i.ImageUrl,
+                Caption = i.Caption,
+                DisplayOrder = i.DisplayOrder,
+                UploadedAt = i.UploadedAt
+            }).ToList(),
+            Documents = company.Documents.Select(d => new DocumentDto
+            {
+                Id = d.Id,
+                CompanyId = d.CompanyId,
+                DocType = d.DocType,
+                FileUrl = d.FileUrl,
+                IsPublic = d.IsPublic,
+                UploadedAt = d.UploadedAt
+            }).ToList()
         };
     }
     public static List<CompanyDto> ToDTos(this IEnumerable<Company> companies)
