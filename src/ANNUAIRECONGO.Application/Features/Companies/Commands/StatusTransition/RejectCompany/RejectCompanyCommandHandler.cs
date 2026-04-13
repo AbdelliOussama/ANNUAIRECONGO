@@ -28,7 +28,7 @@ public sealed record RejectCompanyCommandHandler(ILogger<RejectCompanyCommandHan
             _logger.LogError("Failed To Reject Company with id = {CompanyId} , Errors = {2}", request.companyId,rejectResult.Errors);
             return rejectResult.Errors;
         }
-        company.AddDomainEvent(new CompanyRejectedEvent(company.Id,company.OwnerId,company.Name,company.RejectionReason));
+        company.AddDomainEvent(new CompanyRejectedEvent(company.Id, company.OwnerId.ToString(), company.Name, company.RejectionReason));
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("Company", cancellationToken);
         return Result.Updated;

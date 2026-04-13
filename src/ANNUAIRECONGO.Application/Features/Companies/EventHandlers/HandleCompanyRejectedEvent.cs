@@ -25,7 +25,7 @@ public sealed class HandleCompanyRejectedEvent
         CancellationToken cancellationToken)
     {
         var notif = Notification.Create(
-            notification.OwnerId.ToString(),
+            notification.OwnerId,
             NotificationTypes.CompanyRejected,
             $"Your company '{notification.CompanyName}' was rejected: {notification.Reason}");
 

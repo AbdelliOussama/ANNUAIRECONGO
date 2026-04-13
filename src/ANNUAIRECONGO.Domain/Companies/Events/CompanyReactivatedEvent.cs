@@ -5,5 +5,5 @@ namespace ANNUAIRECONGO.Domain.Companies.Events;
 
 public sealed record CompanyReactivatedEvent(
     Guid CompanyId,
-    Guid OwnerId,
+    string OwnerId,
     string CompanyName) : DomainEvent;

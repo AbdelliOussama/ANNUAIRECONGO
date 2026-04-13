@@ -25,7 +25,7 @@ public sealed class HandleCompanyReactivatedEvent
         CancellationToken cancellationToken)
     {
         var notif = Notification.Create(
-            notification.OwnerId.ToString(),
+            notification.OwnerId,
             NotificationTypes.CompanyReactivated,
             $"Your company '{notification.CompanyName}' has been reactivated");
 

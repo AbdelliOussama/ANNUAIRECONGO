@@ -140,8 +140,16 @@ public class IdentityService : IIdentityService
             return businessOwnerResult.Errors;
         }
 
-        _context.BusinessOwners.Add(businessOwnerResult.Value);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            _context.BusinessOwners.Add(businessOwnerResult.Value);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await _userManager.DeleteAsync(appUser);
+            return IdentityErrors.UserCreationFailed;
+        }
 
         return businessOwnerResult.Value.Id;
     }
