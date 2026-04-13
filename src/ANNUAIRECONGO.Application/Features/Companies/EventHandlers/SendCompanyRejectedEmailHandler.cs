@@ -13,7 +13,7 @@ public sealed class SendCompanyRejectedEmailHandler(ILogger<SendCompanyRejectedE
     private readonly INotificationService _notificationService = notificationService;
     public async Task Handle(CompanyRejectedEvent notification, CancellationToken cancellationToken)
     {
-        var company =await _context.Companies.Include(c => c.Owner).FirstOrDefaultAsync(c => c.Id == notification.CompanyId);
+        var company =await _context.Companies.Include(c => c.Owner).FirstOrDefaultAsync(c => c.Id == notification.CompanyId, cancellationToken);
         if(company is null)
         {
             _logger.LogWarning("Company with id {Id} not found", notification.CompanyId);

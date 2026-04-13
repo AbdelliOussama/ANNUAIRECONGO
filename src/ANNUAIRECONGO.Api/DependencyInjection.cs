@@ -31,7 +31,7 @@ public static class DependencyInjection
                 .AddIdentityInfrastructure()
                 .AddAppRateLimiting()
                 .AddAppOutputCaching()
-                .AddAppOpenTelememrty()
+                .AddAppOpenTelemetry()
                 .AddSignalR();
 
         return services;
@@ -49,10 +49,10 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddAppOpenTelememrty(this IServiceCollection services)
+    public static IServiceCollection AddAppOpenTelemetry(this IServiceCollection services)
     {
         services.AddOpenTelemetry()
-        .ConfigureResource(res => res.AddService("orderservice"))
+        .ConfigureResource(res => res.AddService("annuaire-congo-api"))
         .WithTracing(tracing =>
         {
             tracing.AddAspNetCoreInstrumentation()
@@ -178,8 +178,7 @@ public static class DependencyInjection
                 .WithOrigins(appSettings.AllowedOrigins!)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials()
-                .SetIsOriginAllowed(_ => true)));
+                .AllowCredentials()));
 
         return services;
     }

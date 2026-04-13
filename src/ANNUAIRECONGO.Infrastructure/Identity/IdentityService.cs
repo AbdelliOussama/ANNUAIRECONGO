@@ -39,11 +39,11 @@ public class IdentityService : IIdentityService
         }
         if (!user.EmailConfirmed)
         {
-            return Error.Conflict("Email_Not_Confirmed", $"email '{UtilityService.MaskEmail(email)}' not confirmed");
+            return IdentityErrors.EmailNotConfirmed;
         }
         if(!await _userManager.CheckPasswordAsync(user, password))
         {
-            return Error.Conflict("Invalid_Login_Attempt", "Email / Password are incorrect");
+            return IdentityErrors.InvalidCredentials;
         }
         return new  AppUserDto(user.Id,user.Email,await _userManager.GetRolesAsync(user),await _userManager.GetClaimsAsync(user));
     }

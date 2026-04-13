@@ -15,7 +15,7 @@ public sealed record SubmitCompanyCommandHandler(ILogger<SubmitCompanyCommandHan
     private readonly IUser _currentUser = currentUser;
     public async Task<Result<Updated>> Handle(SubmitCompanyCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.companyId);
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.companyId, cancellationToken);
 
         if (company is null)
         {

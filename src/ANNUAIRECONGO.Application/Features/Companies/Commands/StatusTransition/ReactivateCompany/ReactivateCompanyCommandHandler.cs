@@ -15,7 +15,7 @@ public sealed record ReactivateCompanyCommandHandler(ILogger<ReactivateCompanyCo
     private readonly HybridCache _cache = cache;
     public async Task<Result<Updated>> Handle(ReactivateCompanyCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.companyId);
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.companyId, cancellationToken);
 
         if (company is null)
         {

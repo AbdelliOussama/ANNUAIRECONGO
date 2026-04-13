@@ -14,7 +14,7 @@ public sealed class SendPaymentRefundedEmailHandler(ILogger<SendPaymentRefundedE
     private readonly INotificationService _notificationService = notificationService;
     public async Task Handle(PaymentRefundedEvent notification, CancellationToken cancellationToken)
     {
-        var payment =await _context.Payments.Include(p => p.Company).ThenInclude(c => c.Owner).FirstOrDefaultAsync(p => p.Id == notification.PaymentId);
+        var payment =await _context.Payments.Include(p => p.Company).ThenInclude(c => c.Owner).FirstOrDefaultAsync(p => p.Id == notification.PaymentId, cancellationToken);
         if(payment is null)
         {
             _logger.LogWarning("Payment with id {Id} not found", notification.PaymentId);

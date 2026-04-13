@@ -16,7 +16,7 @@ public sealed record GetSectorByIdQueryHandler(ILogger<GetSectorByIdQueryHandler
     private readonly ILogger<GetSectorByIdQueryHandler> _logger = logger;
     public async Task<Result<SectorDto>> Handle(GetSectorByIdQuery request, CancellationToken cancellationToken)
     {
-        var sector = await _context.Sectors.AsNoTracking().FirstOrDefaultAsync(s => s.Id == request.sectorId);
+        var sector = await _context.Sectors.AsNoTracking().FirstOrDefaultAsync(s => s.Id == request.sectorId, cancellationToken);
         if(sector is null)
         {
             _logger.LogWarning("Sector with id {SectorId} was not found", request.sectorId);

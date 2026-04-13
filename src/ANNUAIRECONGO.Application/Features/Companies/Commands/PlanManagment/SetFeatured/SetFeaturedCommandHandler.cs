@@ -22,7 +22,7 @@ public sealed record SetFeaturedCommandHandler(
 
     public async Task<Result<Updated>> Handle(SetFeatureCommand request, CancellationToken cancellationToken)
     {
-        var company =await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId);
+        var company =await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
         if (company is null)
         {
             _logger.LogWarning("Company not found");

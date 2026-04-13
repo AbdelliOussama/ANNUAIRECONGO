@@ -14,7 +14,7 @@ public sealed class SendCompanyReactivatedEmailHandler(ILogger<SendCompanyReacti
 
     public async Task Handle(CompanyReactivatedEvent notification, CancellationToken cancellationToken)
     {
-        var company =await _context.Companies.Include(c => c.Owner).FirstOrDefaultAsync(c => c.Id == notification.CompanyId);
+        var company =await _context.Companies.Include(c => c.Owner).FirstOrDefaultAsync(c => c.Id == notification.CompanyId, cancellationToken);
         if(company is null)
         {
             _logger.LogWarning("Company with id {Id} not found", notification.CompanyId);

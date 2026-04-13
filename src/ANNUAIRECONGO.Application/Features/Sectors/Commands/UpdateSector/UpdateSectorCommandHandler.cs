@@ -16,7 +16,7 @@ public sealed record UpdateSectorCommandHandler(ILogger<UpdateSectorCommandHandl
     private readonly IAppDbContext _context = context;
     public async Task<Result<Updated>> Handle(UpdateSectorCommand request, CancellationToken cancellationToken)
     {
-        var sector = await _context.Sectors.FirstOrDefaultAsync(s => s.Id == request.id );
+        var sector = await _context.Sectors.FirstOrDefaultAsync(s => s.Id == request.id, cancellationToken );
 
         if(sector is null)
         {
