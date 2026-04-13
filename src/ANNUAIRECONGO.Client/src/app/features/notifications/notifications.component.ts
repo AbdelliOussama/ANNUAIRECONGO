@@ -7,7 +7,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { NotificationService } from '@core/services/notification.service';
-import { Notification, NotificationType } from '@core/models/company.model';
+import { Notification } from '@core/models/company.model';
 
 @Component({
   selector: 'app-notifications',
@@ -44,7 +44,7 @@ import { Notification, NotificationType } from '@core/models/company.model';
                   <mat-icon matListItemIcon [class]="'type-' + notification.type">
                     {{ getIcon(notification.type) }}
                   </mat-icon>
-                  <div matListItemTitle>{{ notification.title }}</div>
+                  <div matListItemTitle>{{ notification.type }}</div>
                   <div matListItemLine>{{ notification.message }}</div>
                   <div matListItemMeta>
                     <span class="time">{{ notification.createdAt | date:'short' }}</span>
@@ -135,15 +135,16 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
-  getIcon(type: NotificationType): string {
-    const icons: { [key: number]: string } = {
-      0: 'info',
-      1: 'check_circle',
-      2: 'warning',
-      3: 'error'
-    };
-    return icons[type] || 'notifications';
-  }
+getIcon(type: string): string {
+     const icons: { [key: string]: string } = {
+       'company_validated': 'check_circle',
+       'company_rejected': 'error',
+       'payment_success': 'check_circle',
+       'payment_failed': 'error',
+       'subscription_expiring': 'warning'
+     };
+     return icons[type] || 'notifications';
+   }
 
   markAsRead(id: string): void {
     this.notificationService.markAsRead(id).subscribe(() => this.loadNotifications());

@@ -123,20 +123,20 @@ export class AdminCompaniesComponent implements OnInit {
     });
   }
 
-  getStatusLabel(status: number): string {
-    const labels: { [key: number]: string } = {
-      0: 'Pending',
-      1: 'Submitted',
-      2: 'Validated',
-      3: 'Rejected',
-      4: 'Suspended'
-    };
-    return labels[status] || 'Unknown';
-  }
+   getStatusLabel(status: number): string {
+     const labels: { [key: number]: string } = {
+       0: 'Draft',
+       1: 'Pending',
+       2: 'Active',
+       3: 'Rejected',
+       4: 'Suspended'
+     };
+     return labels[status] || 'Unknown';
+   }
 
-  validateCompany(id: string): void {
-    this.companyService.submitCompany(id).subscribe(() => this.loadCompanies());
-  }
+   validateCompany(id: string): void {
+     this.companyService.validateCompany(id).subscribe(() => this.loadCompanies());
+   }
 
   suspendCompany(id: string): void {
     // Would call suspend endpoint

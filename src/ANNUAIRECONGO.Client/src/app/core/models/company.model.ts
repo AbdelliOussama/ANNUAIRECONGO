@@ -74,10 +74,10 @@ export interface Company {
   regionName?: string;
   city?: { id: string; name: string };
   sectors: Sector[];
-  contacts: CompanyContact[];
-  services: CompanyService[];
-  images: CompanyImage[];
-  documents: CompanyDocument[];
+  contacts?: CompanyContact[];
+  services?: CompanyService[];
+  images?: CompanyImage[];
+  documents?: CompanyDocument[];
   createdAt: string;
   updatedAt: string;
   activeSubscriptionId?: string;
@@ -85,9 +85,9 @@ export interface Company {
 }
 
 export enum CompanyStatus {
-  Pending = 0,
-  Submitted = 1,
-  Validated = 2,
+  Draft = 0,
+  Pending = 1,
+  Active = 2,
   Rejected = 3,
   Suspended = 4
 }
@@ -140,9 +140,8 @@ export enum PaymentStatus {
 export interface Notification {
   id: string;
   userId: string;
-  title: string;
   message: string;
-  type: NotificationType;
+  type: string;
   isRead: boolean;
   createdAt: string;
   link?: string;

@@ -112,14 +112,14 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
                 <mat-card-subtitle>{{ company.cityName }}</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                <mat-chip-set>
-                  <mat-chip [class.status-validated]="company.status === 2"
-                            [class.status-pending]="company.status === 0"
-                            [class.status-submitted]="company.status === 1"
-                            [class.status-rejected]="company.status === 3"
-                            [class.status-suspended]="company.status === 4">
-                    {{ getStatusLabel(company.status) }}
-                  </mat-chip>
+             <mat-chip-set>
+                   <mat-chip [class.status-active]="company.status === 2"
+                             [class.status-draft]="company.status === 0"
+                             [class.status-pending]="company.status === 1"
+                             [class.status-rejected]="company.status === 3"
+                             [class.status-suspended]="company.status === 4">
+                     {{ getStatusLabel(company.status) }}
+                   </mat-chip>
                   @if (company.isFeatured) {
                     <mat-chip color="accent">Featured</mat-chip>
                   }
@@ -221,11 +221,11 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
         margin: 8px 0;
       }
       
-      .status-validated { background-color: #4caf50; color: white; }
-      .status-pending { background-color: #ff9800; color: white; }
-      .status-submitted { background-color: #2196f3; color: white; }
-      .status-rejected { background-color: #f44336; color: white; }
-      .status-suspended { background-color: #9e9e9e; color: white; }
+       .status-active { background-color: #4caf50; color: white; }
+       .status-draft { background-color: #ff9800; color: white; }
+       .status-pending { background-color: #2196f3; color: white; }
+       .status-rejected { background-color: #f44336; color: white; }
+       .status-suspended { background-color: #9e9e9e; color: white; }
     }
 
     .no-companies {
@@ -275,14 +275,14 @@ export class DashboardComponent implements OnInit {
     this.businessOwnerService.getMyCompanies().subscribe(data => this.myCompanies.set(data));
   }
 
-  getStatusLabel(status: number): string {
-    const labels: { [key: number]: string } = {
-      0: 'Pending',
-      1: 'Submitted',
-      2: 'Validated',
-      3: 'Rejected',
-      4: 'Suspended'
-    };
-    return labels[status] || 'Unknown';
-  }
+   getStatusLabel(status: number): string {
+     const labels: { [key: number]: string } = {
+       0: 'Draft',
+       1: 'Pending',
+       2: 'Active',
+       3: 'Rejected',
+       4: 'Suspended'
+     };
+     return labels[status] || 'Unknown';
+   }
 }

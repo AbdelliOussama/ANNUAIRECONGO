@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatListModule } from '@angular/material/list';
-import { GeographyService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
 import { Region, City } from '@core/models/geography.model';
 
 @Component({

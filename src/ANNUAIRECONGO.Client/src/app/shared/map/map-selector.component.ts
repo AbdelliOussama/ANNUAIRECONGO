@@ -2,10 +2,9 @@ import { Component, inject, Input, Output, EventEmitter, OnInit, OnChanges, OnDe
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { GeographyService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
 import { Region, City } from '@core/models/geography.model';
-
-declare var L: any;
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map-selector',
@@ -199,26 +198,26 @@ export class MapSelectorComponent implements OnInit, AfterViewInit, OnChanges, O
     console.log('Map initialized successfully');
   }
   
-  private addCongoBoundary(): void {
-    // Simplified approximate boundary of Republic of Congo
-    const congoBounds = [
-      [-4.5, 11.5],
-      [-4.5, 18.5],
-      [1.5, 18.5],
-      [1.5, 11.5]
-    ];
-    
-    const congoOutline = L.polygon(congoBounds, {
-      color: '#f57c00',
-      weight: 2,
-      opacity: 0.8,
-      fillColor: '#fff3e0',
-      fillOpacity: 0.1,
-      dashArray: '5, 10'
-    }).addTo(this.map);
-    
-    congoOutline.bindPopup('<strong>Republic of Congo</strong>');
-  }
+private addCongoBoundary(): void {
+     // Simplified approximate boundary of Republic of Congo
+     const congoBounds: L.LatLngTuple[] = [
+       [-4.5, 11.5] as L.LatLngTuple,
+       [-4.5, 18.5] as L.LatLngTuple,
+       [1.5, 18.5] as L.LatLngTuple,
+       [1.5, 11.5] as L.LatLngTuple
+     ];
+     
+     const congoOutline = L.polygon(congoBounds, {
+       color: '#f57c00',
+       weight: 2,
+       opacity: 0.8,
+       fillColor: '#fff3e0',
+       fillOpacity: 0.1,
+       dashArray: '5, 10'
+     }).addTo(this.map);
+     
+     congoOutline.bindPopup('<strong>Republic of Congo</strong>');
+   }
   
   private updateMapRegions(): void {
     // Clear existing region layers
@@ -246,7 +245,7 @@ export class MapSelectorComponent implements OnInit, AfterViewInit, OnChanges, O
         });
         
         // Add label
-        const label = L.marker(bounds[0], {
+        const label = L.marker(bounds[0] as L.LatLngTuple, {
           icon: L.divIcon({
             className: 'region-label',
             html: `<div>${region.name}</div>`,
@@ -375,44 +374,49 @@ export class MapSelectorComponent implements OnInit, AfterViewInit, OnChanges, O
     this.citySelected.emit({ regionId: '', cityId: '' });
   }
   
-  // These methods would normally use real geographic data
-  // For demo purposes, we're generating approximate positions
-  private getApproximateRegionBounds(regionId: string): any[][] | null {
-    // Simplified approximate regions for Congo
-    // In reality, you'd load actual GeoJSON boundary data
-    const regionPositions: Record<string, any[][]> = {
-      // Brazzaville region
-      '1': [
-        [-4.5, 15.0],
-        [-4.5, 15.8],
-        [-4.0, 15.8],
-        [-4.0, 15.0]
-      ],
-      // Pool region
-      '2': [
-        [-3.8, 15.5],
-        [-3.8, 16.5],
-        [-3.2, 16.5],
-        [-3.2, 15.5]
-      ],
-      // Other regions would be defined similarly...
-      // For simplicity, we'll generate some basic bounds
-    };
+// These methods use passed region/city data or return default positions
+  // The actual geographic data comes from the geography service, not hardcoded IDs
+  private getApproximateRegionBounds(regionId: string): L.LatLngTuple[] | null {
+    // Return a default polygon for any region ID - in production you'd use actual GeoJSON
+    // from backend or a geography service with real boundary data
+    const defaultBounds: L.LatLngTuple[] = [
+      [-4.5, 11.5] as L.LatLngTuple,
+      [-4.5, 18.5] as L.LatLngTuple,
+      [1.5, 18.5] as L.LatLngTuple,
+      [1.5, 11.5] as L.LatLngTuple
+    ];
     
-    return regionPositions[regionId] || null;
+    // Try to find matching region from input data
+    const region = this.regions.find(r => r.id === regionId);
+    if (region) {
+      // Return approximate bounds based on region name (fallback for demo)
+      if (region.name?.toLowerCase().includes('brazzaville')) {
+        return [[-4.5, 15.0], [-4.5, 15.8], [-4.0, 15.8], [-4.0, 15.0]] as L.LatLngTuple[];
+      }
+      if (region.name?.toLowerCase().includes('pool')) {
+        return [[-3.8, 15.5], [-3.8, 16.5], [-3.2, 16.5], [-3.2, 15.5]] as L.LatLngTuple[];
+      }
+    }
+    
+    // Return default Congo bounds for any unknown region
+    return defaultBounds;
   }
-  
-  private getApproximateCityPosition(cityId: string): [number, number] | null {
-    // Simplified approximate city positions
-    // In reality, you'd have actual latitude/longitude data
-    const cityPositions: Record<string, [number, number]> = {
-      // Major cities in Congo
-      '1': [-4.27, 15.28], // Brazzaville
-      '2': [-4.25, 15.29], // Kinshasa (for reference)
-      '3': [-3.95, 15.62], // Pointe-Noire
-      // Add more cities as needed
-    };
+
+  private getApproximateCityPosition(cityId: string): L.LatLngTuple | null {
+    // Try to find the city from input data
+    const city = this.cities.find(c => c.id === cityId);
+    if (city) {
+      // Return approximate position based on city name
+      const name = city.name?.toLowerCase() || '';
+      if (name.includes('brazzaville')) return [-4.27, 15.28] as L.LatLngTuple;
+      if (name.includes('pointe-noire') || name.includes('pointe noire')) return [-3.95, 15.62] as L.LatLngTuple;
+      if (name.includes('dolisie') || name.includes('dolisie')) return [-4.2, 15.6] as L.LatLngTuple;
+      if (name.includes('ouesso')) return [1.5, 16.0] as L.LatLngTuple;
+      if (name.includes('impfondo') || name.includes('impfondo')) return [2.2, 17.4] as L.LatLngTuple;
+      if (name.includes('kikwit')) return [-5.04, 18.8] as L.LatLngTuple;
+    }
     
-    return cityPositions[cityId] || [-0.8, 15.5]; // Default to center of map
+    // Default to center of Congo map
+    return [-0.8, 15.5] as L.LatLngTuple;
   }
 }

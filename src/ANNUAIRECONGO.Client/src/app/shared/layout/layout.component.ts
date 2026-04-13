@@ -104,10 +104,10 @@ import { Notification } from '@core/models/company.model';
             <button mat-icon-button routerLink="/notifications" [matBadge]="unreadCount() > 0 ? unreadCount() : ''" matBadgeColor="warn">
               <mat-icon>notifications</mat-icon>
             </button>
-            <button mat-button [matMenuTriggerFor]="userMenu">
-              <mat-icon>account_circle</mat-icon>
-              {{ authService.currentUser()?.firstName }}
-            </button>
+             <button mat-button [matMenuTriggerFor]="userMenu">
+               <mat-icon>account_circle</mat-icon>
+               {{ authService.currentUser()?.email }}
+             </button>
             <mat-menu #userMenu="matMenu">
               <button mat-menu-item routerLink="/dashboard">
                 <mat-icon>dashboard</mat-icon>

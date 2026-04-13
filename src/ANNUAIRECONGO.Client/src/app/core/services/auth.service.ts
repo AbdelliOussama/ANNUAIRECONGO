@@ -49,18 +49,19 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
-  refreshToken(): Observable<TokenResponse> {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    return this.api.post<TokenResponse>('/identity/token/refresh-token', { refreshToken }).pipe(
-      tap(response => {
-        this.storeTokens(response);
-      }),
-      catchError(error => {
-        this.logout();
-        return throwError(() => error);
-      })
-    );
-  }
+   refreshToken(): Observable<TokenResponse> {
+     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+     const accessToken = localStorage.getItem(TOKEN_KEY);
+     return this.api.post<TokenResponse>('/identity/token/refresh-token', { refreshToken, accessToken }).pipe(
+       tap(response => {
+         this.storeTokens(response);
+       }),
+       catchError(error => {
+         this.logout();
+         return throwError(() => error);
+       })
+     );
+   }
 
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);

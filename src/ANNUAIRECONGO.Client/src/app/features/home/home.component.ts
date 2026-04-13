@@ -13,28 +13,30 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CompanyService } from '@core/services/company.service';
 import { SectorService } from '@core/services/sector.service';
-import { GeographyService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
 import { Company, Sector, Region, City } from '@core/models/company.model';
 import { MapSelectorComponent } from '@shared/map/map-selector.component';
+import { CompanyGridComponent } from '@shared/company-grid/company-grid.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-   imports: [
-     CommonModule,
-     RouterModule,
-     FormsModule,
-     MatCardModule,
-     MatButtonModule,
-     MatIconModule,
-     MatInputModule,
-     MatFormFieldModule,
-     MatSelectModule,
-     MatChipsModule,
-     MatProgressSpinnerModule,
-     MatPaginatorModule,
-     MapSelectorComponent
-   ],
+imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatPaginatorModule,
+    MapSelectorComponent,
+    CompanyGridComponent
+  ],
   template: `
     <div class="home-container">
       <section class="hero-section">
@@ -66,7 +68,7 @@ import { MapSelectorComponent } from '@shared/map/map-selector.component';
         </div>
       </section>
 
-      <section class="companies-section">
+<section class="companies-section">
         <div class="section-header">
           <h2>Companies</h2>
          <div class="filters">
@@ -80,71 +82,17 @@ import { MapSelectorComponent } from '@shared/map/map-selector.component';
              </mat-select>
            </mat-form-field>
          </div>
-        </div>
+       </div>
 
-        @if (isLoading()) {
-          <div class="loading-container">
-            <mat-spinner></mat-spinner>
-          </div>
-        } @else if (companies().length === 0) {
-          <div class="empty-state">
-            <mat-icon>business</mat-icon>
-            <h3>No companies found</h3>
-            <p>Try with different search criteria</p>
-          </div>
-        } @else {
-          <div class="companies-grid">
-            @for (company of companies(); track company.id) {
-              <mat-card class="company-card" [routerLink]="['/companies', company.id]">
-                <div class="cover-container">
-                  @if (company.coverUrl) {
-                    <img [src]="company.coverUrl" [alt]="company.name" class="company-cover">
-                  } @else {
-                    <div class="company-cover-placeholder">
-                      <mat-icon>business</mat-icon>
-                    </div>
-                  }
-                  @if (company.logoUrl) {
-                    <img [src]="company.logoUrl" [alt]="company.name" class="company-logo">
-                  }
-                </div>
-                <mat-card-content>
-                  <h3>{{ company.name }}</h3>
-                  @if (company.description) {
-                    <p class="description">{{ company.description | slice:0:80 }}...</p>
-                  }
-                  <div class="sectors">
-                    @for (sector of company.sectors.slice(0, 2); track sector.sectorId) {
-                      <span class="sector-tag">{{ sector.name }}</span>
-                    }
-                  </div>
-                  @if (company.cityName) {
-                    <div class="location">
-                      <mat-icon>location_on</mat-icon>
-                      {{ company.cityName }}
-                    </div>
-                  }
-                </mat-card-content>
-                @if (company.isFeatured) {
-                  <div class="featured-badge">
-                    <mat-icon>star</mat-icon>
-                    Featured
-                  </div>
-                }
-              </mat-card>
-            }
-          </div>
-
-          <mat-paginator
-            [length]="totalCount()"
-            [pageSize]="pageSize"
-            [pageIndex]="pageNumber - 1"
-            [pageSizeOptions]="[6, 12, 24]"
-            (page)="onPageChange($event)"
-            aria-label="Select page">
-          </mat-paginator>
-        }
-      </section>
+       <app-company-grid
+         [companies]="companies"
+         [totalCount]="totalCount"
+         [isLoading]="isLoading"
+         [pageNumber]="pageNumber"
+         [pageSize]="pageSize"
+         (pageChange)="onPageChange($event)"
+       ></app-company-grid>
+     </section>
     </div>
   `,
   styles: [`

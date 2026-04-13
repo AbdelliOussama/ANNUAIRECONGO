@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { SectorService } from '@core/services/sector.service';
 import { Sector } from '@core/models/company.model';
+import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-sectors',
@@ -178,6 +179,7 @@ import { Sector } from '@core/models/company.model';
 export class AdminSectorsComponent implements OnInit {
   private sectorService = inject(SectorService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   sectors = signal<Sector[]>([]);
   showDialog = signal(false);
@@ -231,11 +233,16 @@ export class AdminSectorsComponent implements OnInit {
   }
 
   deleteSector(id: string): void {
-    if (confirm('Are you sure you want to delete this sector?')) {
-      this.sectorService.deleteSector(id).subscribe(() => {
-        this.snackBar.open('Sector deleted', 'Close', { duration: 3000 });
-        this.loadSectors();
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete Sector', message: 'Are you sure you want to delete this sector?', confirmText: 'Delete' }
+    });
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.sectorService.deleteSector(id).subscribe(() => {
+          this.snackBar.open('Sector deleted', 'Close', { duration: 3000 });
+          this.loadSectors();
+        });
+      }
+    });
   }
 }

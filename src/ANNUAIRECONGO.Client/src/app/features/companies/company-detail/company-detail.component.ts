@@ -15,6 +15,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CompanyService } from '@core/services/company.service';
 import { Company, ContactType } from '@core/models/company.model';
 import { AuthService } from '@core/services/auth.service';
+import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
 
 @Component({
   selector: 'app-company-detail',
@@ -53,13 +54,20 @@ import { AuthService } from '@core/services/auth.service';
             @if (company()!.logoUrl) {
               <img [src]="company()!.logoUrl" [alt]="company()!.name" class="company-logo">
             }
-            <div class="info-content">
-              <h1>{{ company()!.name }}</h1>
-              <div class="sectors">
-                @for (sector of company()!.sectors; track sector.sectorId) {
-                  <mat-chip>{{ sector.name }}</mat-chip>
-                }
-              </div>
+             <div class="info-content">
+               <h1>{{ company()!.name }}</h1>
+               <div class="sectors">
+                 @for (sector of company()!.sectors; track sector.sectorId) {
+                   <mat-chip>{{ sector.name }}</mat-chip>
+                 }
+               </div>
+<mat-chip [class.status-active]="company()?.status === 2"
+                          [class.status-draft]="company()?.status === 0"
+                          [class.status-pending]="company()?.status === 1"
+                          [class.status-rejected]="company()?.status === 3"
+                          [class.status-suspended]="company()?.status === 4">
+                 {{ getStatusLabel(company()?.status ?? 0) }}
+               </mat-chip>
               @if (company()!.cityName) {
                 <div class="location">
                   <mat-icon>location_on</mat-icon>
@@ -90,10 +98,10 @@ import { AuthService } from '@core/services/auth.service';
                   
                   <mat-divider></mat-divider>
                   
-                  <h3>Services</h3>
-                  @if (company()!.services.length > 0) {
-                    <ul class="services-list">
-                      @for (service of company()!.services; track service.id) {
+<h3>Services</h3>
+                   @if (company()!.services && company()!.services!.length > 0) {
+                     <ul class="services-list">
+                       @for (service of company()!.services!; track service.id) {
                         <li>
                           <strong>{{ service.title }}</strong>
                           @if (service.description) {
@@ -115,9 +123,9 @@ import { AuthService } from '@core/services/auth.service';
               <mat-card>
                 <mat-card-content>
                   <h3>Contact Information</h3>
-                  @if (company()!.contacts.length > 0) {
+                  @if (company()!.contacts && company()!.contacts!.length > 0) {
                     <div class="contacts-list">
-                      @for (contact of company()!.contacts; track contact.id) {
+                      @for (contact of company()!.contacts!; track contact.id) {
                         <div class="contact-item" (click)="contactAction(contact)">
                           <mat-icon>{{ getContactIcon(contact.type) }}</mat-icon>
                           <div class="contact-info">
@@ -152,9 +160,9 @@ import { AuthService } from '@core/services/auth.service';
               <mat-card>
                 <mat-card-content>
                   <h3>Photos</h3>
-                  @if (company()!.images.length > 0) {
+                  @if (company()!.images && company()!.images!.length > 0) {
                     <div class="gallery-grid">
-                      @for (image of company()!.images; track image.id) {
+                      @for (image of company()!.images!; track image.id) {
                         <div class="gallery-item">
                           <img [src]="image.imageUrl" [alt]="image.caption || company()!.name">
                           @if (image.caption) {
@@ -170,9 +178,9 @@ import { AuthService } from '@core/services/auth.service';
                   <mat-divider></mat-divider>
 
                   <h3>Documents</h3>
-                  @if (company()!.documents.length > 0) {
+                  @if (company()!.documents && company()!.documents!.length > 0) {
                     <div class="documents-list">
-                      @for (doc of company()!.documents; track doc.id) {
+                      @for (doc of company()!.documents!; track doc.id) {
                         <a [href]="doc.documentUrl" target="_blank" class="document-item">
                           <mat-icon>description</mat-icon>
                           <span>{{ doc.documentType }}</span>
@@ -528,6 +536,7 @@ export class CompanyDetailComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
   private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   company = signal<Company | null>(null);
   isLoading = signal<boolean>(true);
@@ -543,17 +552,21 @@ export class CompanyDetailComponent implements OnInit {
   }
 
   openReportDialog(): void {
-    const reason = prompt('Please enter the reason for reporting this company:');
-    if (reason && reason.trim()) {
-      this.companyService.reportCompany(this.company()!.id, reason.trim()).subscribe({
-        next: () => {
-          this.snackBar.open('Report submitted successfully', 'Close', { duration: 3000 });
-        },
-        error: (err) => {
-          this.snackBar.open('Failed to submit report', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(InputDialogComponent, {
+      data: { title: 'Report Company', label: 'Reason', placeholder: 'Enter reason for reporting...' }
+    });
+    dialogRef.afterClosed().subscribe((reason: string | null) => {
+      if (reason && reason.trim()) {
+        this.companyService.reportCompany(this.company()!.id, reason.trim()).subscribe({
+          next: () => {
+            this.snackBar.open('Report submitted successfully', 'Close', { duration: 3000 });
+          },
+          error: () => {
+            this.snackBar.open('Failed to submit report', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   loadCompany(id: string): void {
@@ -597,28 +610,39 @@ export class CompanyDetailComponent implements OnInit {
     return names[type] || 'Contact';
   }
 
-  contactAction(contact: { type: ContactType; value: string }): void {
-    switch (contact.type) {
-      case ContactType.Phone:
-      case ContactType.WhatsApp:
-        window.open(`tel:${contact.value}`);
-        break;
-      case ContactType.Email:
-        window.open(`mailto:${contact.value}`);
-        break;
-      case ContactType.Website:
-        let url = contact.value;
-        if (!url.startsWith('http')) {
-          url = 'https://' + url;
-        }
-        window.open(url, '_blank');
-        break;
-      case ContactType.Facebook:
-      case ContactType.Instagram:
-      case ContactType.LinkedIn:
-      case ContactType.Twitter:
-        window.open(contact.value, '_blank');
-        break;
-    }
-  }
+   contactAction(contact: { type: ContactType; value: string }): void {
+     switch (contact.type) {
+       case ContactType.Phone:
+       case ContactType.WhatsApp:
+         window.open(`tel:${contact.value}`);
+         break;
+       case ContactType.Email:
+         window.open(`mailto:${contact.value}`);
+         break;
+       case ContactType.Website:
+         let url = contact.value;
+         if (!url.startsWith('http')) {
+           url = 'https://' + url;
+         }
+         window.open(url, '_blank');
+         break;
+       case ContactType.Facebook:
+       case ContactType.Instagram:
+       case ContactType.LinkedIn:
+       case ContactType.Twitter:
+         window.open(contact.value, '_blank');
+         break;
+     }
+   }
+
+   getStatusLabel(status: number): string {
+     const labels: { [key: number]: string } = {
+       0: 'Draft',
+       1: 'Pending',
+       2: 'Active',
+       3: 'Rejected',
+       4: 'Suspended'
+     };
+     return labels[status] || 'Unknown';
+   }
 }

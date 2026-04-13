@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 
@@ -31,7 +31,33 @@ export class ApiService {
     return this.http.put<T>(`${this.baseUrl}${endpoint}`, body);
   }
 
-  delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${endpoint}`);
-  }
+delete<T>(endpoint: string, options?: {
+      body?: unknown,
+      headers?: Record<string, string>,
+      params?: Record<string, string | number | boolean>
+    }): Observable<T> {
+      const httpOptions: {
+        body?: unknown;
+        headers?: HttpHeaders;
+        params?: HttpParams;
+      } = {};
+      if (options?.body) httpOptions.body = options.body;
+      if (options?.headers) {
+        let httpHeaders = new HttpHeaders();
+        Object.keys(options.headers).forEach(key => {
+          httpHeaders = httpHeaders.set(key, options.headers![key]);
+        });
+        httpOptions.headers = httpHeaders;
+      }
+      if (options?.params) {
+        let httpParams = new HttpParams();
+        Object.keys(options.params).forEach(key => {
+          if (options.params![key] !== null && options.params![key] !== undefined) {
+            httpParams = httpParams.set(key, String(options.params![key]));
+          }
+        });
+        httpOptions.params = httpParams;
+      }
+      return this.http.delete<T>(`${this.baseUrl}${endpoint}`, httpOptions);
+    }
 }
