@@ -13,6 +13,7 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.Val
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Contacts;
+using ANNUAIRECONGO.Domain.Companies.Enums;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -103,6 +104,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         [FromQuery] Guid? sectorId = null,
         [FromQuery] Guid? cityId = null,
         [FromQuery] Guid? regionId = null,
+        [FromQuery] int? status = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -111,6 +113,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
             sectorId,
             cityId,
             regionId,
+            status,
             pageNumber,
             pageSize), ct);
         return result.Match(
@@ -476,7 +479,12 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     [Authorize(Roles ="EntrepriseOwner")]
     public async Task<IActionResult> AddDocument(Guid id, [FromBody] AddDocumentRequest commandRequest, CancellationToken ct)
     {
-        var result = await sender.Send(new AddDocumentCommand(id,commandRequest.DocumentUrl,commandRequest.DocumentType,commandRequest.Description,commandRequest.IsPublic), ct);
+        if (!Enum.TryParse<DocumentType>(commandRequest.DocumentType, true, out var documentType))
+        {
+            return BadRequest($"Invalid document type: {commandRequest.DocumentType}");
+        }
+        
+        var result = await sender.Send(new AddDocumentCommand(id, commandRequest.DocumentUrl, documentType, commandRequest.Description, commandRequest.IsPublic), ct);
         return result.Match(
             response => Ok(response),
             Problem

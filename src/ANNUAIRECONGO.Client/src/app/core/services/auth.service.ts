@@ -6,6 +6,7 @@ import { TokenResponse, User, LoginRequest, RegisterRequest } from '../models/au
 
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
+const TOKEN_EXPIRY_KEY = 'token_expiry';
 const USER_KEY = 'current_user';
 
 @Injectable({
@@ -89,9 +90,10 @@ export class AuthService {
   private storeTokens(response: TokenResponse): void {
     const token = response.accessToken?.trim() || '';
     const refreshToken = response.refreshToken?.trim() || '';
+    const expiry = response.expiresOnUtc || '';
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    console.log('[AuthService] Token stored, length:', token.length);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, expiry);
   }
 
   private getStoredUser(): User | null {
@@ -108,7 +110,21 @@ export class AuthService {
 
   private hasValidToken(): boolean {
     const token = localStorage.getItem(TOKEN_KEY);
-    return !!token;
+    if (!token) return false;
+    
+    const expiryStr = localStorage.getItem(TOKEN_EXPIRY_KEY);
+    if (!expiryStr) return !!token;
+    
+    try {
+      const expiry = new Date(expiryStr);
+      if (expiry <= new Date()) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+    
+    return true;
   }
 
   init(): void {

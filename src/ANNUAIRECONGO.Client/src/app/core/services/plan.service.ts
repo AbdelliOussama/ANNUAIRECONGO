@@ -10,19 +10,19 @@ export class PlanService {
   private readonly api = inject(ApiService);
 
   getPlans(): Observable<Plan[]> {
-    return this.api.get<Plan[]>('/api/v1.0/plans');
+    return this.api.get<Plan[]>('/api/v1/plans');
   }
 
   getPlanById(id: string): Observable<Plan> {
-    return this.api.get<Plan>(`/api/v1.0/plans/${id}`);
+    return this.api.get<Plan>(`/api/v1/plans/${id}`);
   }
 
   activatePlan(id: string): Observable<Plan> {
-    return this.api.post<Plan>(`/api/v1.0/plans/${id}/activate`, {});
+    return this.api.post<Plan>(`/api/v1/plans/${id}/activate`, {});
   }
 
   deactivatePlan(id: string): Observable<Plan> {
-    return this.api.post<Plan>(`/api/v1.0/plans/${id}/deactivate`, {});
+    return this.api.post<Plan>(`/api/v1/plans/${id}/deactivate`, {});
   }
 
   updatePlan(id: string, data: {
@@ -35,6 +35,6 @@ export class PlanService {
     hasFeaturedBadge: boolean;
     searchPriority: number;
   }): Observable<Plan> {
-    return this.api.put<Plan>(`/api/v1.0/plans/${id}`, data);
+    return this.api.put<Plan>(`/api/v1/plans/${id}`, data);
   }
 }

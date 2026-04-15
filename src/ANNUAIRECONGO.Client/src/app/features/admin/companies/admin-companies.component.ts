@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -6,9 +6,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule } from '@angular/forms';
 import { CompanyService } from '@core/services/company.service';
 import { Company, CompanyStatus } from '@core/models/company.model';
+import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-companies',
@@ -16,22 +22,38 @@ import { Company, CompanyStatus } from '@core/models/company.model';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
     MatCardModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatSelectModule,
+    MatFormFieldModule
   ],
   template: `
     <div class="admin-container">
       <div class="header">
         <h1>Company Management</h1>
+        <mat-form-field appearance="outline">
+          <mat-label>Filter by Status</mat-label>
+          <mat-select [(ngModel)]="statusFilter" (selectionChange)="applyFilter()">
+            <mat-option value="">All</mat-option>
+            <mat-option value="0">Draft</mat-option>
+            <mat-option value="1">Pending</mat-option>
+            <mat-option value="2">Active</mat-option>
+            <mat-option value="3">Rejected</mat-option>
+            <mat-option value="4">Suspended</mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
 
       <mat-card>
         <mat-card-content>
-          <table mat-table [dataSource]="companies()">
+          <table mat-table [dataSource]="filteredCompanies()">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Name</th>
               <td mat-cell *matCellDef="let company">{{ company.name }}</td>
@@ -69,82 +91,135 @@ import { Company, CompanyStatus } from '@core/models/company.model';
                 <button mat-icon-button [routerLink]="['/companies', company.id]">
                   <mat-icon>visibility</mat-icon>
                 </button>
-                <button mat-icon-button color="primary" (click)="validateCompany(company.id)" *ngIf="company.status === 1">
-                  <mat-icon>check_circle</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="suspendCompany(company.id)" *ngIf="company.status === 2">
-                  <mat-icon>pause_circle</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" (click)="toggleFeatured(company)" *ngIf="company.status === 2">
-                  <mat-icon>{{ company.isFeatured ? 'star' : 'star_border' }}</mat-icon>
-                </button>
+                @if (company.status === 1) {
+                  <button mat-icon-button color="primary" (click)="validateCompany(company.id)">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="rejectCompany(company.id)">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                }
+                @if (company.status === 2) {
+                  <button mat-icon-button color="warn" (click)="suspendCompany(company.id)">
+                    <mat-icon>pause_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" (click)="toggleFeatured(company)">
+                    <mat-icon>{{ company.isFeatured ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                }
+                @if (company.status === 4) {
+                  <button mat-icon-button color="primary" (click)="reactivateCompany(company.id)">
+                    <mat-icon>restore</mat-icon>
+                  </button>
+                }
               </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
           </table>
+          <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
         </mat-card-content>
       </mat-card>
     </div>
   `,
-  styles: [`
-    .admin-container {
-      padding: 24px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .status-0 { background-color: #ff9800 !important; color: white !important; }
-    .status-1 { background-color: #2196f3 !important; color: white !important; }
-    .status-2 { background-color: #4caf50 !important; color: white !important; }
-    .status-3 { background-color: #f44336 !important; color: white !important; }
-    .status-4 { background-color: #9e9e9e !important; color: white !important; }
-  `]
+  styleUrl: './admin-companies.component.scss'
 })
-export class AdminCompaniesComponent implements OnInit {
+export class AdminCompaniesComponent implements OnInit, AfterViewInit {
   private companyService = inject(CompanyService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   companies = signal<Company[]>([]);
+  filteredCompanies = signal<Company[]>([]);
   displayedColumns = ['name', 'city', 'status', 'isFeatured', 'createdAt', 'actions'];
+  statusFilter = '';
 
   ngOnInit(): void {
     this.loadCompanies();
   }
 
+  ngAfterViewInit(): void {
+    this.paginator.page.subscribe(() => this.loadPage());
+  }
+
   loadCompanies(): void {
-    this.companyService.getCompanies({ pageSize: 100 }).subscribe(data => {
+    this.loadPage();
+  }
+
+  loadPage(): void {
+    const pageIndex = this.paginator?.pageIndex ?? 0;
+    const pageSize = this.paginator?.pageSize ?? 10;
+    const status = this.statusFilter ? parseInt(this.statusFilter) : null;
+
+    this.companyService.getCompanies({
+      pageNumber: pageIndex + 1,
+      pageSize: pageSize,
+      status: status
+    }).subscribe(data => {
       this.companies.set(data.items);
+      this.filteredCompanies.set(data.items);
+      this.paginator.length = data.totalCount;
     });
   }
 
-   getStatusLabel(status: number): string {
-     const labels: { [key: number]: string } = {
-       0: 'Draft',
-       1: 'Pending',
-       2: 'Active',
-       3: 'Rejected',
-       4: 'Suspended'
-     };
-     return labels[status] || 'Unknown';
-   }
+  applyFilter(): void {
+    this.paginator.pageIndex = 0;
+    this.loadPage();
+  }
 
-   validateCompany(id: string): void {
-     this.companyService.validateCompany(id).subscribe(() => this.loadCompanies());
-   }
+  getStatusLabel(status: number): string {
+    const labels: { [key: number]: string } = {
+      0: 'Draft',
+      1: 'Pending',
+      2: 'Active',
+      3: 'Rejected',
+      4: 'Suspended'
+    };
+    return labels[status] || 'Unknown';
+  }
+
+  validateCompany(id: string): void {
+    this.companyService.validateCompany(id).subscribe(() => this.loadCompanies());
+  }
 
   suspendCompany(id: string): void {
-    // Would call suspend endpoint
-    this.loadCompanies();
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Suspend Company', message: 'Are you sure you want to suspend this company?', confirmText: 'Suspend' }
+    });
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.companyService.suspendCompany(id).subscribe(() => {
+          this.snackBar.open('Company suspended', 'Close', { duration: 3000 });
+          this.loadCompanies();
+        });
+      }
+    });
+  }
+
+  reactivateCompany(id: string): void {
+    this.companyService.reactivateCompany(id).subscribe(() => {
+      this.snackBar.open('Company reactivated', 'Close', { duration: 3000 });
+      this.loadCompanies();
+    });
+  }
+
+  rejectCompany(id: string): void {
+    const reason = prompt('Rejection reason:');
+    if (!reason) return;
+    this.companyService.rejectCompany(id, reason).subscribe({
+      next: () => {
+        this.snackBar.open('Company rejected', 'Close', { duration: 3000 });
+        this.loadCompanies();
+      },
+      error: (err) => this.snackBar.open(err.error?.title || 'Failed to reject', 'Close', { duration: 3000 })
+    });
   }
 
   toggleFeatured(company: Company): void {
-    this.companyService.updateCompanyMedia(company.id, company.logoUrl || undefined, company.coverUrl || undefined)
+    this.companyService.setFeatured(company.id, !company.isFeatured)
       .subscribe(() => this.loadCompanies());
   }
 }

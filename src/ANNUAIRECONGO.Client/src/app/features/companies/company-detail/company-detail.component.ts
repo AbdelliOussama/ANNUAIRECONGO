@@ -181,12 +181,9 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
                   @if (company()!.documents && company()!.documents!.length > 0) {
                     <div class="documents-list">
                       @for (doc of company()!.documents!; track doc.id) {
-                        <a [href]="doc.documentUrl" target="_blank" class="document-item">
+                        <a [href]="doc.fileUrl" target="_blank" class="document-item">
                           <mat-icon>description</mat-icon>
-                          <span>{{ doc.documentType }}</span>
-                          @if (doc.description) {
-                            <span class="doc-description">{{ doc.description }}</span>
-                          }
+                          <span>{{ doc.docType }}</span>
                         </a>
                       }
                     </div>

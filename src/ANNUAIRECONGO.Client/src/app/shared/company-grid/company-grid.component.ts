@@ -19,11 +19,11 @@ import { Company } from '@core/models/company.model';
     MatPaginatorModule
   ],
   template: `
-    @if (isLoading()) {
+    @if (isLoading) {
       <div class="loading-container">
         <mat-spinner></mat-spinner>
       </div>
-    } @else if (companies().length === 0) {
+    } @else if (companies.length === 0) {
       <div class="empty-state">
         <mat-icon>business</mat-icon>
         <h3>No companies found</h3>
@@ -31,7 +31,7 @@ import { Company } from '@core/models/company.model';
       </div>
     } @else {
       <div class="companies-grid">
-        @for (company of companies(); track company.id) {
+        @for (company of companies; track company.id) {
           <mat-card class="company-card" [routerLink]="['/companies', company.id]">
             <div class="cover-container">
               @if (company.coverUrl) {
@@ -72,9 +72,9 @@ import { Company } from '@core/models/company.model';
         }
       </div>
 
-      @if (showPagination()) {
+      @if (showPagination) {
         <mat-paginator
-          [length]="totalCount()"
+          [length]="totalCount"
           [pageSize]="pageSize"
           [pageIndex]="pageNumber - 1"
           [pageSizeOptions]="[6, 12, 24]"
@@ -248,11 +248,11 @@ import { Company } from '@core/models/company.model';
   `]
 })
 export class CompanyGridComponent {
-  @Input() companies = signal<Company[]>([]);
-  @Input() totalCount = signal<number>(0);
-  @Input() isLoading = signal<boolean>(false);
-  @Input() showPagination = signal<boolean>(true);
-  
+  @Input() companies: Company[] = [];
+  @Input() totalCount = 0;
+  @Input() isLoading = false;
+  @Input() showPagination = true;
+
   @Input() pageNumber = 1;
   @Input() pageSize = 12;
 

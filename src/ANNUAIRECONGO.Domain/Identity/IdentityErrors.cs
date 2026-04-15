@@ -14,4 +14,8 @@ public static class IdentityErrors
 
     public static readonly Error EmailNotConfirmed =
         Error.Conflict("Identity.EmailNotConfirmed", "Email address has not been confirmed.");
+
+    public static readonly Error UserNotFound =
+        Error.NotFound("Identity.UserNotFound", "User not found.");
+
 }

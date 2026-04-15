@@ -31,10 +31,10 @@ export interface CompanyImage {
 
 export interface CompanyDocument {
   id: string;
-  documentUrl: string;
-  documentType: string;
-  description?: string;
-  isPublic: boolean;
+  fileUrl: string;
+  docType: number;
+  isPublic?: boolean;
+  uploadedAt: string;
 }
 
 export interface Sector {
@@ -96,12 +96,11 @@ export interface Subscription {
   id: string;
   companyId: string;
   planId: string;
-  planName: PlanName;
-  startDate: string;
-  endDate: string;
+  planName: number;
+  status: number;
+  startedAt: string;  // was startDate
+  expiresAt: string;  // was endDate
   isActive: boolean;
-  paymentMethod: PaymentMethod;
-  payments: Payment[];
 }
 
 export enum PlanName {
@@ -112,20 +111,22 @@ export enum PlanName {
 }
 
 export enum PaymentMethod {
-  None = 0,
-  CreditCard = 1,
-  MobileMoney = 2,
-  BankTransfer = 3
+  Stripe = 0,
+  MTNMoMo = 1,
+  AirtelMoney = 2
 }
 
 export interface Payment {
   id: string;
+  companyId: string;
+  subscriptionId: string;
   amount: number;
   currency: string;
-  status: PaymentStatus;
-  paymentMethod: PaymentMethod;
-  paymentGatewayReference?: string;
-  createdAt: string;
+  method: number;        // was paymentMethod
+  status: number;
+  gatewayRef?: string;   // was paymentGatewayReference
+  invoiceUrl?: string;
+  paidAt?: string;       // was createdAt
 }
 
 export enum PaymentStatus {
@@ -175,14 +176,12 @@ export interface SectorStats {
 }
 
 export interface BusinessOwner {
-  id: string;
-  userId: string;
+  businessOwnerId: string;  // was "id"
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
+  fullName: string;
+  phone?: string;            // was "phoneNumber"
   companyPosition?: string;
-  createdAt: string;
-  companyCount?: number;
 }
 
 export interface Plan {
@@ -213,6 +212,7 @@ export interface CompanyFilter {
   sectorId?: string;
   cityId?: string;
   regionId?: string;
+  status?: number | null;
   pageNumber?: number;
   pageSize?: number;
 }

@@ -10,14 +10,14 @@ export class StatsService {
   private readonly api = inject(ApiService);
 
   getPlatformSummary(): Observable<PlatformStats> {
-    return this.api.get<PlatformStats>('/api/v1.0/stats/platform-summary');
+    return this.api.get<PlatformStats>('/api/v1/stats/platform-summary');
   }
 
   getRegionStats(): Observable<RegionStats[]> {
-    return this.api.get<RegionStats[]>('/api/v1.0/stats/regions');
+    return this.api.get<RegionStats[]>('/api/v1/stats/regions');
   }
 
   getSectorStats(): Observable<SectorStats[]> {
-    return this.api.get<SectorStats[]>('/api/v1.0/stats/sectors');
+    return this.api.get<SectorStats[]>('/api/v1/stats/sectors');
   }
 }

@@ -84,14 +84,14 @@ imports: [
          </div>
        </div>
 
-       <app-company-grid
-         [companies]="companies"
-         [totalCount]="totalCount"
-         [isLoading]="isLoading"
-         [pageNumber]="pageNumber"
-         [pageSize]="pageSize"
-         (pageChange)="onPageChange($event)"
-       ></app-company-grid>
+<app-company-grid
+          [companies]="companiesValue"
+          [totalCount]="totalCountValue"
+          [isLoading]="isLoadingValue"
+          [pageNumber]="pageNumber"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        ></app-company-grid>
      </section>
     </div>
   `,
@@ -419,12 +419,16 @@ export class HomeComponent implements OnInit {
   totalCount = signal<number>(0);
   isLoading = signal<boolean>(false);
 
-  searchTerm = '';
+searchTerm = '';
   selectedSectorId: string | null = null;
   selectedRegionId: string | null = null;
   selectedCityId: string | null = null;
   pageNumber = 1;
   pageSize = 12;
+
+  get companiesValue() { return this.companies(); }
+  get totalCountValue() { return this.totalCount(); }
+  get isLoadingValue() { return this.isLoading(); }
 
   ngOnInit(): void {
     this.loadSectors();

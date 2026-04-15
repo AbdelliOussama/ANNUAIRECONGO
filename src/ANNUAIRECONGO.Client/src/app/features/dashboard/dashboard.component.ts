@@ -6,8 +6,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { StatsService } from '@core/services/stats.service';
 import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { CompanyService } from '@core/services/company.service';
 import { AuthService } from '@core/services/auth.service';
 import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/company.model';
 
@@ -21,7 +24,9 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
     MatButtonModule,
     MatIconModule,
     MatTableModule,
-    MatChipsModule
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="dashboard-container">
@@ -103,28 +108,43 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
 
       @if (authService.isEntrepriseOwner()) {
         <h2>My Companies</h2>
-        <div class="companies-grid">
+<div class="companies-grid">
           @for (company of myCompanies(); track company.id) {
-            <mat-card class="company-card" [routerLink]="['/companies', company.id]">
-              <img [src]="company.coverUrl || 'assets/placeholder-company.jpg'" alt="{{ company.name }}">
-              <mat-card-header>
+            <mat-card class="company-card">
+              <img [src]="company.coverUrl || 'assets/placeholder-company.jpg'" alt="{{ company.name }}" [routerLink]="['/companies', company.id]">
+              <mat-card-header [routerLink]="['/companies', company.id]">
                 <mat-card-title>{{ company.name }}</mat-card-title>
                 <mat-card-subtitle>{{ company.cityName }}</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-             <mat-chip-set>
-                   <mat-chip [class.status-active]="company.status === 2"
-                             [class.status-draft]="company.status === 0"
-                             [class.status-pending]="company.status === 1"
-                             [class.status-rejected]="company.status === 3"
-                             [class.status-suspended]="company.status === 4">
-                     {{ getStatusLabel(company.status) }}
-                   </mat-chip>
-                  @if (company.isFeatured) {
-                    <mat-chip color="accent">Featured</mat-chip>
-                  }
-                </mat-chip-set>
-                <p>{{ company.description | slice:0:100 }}...</p>
+              <mat-chip-set>
+                    <mat-chip [class.status-active]="company.status === 2"
+                              [class.status-draft]="company.status === 0"
+                              [class.status-pending]="company.status === 1"
+                              [class.status-rejected]="company.status === 3"
+                              [class.status-suspended]="company.status === 4">
+                      {{ getStatusLabel(company.status) }}
+                    </mat-chip>
+                   @if (company.isFeatured) {
+                     <mat-chip color="accent">Featured</mat-chip>
+                   }
+                 </mat-chip-set>
+                 <p>{{ company.description | slice:0:100 }}...</p>
+                 <div class="company-actions">
+                   @if (company.status === 0) {
+                     <button mat-raised-button color="primary" (click)="submitCompany(company.id, $event)">
+                       @if (submittingCompanyId() === company.id) {
+                         <mat-spinner diameter="18"></mat-spinner>
+                       }
+                       Submit for Review
+                     </button>
+                   }
+                   @if (company.status === 2) {
+                     <button mat-raised-button color="primary" [routerLink]="['/companies', company.id, 'edit']">
+                       Edit Profile
+                     </button>
+                   }
+                 </div>
               </mat-card-content>
             </mat-card>
           } @empty {
@@ -203,12 +223,16 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
       gap: 16px;
     }
 
-    .company-card {
+.company-card {
       cursor: pointer;
       transition: transform 0.2s;
       
       &:hover {
         transform: translateY(-4px);
+      }
+      
+      img, mat-card-header {
+        cursor: pointer;
       }
       
       img {
@@ -221,12 +245,19 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
         margin: 8px 0;
       }
       
+      .company-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      
        .status-active { background-color: #4caf50; color: white; }
        .status-draft { background-color: #ff9800; color: white; }
        .status-pending { background-color: #2196f3; color: white; }
        .status-rejected { background-color: #f44336; color: white; }
        .status-suspended { background-color: #9e9e9e; color: white; }
-    }
+     }
 
     .no-companies {
       text-align: center;
@@ -250,11 +281,15 @@ export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
   private statsService = inject(StatsService);
   private businessOwnerService = inject(BusinessOwnerService);
+  private companyService = inject(CompanyService);
+  private snackBar = inject(MatSnackBar);
 
   platformStats = signal<PlatformStats | null>(null);
   regionStats = signal<RegionStats[]>([]);
   sectorStats = signal<SectorStats[]>([]);
   myCompanies = signal<Company[]>([]);
+  submittingCompanyId = signal<string | null>(null);
+  isLoading = signal<boolean>(false);
 
   ngOnInit(): void {
     if (this.authService.isAdmin()) {
@@ -266,23 +301,51 @@ export class DashboardComponent implements OnInit {
   }
 
   loadStats(): void {
-    this.statsService.getPlatformSummary().subscribe(data => this.platformStats.set(data));
-    this.statsService.getRegionStats().subscribe(data => this.regionStats.set(data));
-    this.statsService.getSectorStats().subscribe(data => this.sectorStats.set(data));
+    this.statsService.getPlatformSummary().subscribe({
+      next: data => this.platformStats.set(data),
+      error: () => this.isLoading.set(false)
+    });
+    this.statsService.getRegionStats().subscribe({
+      next: data => this.regionStats.set(data),
+      error: () => this.isLoading.set(false)
+    });
+    this.statsService.getSectorStats().subscribe({
+      next: data => this.sectorStats.set(data),
+      error: () => this.isLoading.set(false)
+    });
   }
 
   loadMyCompanies(): void {
-    this.businessOwnerService.getMyCompanies().subscribe(data => this.myCompanies.set(data));
+    this.businessOwnerService.getMyCompanies().subscribe({
+      next: data => this.myCompanies.set(data),
+      error: () => this.isLoading.set(false)
+    });
   }
 
-   getStatusLabel(status: number): string {
-     const labels: { [key: number]: string } = {
-       0: 'Draft',
-       1: 'Pending',
-       2: 'Active',
-       3: 'Rejected',
-       4: 'Suspended'
-     };
-     return labels[status] || 'Unknown';
-   }
+getStatusLabel(status: number): string {
+      const labels: { [key: number]: string } = {
+        0: 'Draft',
+        1: 'Pending',
+        2: 'Active',
+        3: 'Rejected',
+        4: 'Suspended'
+      };
+      return labels[status] || 'Unknown';
+    }
+
+  submitCompany(companyId: string, event: Event): void {
+    event.stopPropagation();
+    this.submittingCompanyId.set(companyId);
+    this.companyService.submitCompany(companyId).subscribe({
+      next: () => {
+        this.snackBar.open('Company submitted for review!', 'Close', { duration: 3000 });
+        this.loadMyCompanies();
+        this.submittingCompanyId.set(null);
+      },
+      error: (err) => {
+        this.snackBar.open(err.error?.title || 'Failed to submit company', 'Close', { duration: 3000 });
+        this.submittingCompanyId.set(null);
+      }
+    });
+  }
 }

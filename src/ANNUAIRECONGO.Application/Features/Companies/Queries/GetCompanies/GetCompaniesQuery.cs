@@ -10,5 +10,6 @@ public sealed record GetCompaniesQuery(
     Guid? SectorId,
     Guid? CityId,
     Guid? RegionId,
+    int? Status,
     int PageNumber,
     int PageSize) : IRequest<Result<PaginatedList<CompanyDto>>>;

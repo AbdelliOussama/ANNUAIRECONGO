@@ -7,11 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PlanService } from '@core/services/plan.service';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { AuthService } from '@core/services/auth.service';
-import { Plan } from '@core/models/company.model';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { Plan, Company } from '@core/models/company.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -26,6 +28,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatProgressSpinnerModule,
     MatRadioModule,
     MatFormFieldModule,
+    MatSelectModule,
     FormsModule,
     ReactiveFormsModule
   ],
@@ -50,7 +53,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           } @else {
             <div class="plans-grid">
               @for (plan of plans(); track plan.id) {
-                <mat-card class="plan-card" [class.selected]="selectedPlanId() === plan.id">
+                <mat-card class="plan-card" [class.selected]="selectedPlanId === plan.id">
                   <mat-card-content>
                     <div class="plan-header">
                       <h3>{{ plan.name }}</h3>
@@ -101,7 +104,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                   </mat-card-content>
                   <mat-card-actions>
                     <button mat-flat-button color="primary" 
-                            [disabled]="selectedPlanId() !== plan.id || isSubscribing()"
+                            [disabled]="selectedPlanId !== plan.id || isSubscribing()"
                             (click)="subscribeToPlan(plan.id)">
                       @if (isSubscribing()) {
                         <mat-spinner diameter="20"></mat-spinner>
@@ -114,6 +117,33 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                 </mat-card>
               }
             </div>
+            
+            @if (companies().length > 0) {
+              <div class="company-selection">
+                <h4>Select a company to subscribe</h4>
+                <mat-form-field appearance="outline">
+                  <mat-label>Choose a company</mat-label>
+                  <mat-select [(ngModel)]="selectedCompanyId">
+                    @for (company of companies(); track company.id) {
+                      <mat-option [value]="company.id">
+                        {{ company.name }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            } @else if (isLoadingCompanies()) {
+              <div class="loading-companies">
+                <mat-spinner diameter="24"></mat-spinner>
+                <p>Loading your companies...</p>
+              </div>
+            } @else {
+              <div class="no-companies">
+                <mat-icon>business</mat-icon>
+                <p>You don't have any companies yet</p>
+                <a mat-button color="primary" routerLink="/companies/create">Create a Company</a>
+              </div>
+            }
           }
         </mat-card-content>
       </mat-card>
@@ -260,21 +290,69 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         grid-template-columns: 1fr;
       }
     }
+    
+    .company-selection {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    
+    .company-selection h4 {
+      margin: 0 0 12px 0;
+      font-weight: 500;
+    }
+    
+    .company-selection mat-form-field {
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    .loading-companies, .no-companies {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 24px;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .loading-companies mat-spinner {
+      margin-bottom: 12px;
+    }
+    
+    .loading-companies p, .no-companies p {
+      margin: 0 0 12px 0;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .no-companies mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 8px;
+      color: rgba(0, 0, 0, 0.38);
+    }
   `]
 })
 export class SubscriptionPlansComponent implements OnInit {
   private planService = inject(PlanService);
   private subscriptionService = inject(SubscriptionService);
   private authService = inject(AuthService);
+  private businessOwnerService = inject(BusinessOwnerService);
   private snackBar = inject(MatSnackBar);
 
   plans = signal<Plan[]>([]);
-  selectedPlanId = signal<string>('');
+  companies = signal<Company[]>([]);
+  selectedPlanId = '';
+  selectedCompanyId = '';
   isLoading = signal<boolean>(false);
+  isLoadingCompanies = signal<boolean>(false);
   isSubscribing = signal<boolean>(false);
 
   ngOnInit(): void {
     this.loadPlans();
+    this.loadCompanies();
   }
 
   loadPlans(): void {
@@ -291,19 +369,33 @@ export class SubscriptionPlansComponent implements OnInit {
     });
   }
 
+  loadCompanies(): void {
+    this.isLoadingCompanies.set(true);
+    this.businessOwnerService.getMyCompanies().subscribe({
+      next: (data) => {
+        this.companies.set(data);
+        this.isLoadingCompanies.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading companies:', err);
+        this.isLoadingCompanies.set(false);
+      }
+    });
+  }
+
   subscribeToPlan(planId: string): void {
     if (!this.authService.isAuthenticated()) {
       this.snackBar.open('Please log in to subscribe', 'Close', { duration: 3000 });
       return;
     }
 
-    // For simplicity, we'll use the first company of the authenticated user
-    // In a real app, you might want to let the user select which company to subscribe
+    const companyId = this.selectedCompanyId;
+    if (!companyId) {
+      this.snackBar.open('Please select a company to subscribe', 'Close', { duration: 3000 });
+      return;
+    }
+
     this.isSubscribing.set(true);
-    
-    // This is a simplified approach - in reality, you'd need to get the user's company ID
-    // For demo purposes, we'll use a placeholder or get it from auth service
-    const companyId = 'placeholder-company-id'; // This should come from user's company data
     
     const subscribeRequest = {
       companyId: companyId,
@@ -315,7 +407,6 @@ export class SubscriptionPlansComponent implements OnInit {
       next: (subscription) => {
         this.snackBar.open('Subscription created successfully!', 'Close', { duration: 3000 });
         this.isSubscribing.set(false);
-        // Navigate to subscription details or dashboard
       },
       error: (err) => {
         console.error('Error creating subscription:', err);

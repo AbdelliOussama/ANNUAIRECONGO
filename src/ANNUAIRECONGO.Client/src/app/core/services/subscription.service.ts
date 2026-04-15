@@ -16,30 +16,30 @@ export class SubscriptionService {
   private readonly api = inject(ApiService);
 
   createSubscription(data: SubscribeRequest): Observable<Subscription> {
-    return this.api.post<Subscription>('/api/v1.0/subscriptions', data);
+    return this.api.post<Subscription>('/api/v1/subscriptions', data);
   }
 
   cancelSubscription(subscriptionId: string): Observable<Subscription> {
-    return this.api.put<Subscription>(`/api/v1.0/subscriptions/${subscriptionId}/cancel`, {});
+    return this.api.put<Subscription>(`/api/v1/subscriptions/${subscriptionId}/cancel`, {});
   }
 
   getCompanySubscriptions(companyId: string): Observable<Subscription[]> {
-    return this.api.get<Subscription[]>(`/api/v1.0/subscriptions/company/${companyId}`);
+    return this.api.get<Subscription[]>(`/api/v1/subscriptions/company/${companyId}`);
   }
 
   confirmPayment(paymentId: string): Observable<Payment> {
-    return this.api.put<Payment>(`/api/v1.0/subscriptions/payments/${paymentId}/confirm`, {});
+    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/confirm`, {});
   }
 
   refundPayment(paymentId: string): Observable<Payment> {
-    return this.api.put<Payment>(`/api/v1.0/subscriptions/payments/${paymentId}/Refund`, {});
+    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/Refund`, {});
   }
 
   rejectPayment(paymentId: string, reason: string): Observable<Payment> {
-    return this.api.put<Payment>(`/api/v1.0/subscriptions/payments/${paymentId}/Reject`, reason);
+    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/Reject`, reason);
   }
 
   getCompanyPayments(companyId: string): Observable<Payment[]> {
-    return this.api.get<Payment[]>(`/api/v1.0/subscriptions/payments/company/${companyId}`);
+    return this.api.get<Payment[]>(`/api/v1/subscriptions/payments/company/${companyId}`);
   }
 }

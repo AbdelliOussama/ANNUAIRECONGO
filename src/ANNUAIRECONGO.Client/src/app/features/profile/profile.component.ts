@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { switchMap, tap, of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -61,39 +62,39 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
                   <p class="profile-email">{{ authService.currentUser()?.email }}</p>
                 </div>
               </div>
-              
+
               <mat-divider></mat-divider>
-              
+
               <div class="form-section">
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>First Name</mat-label>
                   <input matInput formControlName="firstName" required>
                 </mat-form-field>
               </div>
-              
+
               <div class="form-section">
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>Last Name</mat-label>
                   <input matInput formControlName="lastName" required>
                 </mat-form-field>
               </div>
-              
+
               <div class="form-section">
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>Phone Number</mat-label>
                   <input matInput formControlName="phoneNumber">
                 </mat-form-field>
               </div>
-              
+
               <div class="form-section">
                 <mat-form-field appearance="fill" class="full-width">
                   <mat-label>Company Position</mat-label>
                   <input matInput formControlName="companyPosition">
                 </mat-form-field>
               </div>
-              
+
               <mat-divider></mat-divider>
-              
+
               <div class="info-section">
                 <div class="info-item">
                   <mat-icon>email</mat-icon>
@@ -105,14 +106,19 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
                 </div>
                 <div class="info-item">
                   <mat-icon>work</mat-icon>
-                  <span>Company Count: {{ businessOwner()?.companyCount }}</span>
+                  <!-- <span>Company Count: {{ businessOwner()?.companyCount }}</span> -->
                 </div>
                 <div class="info-item">
                   <mat-icon>subscription</mat-icon>
                   <span>Active Subscriptions: {{ activeSubscriptions()?.length }}</span>
+                  @if (activeSubscriptions()?.length) {
+                    <button mat-button color="warn" (click)="cancelSubscription()">
+                      Cancel Subscription
+                    </button>
+                  }
                 </div>
               </div>
-              
+
               <div class="form-actions">
                 <button mat-button type="button" (click)="resetForm()">
                   Cancel
@@ -138,7 +144,7 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
       max-width: 800px;
       margin: 0 auto;
     }
-    
+
     .loading-container, .empty-state {
       display: flex;
       flex-direction: column;
@@ -147,28 +153,28 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
       padding: 48px;
       text-align: center;
     }
-    
+
     .loading-container mat-icon,
     .empty-state mat-icon {
       font-size: 48px;
       margin-bottom: 24px;
       color: rgba(0, 0, 0, 0.38);
     }
-    
+
     .loading-container p,
     .empty-state p {
       margin: 0;
       font-size: 18px;
       color: rgba(0, 0, 0, 0.6);
     }
-    
+
     .profile-header {
       display: flex;
       align-items: center;
       gap: 24px;
       margin-bottom: 24px;
     }
-    
+
     .profile-avatar {
       width: 80px;
       height: 80px;
@@ -178,34 +184,34 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
       align-items: center;
       justify-content: center;
     }
-    
+
     .profile-avatar mat-icon {
       font-size: 40px;
       color: white;
     }
-    
+
     .profile-info h2 {
       margin: 0 0 4px 0;
       font-size: 24px;
       font-weight: 500;
     }
-    
+
     .profile-email {
       margin: 0;
       font-size: 16px;
       color: rgba(0, 0, 0, 0.6);
     }
-    
+
     .form-section {
       margin-bottom: 20px;
     }
-    
+
     .info-section {
       display: grid;
       gap: 16px;
       margin: 24px 0;
     }
-    
+
     .info-item {
       display: flex;
       align-items: center;
@@ -214,32 +220,32 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
       background: #f5f5f5;
       border-radius: 8px;
     }
-    
+
     .info-item mat-icon {
       font-size: 20px;
       color: #f57c00;
     }
-    
+
     .info-item span {
       font-size: 14px;
     }
-    
+
     .form-actions {
       display: flex;
       justify-content: flex-end;
       gap: 12px;
       margin-top: 24px;
     }
-    
+
     button.mat-button {
       background: transparent;
       color: rgba(0, 0, 0, 0.6);
     }
-    
+
     button.mat-button:hover {
       background: rgba(0, 0, 0, 0.04);
     }
-    
+
     .full-width {
       width: 100%;
     }
@@ -260,7 +266,7 @@ export class ProfileComponent implements OnInit {
     phoneNumber: [''],
     companyPosition: ['']
   });
-  
+
   isLoading = signal<boolean>(true);
   isSaving = signal<boolean>(false);
 
@@ -268,42 +274,39 @@ export class ProfileComponent implements OnInit {
     this.loadProfile();
   }
 
-  loadProfile(): void {
+loadProfile(): void {
+    const userId = this.authService.currentUser()?.id;
+    if (!userId) {
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
-    this.businessOwnerService.getMyCompanies().subscribe({
-      next: (companies) => {
+    this.businessOwnerService.getBusinessOwnerById(userId).pipe(
+      tap(bo => {
+        this.businessOwner.set(bo);
+        this.form.patchValue({
+          firstName: bo.firstName,
+          lastName: bo.lastName,
+          phoneNumber: bo.phone || '',
+          companyPosition: bo.companyPosition || ''
+        });
+      }),
+      switchMap(() => this.businessOwnerService.getMyCompanies()),
+      switchMap(companies => {
         if (companies.length > 0) {
-          this.businessOwnerService.getBusinessOwners().subscribe({
-            next: (businessOwners) => {
-              const bo = businessOwners.find(b => b.userId === this.authService.currentUser()?.id);
-              if (bo) {
-                this.businessOwner.set(bo);
-                this.form.patchValue({
-                  firstName: bo.firstName,
-                  lastName: bo.lastName,
-                  phoneNumber: bo.phoneNumber || '',
-                  companyPosition: bo.companyPosition || ''
-                });
-                
-                // Load subscriptions for this business owner
-                this.loadSubscriptions();
-              } else {
-                this.businessOwner.set(null);
-                this.isLoading.set(false);
-              }
-            },
-            error: (err) => {
-              console.error('Error loading business owners:', err);
-              this.isLoading.set(false);
-            }
-          });
-        } else {
-          this.businessOwner.set(null);
-          this.isLoading.set(false);
+          return this.subscriptionService.getCompanySubscriptions(companies[0].id);
         }
+        return of([]);
+      })
+    ).subscribe({
+      next: (subscriptions) => {
+        this.activeSubscriptions.set(subscriptions.filter(s => s.isActive));
+        this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading my companies:', err);
+      error: () => {
+        this.businessOwner.set(null);
+        this.activeSubscriptions.set([]);
         this.isLoading.set(false);
       }
     });
@@ -343,13 +346,12 @@ export class ProfileComponent implements OnInit {
       this.isLoading.set(false);
     }
   }
-
   saveProfile(): void {
     const businessOwner = this.businessOwner();
     if (businessOwner && this.form.valid) {
       this.isSaving.set(true);
       const formValue = this.form.value;
-      this.businessOwnerService.updateBusinessOwner(businessOwner.id, {
+      this.businessOwnerService.updateBusinessOwner(businessOwner.businessOwnerId, {
         firstName: formValue.firstName || '',
         lastName: formValue.lastName || '',
         phoneNumber: formValue.phoneNumber || '',
@@ -376,7 +378,7 @@ export class ProfileComponent implements OnInit {
       this.form.patchValue({
         firstName: businessOwner.firstName,
         lastName: businessOwner.lastName,
-        phoneNumber: businessOwner.phoneNumber || '',
+        phoneNumber: businessOwner.phone || '',
         companyPosition: businessOwner.companyPosition || ''
       });
     }
@@ -384,5 +386,18 @@ export class ProfileComponent implements OnInit {
 
   refreshProfile(): void {
     this.loadProfile();
+  }
+
+  cancelSubscription(): void {
+    const subscription = this.activeSubscriptions()[0];
+    if (!subscription) return;
+    if (!confirm('Are you sure you want to cancel your subscription?')) return;
+    this.subscriptionService.cancelSubscription(subscription.id).subscribe({
+      next: () => {
+        this.snackBar.open('Subscription cancelled', 'Close', { duration: 3000 });
+        this.loadSubscriptions();
+      },
+      error: (err) => this.snackBar.open(err.error?.title || 'Failed to cancel', 'Close', { duration: 3000 })
+    });
   }
 }

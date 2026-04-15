@@ -241,7 +241,14 @@ export class AdminGeographyComponent implements OnInit {
   }
 
   deleteCity(cityId: string, regionId: string): void {
-    // Would need delete method in service
-    this.snackBar.open('Delete not implemented', 'Close', { duration: 3000 });
+    if (!confirm('Delete this city?')) return;
+    this.geographyService.deleteCity(cityId).subscribe({
+      next: () => {
+        this.snackBar.open('City deleted', 'Close', { duration: 3000 });
+        // Reload the page to refresh the list
+        window.location.reload();
+      },
+      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete city', 'Close', { duration: 3000 })
+    });
   }
 }

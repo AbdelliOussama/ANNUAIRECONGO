@@ -65,6 +65,10 @@ public class IdentityService : IIdentityService
     public async Task<Result<AppUserDto>> GetUserByIdAsync(string userId)
     {
         var user =await _userManager.FindByIdAsync(userId);
+        if(user is null)
+        {
+            return IdentityErrors.UserNotFound;
+        }
         var roles =await _userManager.GetRolesAsync(user);
         var claims =await _userManager.GetClaimsAsync(user);
 

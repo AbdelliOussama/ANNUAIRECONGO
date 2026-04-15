@@ -79,9 +79,9 @@ import { CompanyGridComponent } from '@shared/company-grid/company-grid.componen
       </div>
 
       <app-company-grid
-        [companies]="companies"
-        [totalCount]="totalCount"
-        [isLoading]="isLoading"
+        [companies]="companiesValue"
+        [totalCount]="totalCountValue"
+        [isLoading]="isLoadingValue"
         [pageNumber]="pageNumber"
         [pageSize]="pageSize"
         (pageChange)="onPageChange($event)"
@@ -147,6 +147,10 @@ export class CompanyListComponent implements OnInit {
   selectedCityId: string | null = null;
   pageNumber = 1;
   pageSize = 12;
+
+  get companiesValue() { return this.companies(); }
+  get totalCountValue() { return this.totalCount(); }
+  get isLoadingValue() { return this.isLoading(); }
 
   ngOnInit(): void {
     this.loadSectors();

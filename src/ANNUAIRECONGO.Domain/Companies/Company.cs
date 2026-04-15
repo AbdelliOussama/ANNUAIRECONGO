@@ -200,11 +200,10 @@ public class Company : AuditableEntity
     }
     // ── Helpers ───────────────────────────────────────────────────
 
-    public bool IsOwnedBy(string userId)
+    public bool IsOwnedBy(string? userId)
     {
-        if (OwnerId != Guid.Parse(userId))
-            return false;
-        return true;
+        if (!Guid.TryParse(userId, out var id)) return false;
+        return OwnerId == id;
     }
     private static string GenerateSlug(string name) =>
         System.Text.RegularExpressions.Regex.Replace(

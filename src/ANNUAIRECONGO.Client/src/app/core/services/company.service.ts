@@ -17,17 +17,18 @@ export class CompanyService {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
 
-   getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>> {
-     const params: Record<string, string | number> = {};
-     
-     if (filter.searchTerm) params['searchTerm'] = filter.searchTerm;
-     if (filter.sectorId) params['sectorId'] = filter.sectorId;
-     if (filter.cityId) params['cityId'] = filter.cityId;
-     if (filter.regionId) params['regionId'] = filter.regionId;
-     if (filter.pageNumber) params['pageNumber'] = filter.pageNumber;
-     if (filter.pageSize) params['pageSize'] = filter.pageSize;
- 
-     return this.api.get<PaginatedResponse<Company>>('/api/v1/companies', params);
+getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>> {
+      const params: Record<string, string | number> = {};
+      
+      if (filter.searchTerm) params['searchTerm'] = filter.searchTerm;
+      if (filter.sectorId) params['sectorId'] = filter.sectorId;
+      if (filter.cityId) params['cityId'] = filter.cityId;
+      if (filter.regionId) params['regionId'] = filter.regionId;
+      if (filter.status !== null && filter.status !== undefined) params['status'] = filter.status;
+      if (filter.pageNumber) params['pageNumber'] = filter.pageNumber;
+      if (filter.pageSize) params['pageSize'] = filter.pageSize;
+  
+      return this.api.get<PaginatedResponse<Company>>('/api/v1/companies', params);
    }
 
    getCompanyById(id: string): Observable<Company> {
@@ -92,5 +93,21 @@ export class CompanyService {
 
   reportCompany(companyId: string, reason: string): Observable<void> {
     return this.api.post(`/api/v1/companies/${companyId}/AddReport`, { reason });
+  }
+
+  suspendCompany(companyId: string): Observable<void> {
+    return this.api.put<void>(`/api/v1/companies/${companyId}/SuspendCompany`, {});
+  }
+
+  reactivateCompany(companyId: string): Observable<void> {
+    return this.api.put<void>(`/api/v1/companies/${companyId}/ReactivateCompany`, {});
+  }
+
+  rejectCompany(companyId: string, reason: string): Observable<void> {
+    return this.api.put<void>(`/api/v1/companies/${companyId}/RejectCompany`, { reason });
+  }
+
+  setFeatured(companyId: string, isFeatured: boolean): Observable<void> {
+    return this.api.put<void>(`/api/v1/companies/${companyId}/setFeatured`, isFeatured);
   }
 }

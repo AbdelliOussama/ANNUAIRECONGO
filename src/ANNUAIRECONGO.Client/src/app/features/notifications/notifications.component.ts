@@ -44,7 +44,7 @@ import { Notification } from '@core/models/company.model';
                   <mat-icon matListItemIcon [class]="'type-' + notification.type">
                     {{ getIcon(notification.type) }}
                   </mat-icon>
-                  <div matListItemTitle>{{ notification.type }}</div>
+                  <div matListItemTitle>{{ getTitle(notification.type) }}</div>
                   <div matListItemLine>{{ notification.message }}</div>
                   <div matListItemMeta>
                     <span class="time">{{ notification.createdAt | date:'short' }}</span>
@@ -136,15 +136,30 @@ export class NotificationsComponent implements OnInit {
   }
 
 getIcon(type: string): string {
-     const icons: { [key: string]: string } = {
-       'company_validated': 'check_circle',
-       'company_rejected': 'error',
-       'payment_success': 'check_circle',
-       'payment_failed': 'error',
-       'subscription_expiring': 'warning'
-     };
-     return icons[type] || 'notifications';
-   }
+      const icons: { [key: string]: string } = {
+        'company_validated': 'check_circle',
+        'company_rejected': 'error',
+        'payment_success': 'check_circle',
+        'payment_failed': 'error',
+        'subscription_expiring': 'warning'
+      };
+      return icons[type] || 'notifications';
+    }
+
+    getTitle(type: string): string {
+      const titles: { [key: string]: string } = {
+        'company_validated': 'Company Approved',
+        'company_rejected': 'Company Rejected',
+        'company_suspended': 'Company Suspended',
+        'company_reactivated': 'Company Reactivated',
+        'subscription_activated': 'Subscription Activated',
+        'subscription_cancelled': 'Subscription Cancelled',
+        'payment_success': 'Payment Successful',
+        'payment_failed': 'Payment Failed',
+        'subscription_expiring': 'Subscription Expiring Soon'
+      };
+      return titles[type] || type;
+    }
 
   markAsRead(id: string): void {
     this.notificationService.markAsRead(id).subscribe(() => this.loadNotifications());

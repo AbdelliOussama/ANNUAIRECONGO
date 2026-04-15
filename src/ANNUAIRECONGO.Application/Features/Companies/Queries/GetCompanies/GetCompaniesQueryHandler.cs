@@ -4,6 +4,7 @@ using ANNUAIRECONGO.Application.Features.Companies.Dtos;
 using ANNUAIRECONGO.Application.Features.Companies.Mappers;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
+using ANNUAIRECONGO.Domain.Companies.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -37,6 +38,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         bool needSectorFilter = request.SectorId.HasValue;
         bool needRegionFilter = request.RegionId.HasValue;
         bool needCityFilter = request.CityId.HasValue;
+        bool needStatusFilter = request.Status.HasValue;
 
         if (needSectorFilter)
         {
@@ -51,6 +53,12 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         if (needRegionFilter)
         {
             query = query.Where(c => c.City.RegionId == request.RegionId.Value);
+        }
+
+        if (needStatusFilter)
+        {
+            var statusValue = (CompanyStatus)request.Status.Value;
+            query = query.Where(c => c.Status == statusValue);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

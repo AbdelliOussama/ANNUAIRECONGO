@@ -24,4 +24,12 @@ export class GeographyService {
   createCity(name: string, regionId: string): Observable<City> {
     return this.api.post<City>('/api/v1/geography/cities', { name, regionId });
   }
+
+  deleteCity(cityId: string): Observable<void> {
+    return this.api.delete<void>(`/api/v1/geography/cities/${cityId}`);
+  }
+
+  deleteRegion(regionId: string): Observable<void> {
+    return this.api.delete<void>(`/api/v1/geography/${regionId}`);
+  }
 }

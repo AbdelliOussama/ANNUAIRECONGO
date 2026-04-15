@@ -45,7 +45,7 @@ import { Notification } from '@core/models/company.model';
             <mat-icon matListItemIcon>business</mat-icon>
             <span matListItemTitle>Companies</span>
           </a>
-          <a mat-list-item routerLink="/cart" (click)="sidenav.close()">
+          <a mat-list-item routerLink="/regions" (click)="sidenav.close()">
             <mat-icon matListItemIcon>public</mat-icon>
             <span matListItemTitle>Regions</span>
           </a>
@@ -118,7 +118,7 @@ import { Notification } from '@core/models/company.model';
           <span class="logo" routerLink="/">Annuaire Congo</span>
           <span class="spacer"></span>
           
-          <button mat-icon-button routerLink="/cart" matTooltip="Regions">
+          <button mat-icon-button routerLink="/regions" matTooltip="Regions">
             <mat-icon>public</mat-icon>
           </button>
           <button mat-icon-button routerLink="/subscription" matTooltip="Subscription Plans">
@@ -178,7 +178,7 @@ import { Notification } from '@core/models/company.model';
             <div class="footer-links">
               <a routerLink="/">Home</a>
               <a routerLink="/companies">Companies</a>
-              <a routerLink="/cart">Regions</a>
+              <a routerLink="/regions">Regions</a>
               <a routerLink="/subscription">Plans</a>
             </div>
           </div>

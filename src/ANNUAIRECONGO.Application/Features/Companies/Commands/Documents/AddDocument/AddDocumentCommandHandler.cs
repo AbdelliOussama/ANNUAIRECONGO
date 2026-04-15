@@ -44,7 +44,7 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
             _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of documents allowed by the subscription plan", request.CompanyId);
             return CompanyErrors.DocumentLimitReached;
         }
-        var documentResult = CompanyDocument.Create(request.CompanyId,(DocumentType)Enum.Parse(typeof(DocumentType), request.DocumentType, true),request.DocumentUrl,request.isPublic);
+        var documentResult = CompanyDocument.Create(request.CompanyId, request.DocumentType, request.DocumentUrl, request.isPublic);
 
         if (documentResult.IsError)
         {

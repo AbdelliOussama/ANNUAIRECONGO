@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './shared/layout/layout.component';
-import { authGuard, adminGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, publicGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -16,12 +16,22 @@ export const routes: Routes = [
         loadComponent: () => import('./features/companies/company-list/company-list.component').then(m => m.CompanyListComponent)
       },
       {
+        path: 'companies/create',
+        loadComponent: () => import('./features/companies/create-company/create-company.component').then(m => m.CreateCompanyComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'companies/:id/edit',
+        loadComponent: () => import('./features/companies/edit-company/edit-company.component').then(m => m.EditCompanyComponent),
+        canActivate: [authGuard]
+      },
+      {
         path: 'companies/:id',
         loadComponent: () => import('./features/companies/company-detail/company-detail.component').then(m => m.CompanyDetailComponent)
       },
       {
-        path: 'cart',
-        loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent)
+        path: 'regions',
+        loadComponent: () => import('./features/regions/regions.component').then(m => m.RegionsComponent)
       },
       {
         path: 'subscription',
@@ -34,11 +44,13 @@ export const routes: Routes = [
       },
       {
         path: 'login',
-        loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+        loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
+        canActivate: [publicGuard]
       },
       {
         path: 'register',
-        loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
+        loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
+        canActivate: [publicGuard]
       },
       {
         path: 'dashboard',
@@ -73,6 +85,16 @@ export const routes: Routes = [
       {
         path: 'admin/geography',
         loadComponent: () => import('./features/admin/geography/admin-geography.component').then(m => m.AdminGeographyComponent),
+        canActivate: [authGuard, adminGuard]
+      },
+      {
+        path: 'admin/reports',
+        loadComponent: () => import('./features/admin/reports/admin-reports.component').then(m => m.AdminReportsComponent),
+        canActivate: [authGuard, adminGuard]
+      },
+      {
+        path: 'admin/business-owners',
+        loadComponent: () => import('./features/admin/business-owners/admin-business-owners.component').then(m => m.AdminBusinessOwnersComponent),
         canActivate: [authGuard, adminGuard]
       },
     ]

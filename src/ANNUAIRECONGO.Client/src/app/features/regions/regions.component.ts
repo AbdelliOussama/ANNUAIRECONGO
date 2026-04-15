@@ -10,7 +10,7 @@ import { StatsService } from '@core/services/stats.service';
 import { RegionStats } from '@core/models/company.model';
 
 @Component({
-  selector: 'app-cart',
+  selector: 'app-regions',
   standalone: true,
   imports: [
     CommonModule,
@@ -22,7 +22,7 @@ import { RegionStats } from '@core/models/company.model';
     MatProgressSpinnerModule
   ],
   template: `
-    <div class="cart-container">
+    <div class="regions-container">
       <mat-card>
         <mat-card-header>
           <mat-card-title>Congo Regions</mat-card-title>
@@ -66,7 +66,7 @@ import { RegionStats } from '@core/models/company.model';
     </div>
   `,
   styles: [`
-    .cart-container {
+    .regions-container {
       padding: 24px;
       max-width: 1200px;
       margin: 0 auto;
@@ -154,7 +154,7 @@ import { RegionStats } from '@core/models/company.model';
     }
   `]
 })
-export class CartComponent implements OnInit {
+export class RegionsComponent implements OnInit {
   private statsService = inject(StatsService);
   
   regionStats = signal<RegionStats[]>([]);
@@ -181,8 +181,6 @@ export class CartComponent implements OnInit {
   
   selectRegion(regionId: string): void {
     this.selectedRegionId = regionId;
-    // In a real implementation, we might navigate to a detailed view or show a dialog
-    // For now, we'll just highlight the selected region
     console.log('Selected region:', regionId);
   }
 }

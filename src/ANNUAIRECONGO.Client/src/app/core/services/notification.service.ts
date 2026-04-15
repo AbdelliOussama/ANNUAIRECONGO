@@ -10,18 +10,18 @@ export class NotificationService {
   private readonly api = inject(ApiService);
 
   getMyNotifications(): Observable<Notification[]> {
-    return this.api.get<Notification[]>('/api/v1.0/notifications');
+    return this.api.get<Notification[]>('/api/v1/notifications');
   }
 
   markAsRead(id: string): Observable<void> {
-    return this.api.put<void>(`/api/v1.0/notifications/${id}/read`, {});
+    return this.api.put<void>(`/api/v1/notifications/${id}/read`, {});
   }
 
   markAllRead(): Observable<void> {
-    return this.api.put<void>('/api/v1.0/notifications/read-all', {});
+    return this.api.put<void>('/api/v1/notifications/read-all', {});
   }
 
   deleteNotification(id: string): Observable<void> {
-    return this.api.delete<void>(`/api/v1.0/notifications/${id}`);
+    return this.api.delete<void>(`/api/v1/notifications/${id}`);
   }
 }
