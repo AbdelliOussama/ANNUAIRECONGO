@@ -1,5 +1,7 @@
 using ANNUAIRECONGO.Application.Features.Geography.Commands.CreateCity;
 using ANNUAIRECONGO.Application.Features.Geography.Commands.CreateRegion;
+using ANNUAIRECONGO.Application.Features.Geography.Commands.DeleteCity;
+using ANNUAIRECONGO.Application.Features.Geography.Commands.DeleteRegion;
 using ANNUAIRECONGO.Application.Features.Geography.Dtos;
 using ANNUAIRECONGO.Application.Features.Geography.Queries.GetCitiesByRegion;
 using ANNUAIRECONGO.Application.Features.Geography.Queries.GetRegions;
@@ -83,6 +85,41 @@ public sealed class GeographyController(ISender sender) : ApiController
         var result = await sender.Send(command, ct);
         return result.Match(
             city => Created($"/api/v1.0/geography/regions/{request.RegionId}/cities/{city.Id}", city),
+            Problem);
+    }
+
+    [HttpDelete("regions/{regionId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Delete a region.")]
+    [EndpointDescription("This endpoint deletes a specific region.")]
+    [EndpointName("DeleteRegion")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteRegion([FromRoute] Guid regionId, CancellationToken ct)
+    {
+        var result = await sender.Send(new DeleteRegionCommand(regionId), ct);
+        return result.Match(
+            _ => NoContent(),
+            Problem);
+    }
+
+
+    [HttpDelete("cities/{cityId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Delete a city.")]
+    [EndpointDescription("This endpoint deletes a specific city.")]
+    [EndpointName("DeleteCity")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteCity([FromRoute] Guid cityId, CancellationToken ct)
+    {
+        var result = await sender.Send(new DeleteCityCommand(cityId), ct);
+        return result.Match(
+            _ => NoContent(),
             Problem);
     }
 }
