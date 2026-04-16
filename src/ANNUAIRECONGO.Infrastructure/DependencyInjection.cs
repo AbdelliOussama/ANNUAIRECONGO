@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Infrastructure.Identity;
 using ANNUAIRECONGO.Infrastructure;
+using ANNUAIRECONGO.Infrastructure.BackgroundServices;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class DependencyInjection
@@ -87,7 +88,7 @@ public static class DependencyInjection
 
         services.AddScoped<INotificationService, NotificationService>();
 
-
+        services.AddHostedService<AnalyticsAggregationBackgroundService>();
 
         return services;
     }

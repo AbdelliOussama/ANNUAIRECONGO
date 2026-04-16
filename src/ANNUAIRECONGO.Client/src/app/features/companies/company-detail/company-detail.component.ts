@@ -610,7 +610,7 @@ export class CompanyDetailComponent implements OnInit {
 contactAction(contact: { type: ContactType; value: string }): void {
       if (this.company()) {
         this.companyService.trackContactClick(this.company()!.id, contact.type).subscribe({
-          error: () {}
+          error: () => {}
         });
       }
 
