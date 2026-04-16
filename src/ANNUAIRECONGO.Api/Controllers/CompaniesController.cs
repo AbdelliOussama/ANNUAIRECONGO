@@ -29,6 +29,8 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.Documents.RemoveDocu
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Services.AddService;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Services.RemoveService;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Reports.AddReport;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.ContactClick.TrackContactClick;
+using ANNUAIRECONGO.Contracts.Requests.Companies.ContactClick;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
@@ -509,5 +511,24 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
             Problem
         );
     }
-      // ****************** Company Documents ******************
+
+    [HttpPost("{id:guid}/contact-click")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Track a contact click for a company.")]
+    [EndpointDescription("This endpoint tracks when a user clicks on a contact method (phone, email, website, etc.).")]
+    [EndpointName("TrackContactClick")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> TrackContactClick(Guid id, [FromBody] TrackContactClickRequest request, CancellationToken ct)
+    {
+        var command = new TrackContactClickCommand(id, (ContactType)request.ContactType);
+        var result = await sender.Send(command, ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
 }

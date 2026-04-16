@@ -607,8 +607,14 @@ export class CompanyDetailComponent implements OnInit {
     return names[type] || 'Contact';
   }
 
-   contactAction(contact: { type: ContactType; value: string }): void {
-     switch (contact.type) {
+contactAction(contact: { type: ContactType; value: string }): void {
+      if (this.company()) {
+        this.companyService.trackContactClick(this.company()!.id, contact.type).subscribe({
+          error: () {}
+        });
+      }
+
+      switch (contact.type) {
        case ContactType.Phone:
        case ContactType.WhatsApp:
          window.open(`tel:${contact.value}`);

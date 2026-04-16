@@ -95,6 +95,10 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
     return this.api.post(`/api/v1/companies/${companyId}/AddReport`, { reason });
   }
 
+  trackContactClick(companyId: string, contactType: number): Observable<void> {
+    return this.api.post(`/api/v1/companies/${companyId}/contact-click`, { contactType });
+  }
+
   suspendCompany(companyId: string): Observable<void> {
     return this.api.put<void>(`/api/v1/companies/${companyId}/SuspendCompany`, {});
   }

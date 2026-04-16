@@ -1,6 +1,7 @@
 
 
 using ANNUAIRECONGO.Domain.Common;
+using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
 using ANNUAIRECONGO.Domain.Companies.Enums;
 
@@ -22,7 +23,7 @@ public class ContactClick : Entity
         ClickedAt = clickedAt;
     }
 
-    public static ContactClick Create(Guid companyId, ContactType contactType)
+    public static Result<ContactClick> Create(Guid companyId, ContactType contactType)
     {
         return new ContactClick(companyId,contactType,DateTime.Now);
     }
