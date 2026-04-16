@@ -4,7 +4,7 @@ using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
 
-public sealed record GetCompanyByIdQuery(Guid id) : ICachedQuery<Result<CompanyDto>>
+public sealed record GetCompanyByIdQuery(Guid id,string? viewerIp) : ICachedQuery<Result<CompanyDto>>
 {
     public string CacheKey => $"company-{id}";
 

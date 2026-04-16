@@ -2,6 +2,7 @@ using ANNUAIRECONGO.Application.Common.Errors;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Companies.Dtos;
 using ANNUAIRECONGO.Application.Features.Companies.Mappers;
+using ANNUAIRECONGO.Domain.Analytics;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
 using MediatR;
@@ -31,6 +32,14 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
             logger.LogWarning("Company with id {Id} not found", request.id);
             return CompanyErrors.CompanyNotFound(request.id);
         }
+        var profileViewResult = ProfileView.Create(company.Id,request.viewerIp);
+        if(profileViewResult.IsError)
+        {
+            _logger.LogInformation("Failed To Create A Profile View ");
+            return profileViewResult.Errors.First();
+        }
+        await _context.ProfileViews.AddAsync(profileViewResult.Value,cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
         return company.ToDto();
     }
 }

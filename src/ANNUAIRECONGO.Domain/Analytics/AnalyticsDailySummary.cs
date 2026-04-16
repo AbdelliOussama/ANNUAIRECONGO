@@ -22,7 +22,6 @@ public class AnalyticsDailySummary : Entity
         ContactClicks = contactClicks;
         SearchAppearances = searchAppearance;
     }
-
     public static Result<AnalyticsDailySummary> Create(
         Guid companyId,
         DateOnly summaryDate,
