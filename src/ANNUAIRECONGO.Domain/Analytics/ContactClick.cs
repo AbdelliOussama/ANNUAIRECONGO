@@ -15,14 +15,15 @@ public class ContactClick : Entity
 
 
     private ContactClick() { }
+    private ContactClick(Guid companyId,ContactType contactType,DateTime clickedAt)
+    {
+        CompanyId = companyId;
+        ContactType = contactType;
+        ClickedAt = clickedAt;
+    }
 
     public static ContactClick Create(Guid companyId, ContactType contactType)
     {
-        return new ContactClick
-        {
-            CompanyId = companyId,
-            ContactType = contactType,
-            ClickedAt = DateTime.UtcNow
-        };
+        return new ContactClick(companyId,contactType,DateTime.Now);
     }
 }

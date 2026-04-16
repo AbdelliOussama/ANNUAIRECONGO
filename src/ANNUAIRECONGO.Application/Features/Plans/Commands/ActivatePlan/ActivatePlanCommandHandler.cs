@@ -1,5 +1,6 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Common.Results;
+using ANNUAIRECONGO.Domain.Logs;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans;
 using MediatR;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -7,11 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Plans.Commands.ActivatePlan;
 
-public sealed record ActivatePlanCommandHandler(ILogger<ActivatePlanCommandHandler> logger, IAppDbContext context, HybridCache cache) : IRequestHandler<ActivatePlanCommand, Result<Updated>>
+public sealed record ActivatePlanCommandHandler(ILogger<ActivatePlanCommandHandler> logger, IAppDbContext context, HybridCache cache, IUser CurrentUser) : IRequestHandler<ActivatePlanCommand, Result<Updated>>
 {
     private readonly ILogger<ActivatePlanCommandHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
+    private readonly IUser _currentUser = CurrentUser;
 
     public async Task<Result<Updated>> Handle(ActivatePlanCommand request, CancellationToken cancellationToken)
     {
@@ -22,6 +24,19 @@ public sealed record ActivatePlanCommandHandler(ILogger<ActivatePlanCommandHandl
             return PlanErrors.NotFound(request.PlanId);
         }
         plan.Activate();
+
+        var adminLogResult = AdminLog.Create(
+            _currentUser.Id,
+            "activated_plan",
+            AdminTargetTypes.Plan,
+            plan.Id,
+            $"Plan '{plan.Name}' activated by admin");
+
+        if (!adminLogResult.IsError)
+            await _context.AdminLogs.AddAsync(adminLogResult.Value, cancellationToken);
+        else
+            _logger.LogWarning("Could not create admin log for ActivatePlan {PlanId}", request.PlanId);
+
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("plans", cancellationToken);
         return Result.Updated;

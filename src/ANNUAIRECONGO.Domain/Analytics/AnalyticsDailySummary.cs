@@ -14,6 +14,14 @@ public class AnalyticsDailySummary : Entity
     public Company Company { get; private set; } = null!;
 
     private AnalyticsDailySummary() { }
+    private AnalyticsDailySummary(Guid companyId,DateOnly summaryDate,int profileViews,int contactClicks,int searchAppearance)
+    {
+        CompanyId = companyId;
+        SummaryDate = summaryDate;
+        ProfileViews = profileViews;
+        ContactClicks = contactClicks;
+        SearchAppearances = searchAppearance;
+    }
 
     public static Result<AnalyticsDailySummary> Create(
         Guid companyId,
@@ -22,14 +30,7 @@ public class AnalyticsDailySummary : Entity
         int contactClicks,
         int searchAppearances)
     {
-        return new AnalyticsDailySummary
-        {
-            CompanyId = companyId,
-            SummaryDate = summaryDate,
-            ProfileViews = profileViews,
-            ContactClicks = contactClicks,
-            SearchAppearances = searchAppearances
-        };
+        return new AnalyticsDailySummary(companyId,summaryDate,profileViews,contactClicks,searchAppearances);
     }
 
     public Result<Updated> UpdateCounts(int profileViews, int contactClicks, int searchAppearances)

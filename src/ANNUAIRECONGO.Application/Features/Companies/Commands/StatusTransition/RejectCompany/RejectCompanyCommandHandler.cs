@@ -2,17 +2,19 @@ using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
 using ANNUAIRECONGO.Domain.Companies.Events;
+using ANNUAIRECONGO.Domain.Logs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.RejectCompany;
-public sealed record RejectCompanyCommandHandler(ILogger<RejectCompanyCommandHandler> logger, IAppDbContext context, HybridCache cache) : IRequestHandler<RejectCompanyCommand, Result<Updated>>
+public sealed record RejectCompanyCommandHandler(ILogger<RejectCompanyCommandHandler> logger, IAppDbContext context, HybridCache cache, IUser CurrentUser) : IRequestHandler<RejectCompanyCommand, Result<Updated>>
 {
     private readonly ILogger<RejectCompanyCommandHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
     private readonly HybridCache _cache = cache;
+    private readonly IUser _currentUser = CurrentUser;
     public async Task<Result<Updated>> Handle(RejectCompanyCommand request, CancellationToken cancellationToken)
     {
         var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.companyId, cancellationToken);
@@ -29,6 +31,19 @@ public sealed record RejectCompanyCommandHandler(ILogger<RejectCompanyCommandHan
             return rejectResult.Errors;
         }
         company.AddDomainEvent(new CompanyRejectedEvent(company.Id, company.OwnerId.ToString(), company.Name, company.RejectionReason));
+
+        var adminLogResult = AdminLog.Create(
+            _currentUser.Id,
+            AdminActions.RejectedCompany,
+            AdminTargetTypes.Company,
+            company.Id,
+            $"Company '{company.Name}' rejected by admin. Reason: {request.reason}");
+
+        if (!adminLogResult.IsError)
+            await _context.AdminLogs.AddAsync(adminLogResult.Value, cancellationToken);
+        else
+            _logger.LogWarning("Could not create admin log for RejectCompany {CompanyId}", request.companyId);
+
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("Company", cancellationToken);
         return Result.Updated;
