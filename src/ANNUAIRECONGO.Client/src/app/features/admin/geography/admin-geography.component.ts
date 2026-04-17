@@ -90,6 +90,10 @@ import { Region, City } from '@core/models/geography.model';
                 <mat-icon>add</mat-icon>
                 Add City
               </button>
+              <button mat-button color="warn" (click)="deleteRegion(region.id)">
+                <mat-icon>delete</mat-icon>
+                Delete Region
+              </button>
             </div>
 
             @if (getCities(region.id).length > 0) {
@@ -245,10 +249,20 @@ export class AdminGeographyComponent implements OnInit {
     this.geographyService.deleteCity(cityId).subscribe({
       next: () => {
         this.snackBar.open('City deleted', 'Close', { duration: 3000 });
-        // Reload the page to refresh the list
-        window.location.reload();
+        this.loadRegions();
       },
       error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete city', 'Close', { duration: 3000 })
+    });
+  }
+
+  deleteRegion(regionId: string): void {
+    if (!confirm('Delete this region and all its cities?')) return;
+    this.geographyService.deleteRegion(regionId).subscribe({
+      next: () => {
+        this.snackBar.open('Region deleted', 'Close', { duration: 3000 });
+        this.loadRegions();
+      },
+      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete region', 'Close', { duration: 3000 })
     });
   }
 }

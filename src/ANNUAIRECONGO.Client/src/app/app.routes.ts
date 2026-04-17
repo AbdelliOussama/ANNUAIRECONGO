@@ -97,6 +97,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/business-owners/admin-business-owners.component').then(m => m.AdminBusinessOwnersComponent),
         canActivate: [authGuard, adminGuard]
       },
+      {
+        path: 'admin/logs',
+        loadComponent: () => import('./features/admin/logs/admin-logs.component').then(m => m.AdminLogsComponent),
+        canActivate: [authGuard, adminGuard]
+      },
     ]
   },
   { path: '**', redirectTo: '' }

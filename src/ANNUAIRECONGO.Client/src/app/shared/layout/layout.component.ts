@@ -97,6 +97,18 @@ import { Notification } from '@core/models/company.model';
                 <mat-icon matListItemIcon>layers</mat-icon>
                 <span matListItemTitle>Plans</span>
               </a>
+              <a mat-list-item routerLink="/admin/business-owners" (click)="sidenav.close()">
+                <mat-icon matListItemIcon>people</mat-icon>
+                <span matListItemTitle>Business Owners</span>
+              </a>
+              <a mat-list-item routerLink="/admin/reports" (click)="sidenav.close()">
+                <mat-icon matListItemIcon>assessment</mat-icon>
+                <span matListItemTitle>Reports</span>
+              </a>
+              <a mat-list-item routerLink="/admin/logs" (click)="sidenav.close()">
+                <mat-icon matListItemIcon>history</mat-icon>
+                <span matListItemTitle>Logs</span>
+              </a>
             }
             @if (authService.isEntrepriseOwner()) {
               <mat-divider></mat-divider>

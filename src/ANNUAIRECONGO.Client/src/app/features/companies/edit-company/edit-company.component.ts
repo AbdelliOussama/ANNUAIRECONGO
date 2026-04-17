@@ -19,6 +19,8 @@ import { SectorService } from '@core/services/sector.service';
 import { AuthService } from '@core/services/auth.service';
 import { Region, City } from '@core/models/geography.model';
 import { Company, Sector, CompanyContact, CompanyService as CompanyServiceModel, CompanyImage, CompanyDocument } from '@core/models/company.model';
+import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
+import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-edit-company',
@@ -467,37 +469,93 @@ export class EditCompanyComponent implements OnInit {
     });
   }
 
-  openContactDialog(contact?: CompanyContact): void {
-    const type = prompt('Contact Type (0=Phone, 1=Email, 2=Website, 3=Social):', contact?.type?.toString() || '0');
-    if (type === null) return;
-    const value = prompt('Contact Value:', contact?.value || '');
-    if (!value) return;
-    const isPrimary = confirm('Is Primary?');
+openContactDialog(contact?: CompanyContact): void {
+    // First dialog for contact type
+    const typeDialogRef = this.dialog.open(InputDialogComponent, {
+      data: {
+        title: 'Contact Type',
+        label: 'Enter 0=Phone, 1=Email, 2=Website, 3=Social',
+        placeholder: contact?.type?.toString() || '0',
+        confirmText: 'Next',
+        cancelText: 'Cancel'
+      }
+    });
 
-    if (contact) {
-      this.companyService.updateContact(this.companyId, contact.id, parseInt(type), value, isPrimary).subscribe({
-        next: () => this.loadCompany(),
-        error: (err) => this.snackBar.open(err.error?.title || 'Failed to update contact', 'Close', { duration: 3000 })
+    typeDialogRef.afterClosed().subscribe((typeResult: string | null) => {
+      if (typeResult === null) return;
+      
+      const type = parseInt(typeResult);
+      if (isNaN(type)) {
+        this.snackBar.open('Invalid contact type', 'Close', { duration: 3000 });
+        return;
+      }
+
+      // Second dialog for contact value
+      const valueDialogRef = this.dialog.open(InputDialogComponent, {
+        data: {
+          title: 'Contact Value',
+          label: 'Enter contact value',
+          placeholder: contact?.value || '',
+          confirmText: 'Next',
+          cancelText: 'Cancel'
+        }
       });
-    } else {
-      this.companyService.addContact(this.companyId, parseInt(type), value, isPrimary).subscribe({
-        next: () => this.loadCompany(),
-        error: (err) => this.snackBar.open(err.error?.title || 'Failed to add contact', 'Close', { duration: 3000 })
+
+      valueDialogRef.afterClosed().subscribe((valueResult: string | null) => {
+        if (valueResult === null || valueResult.trim() === '') return;
+        
+        const value = valueResult.trim();
+
+        // Third dialog for isPrimary confirmation
+        const confirmDialogRef = this.dialog.open(ConfirmDialogComponent, {
+          data: {
+            title: 'Primary Contact',
+            message: 'Is this the primary contact?',
+            confirmText: 'Yes',
+            cancelText: 'No'
+          }
+        });
+
+        confirmDialogRef.afterClosed().subscribe((isPrimaryResult: boolean) => {
+          if (contact) {
+            this.companyService.updateContact(this.companyId, contact.id, type, value, isPrimaryResult).subscribe({
+              next: () => this.loadCompany(),
+              error: (err) => this.snackBar.open(err.error?.title || 'Failed to update contact', 'Close', { duration: 3000 })
+            });
+          } else {
+            this.companyService.addContact(this.companyId, type, value, isPrimaryResult).subscribe({
+              next: () => this.loadCompany(),
+              error: (err) => this.snackBar.open(err.error?.title || 'Failed to add contact', 'Close', { duration: 3000 })
+            });
+          }
+        });
       });
-    }
+    });
   }
 
   editContact(contact: CompanyContact): void {
     this.openContactDialog(contact);
   }
 
-  deleteContact(contactId: string): void {
-    if (!confirm('Delete this contact?')) return;
-    this.companyService.removeContact(this.companyId, contactId).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete contact', 'Close', { duration: 3000 })
-    });
-  }
+   deleteContact(contactId: string): void {
+     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+       data: {
+         title: 'Delete Contact',
+         message: 'Are you sure you want to delete this contact?',
+         confirmText: 'Delete',
+         cancelText: 'Cancel'
+       }
+     });
+
+     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+       if (confirmed) {
+         this.companyService.removeContact(this.companyId, contactId).subscribe({
+           next: () => this.loadCompany(),
+           error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete contact', 'Close', { duration: 3000 })
+         });
+       }
+     });
+   }
 
   getContactTypeIcon(type: number): string {
     const icons: { [key: number]: string } = { 0: 'phone', 1: 'email', 2: 'language', 3: 'share' };
@@ -576,58 +634,192 @@ export class EditCompanyComponent implements OnInit {
   }
 
   addService(): void {
-    const title = prompt('Service Title:');
-    if (!title) return;
-    const description = prompt('Description (optional):') || undefined;
-    this.companyService.addService(this.companyId, title, description).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to add service', 'Close', { duration: 3000 })
+    const dialogRef = this.dialog.open(InputDialogComponent, {
+      data: {
+        title: 'Add Service',
+        label: 'Service Title',
+        placeholder: 'Enter service title',
+        confirmText: 'Add',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((title: string | null) => {
+      if (!title || title.trim() === '') return;
+      
+      const titleValue = title.trim();
+      const descDialogRef = this.dialog.open(InputDialogComponent, {
+        data: {
+          title: 'Service Description',
+          label: 'Description (optional)',
+          placeholder: 'Enter description',
+          confirmText: 'Add',
+          cancelText: 'Skip'
+        }
+      });
+
+      descDialogRef.afterClosed().subscribe((description: string | null) => {
+        const descValue = description?.trim() || undefined;
+        this.companyService.addService(this.companyId, titleValue, descValue).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to add service', 'Close', { duration: 3000 })
+        });
+      });
     });
   }
 
   deleteService(serviceId: string): void {
-    if (!confirm('Delete this service?')) return;
-    this.companyService.removeService(this.companyId, serviceId).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete service', 'Close', { duration: 3000 })
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Service',
+        message: 'Are you sure you want to delete this service?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.companyService.removeService(this.companyId, serviceId).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete service', 'Close', { duration: 3000 })
+        });
+      }
     });
   }
 
   addImage(): void {
-    const imageUrl = prompt('Image URL:');
-    if (!imageUrl) return;
-    const caption = prompt('Caption (optional):') || undefined;
-    this.companyService.addImage(this.companyId, imageUrl, undefined, caption).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to add image', 'Close', { duration: 3000 })
+    const dialogRef = this.dialog.open(InputDialogComponent, {
+      data: {
+        title: 'Add Image',
+        label: 'Image URL',
+        placeholder: 'https://example.com/image.jpg',
+        confirmText: 'Add',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((imageUrl: string | null) => {
+      if (!imageUrl || imageUrl.trim() === '') return;
+      
+      const urlValue = imageUrl.trim();
+      const captionDialogRef = this.dialog.open(InputDialogComponent, {
+        data: {
+          title: 'Image Caption',
+          label: 'Caption (optional)',
+          placeholder: 'Enter caption',
+          confirmText: 'Add',
+          cancelText: 'Skip'
+        }
+      });
+
+      captionDialogRef.afterClosed().subscribe((caption: string | null) => {
+        const captionValue = caption?.trim() || undefined;
+        this.companyService.addImage(this.companyId, urlValue, undefined, captionValue).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to add image', 'Close', { duration: 3000 })
+        });
+      });
     });
   }
 
   deleteImage(imageId: string): void {
-    if (!confirm('Delete this image?')) return;
-    this.companyService.removeImage(this.companyId, imageId).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete image', 'Close', { duration: 3000 })
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Image',
+        message: 'Are you sure you want to delete this image?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.companyService.removeImage(this.companyId, imageId).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete image', 'Close', { duration: 3000 })
+        });
+      }
     });
   }
 
   addDocument(): void {
-    const documentUrl = prompt('Document URL:');
-    if (!documentUrl) return;
-    const docType = prompt('Document Type (Legal=0, Registration=1, Certification=2, Other=3):', '3') || '3';
-    const description = prompt('Description (optional):') || undefined;
-    const isPublic = confirm('Make public?');
-    this.companyService.addDocument(this.companyId, documentUrl, docType, description, isPublic).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to add document', 'Close', { duration: 3000 })
+    const urlDialogRef = this.dialog.open(InputDialogComponent, {
+      data: {
+        title: 'Add Document',
+        label: 'Document URL',
+        placeholder: 'https://example.com/document.pdf',
+        confirmText: 'Next',
+        cancelText: 'Cancel'
+      }
+    });
+
+    urlDialogRef.afterClosed().subscribe((documentUrl: string | null) => {
+      if (!documentUrl || documentUrl.trim() === '') return;
+      
+      const urlValue = documentUrl.trim();
+      const typeDialogRef = this.dialog.open(InputDialogComponent, {
+        data: {
+          title: 'Document Type',
+          label: 'Type: 0=Legal, 1=Registration, 2=Certification, 3=Other',
+          placeholder: '3',
+          confirmText: 'Next',
+          cancelText: 'Cancel'
+        }
+      });
+
+      typeDialogRef.afterClosed().subscribe((docType: string | null) => {
+        if (!docType) return;
+        
+        const descDialogRef = this.dialog.open(InputDialogComponent, {
+          data: {
+            title: 'Description',
+            label: 'Description (optional)',
+            placeholder: 'Enter description',
+            confirmText: 'Add',
+            cancelText: 'Skip'
+          }
+        });
+
+        descDialogRef.afterClosed().subscribe((description: string | null) => {
+          const descValue = description?.trim() || undefined;
+          const isPublicDialogRef = this.dialog.open(ConfirmDialogComponent, {
+            data: {
+              title: 'Visibility',
+              message: 'Make this document public?',
+              confirmText: 'Public',
+              cancelText: 'Private'
+            }
+          });
+
+          isPublicDialogRef.afterClosed().subscribe((isPublic: boolean) => {
+            this.companyService.addDocument(this.companyId, urlValue, docType, descValue, isPublic).subscribe({
+              next: () => this.loadCompany(),
+              error: (err) => this.snackBar.open(err.error?.title || 'Failed to add document', 'Close', { duration: 3000 })
+            });
+          });
+        });
+      });
     });
   }
 
   deleteDocument(documentId: string): void {
-    if (!confirm('Delete this document?')) return;
-    this.companyService.removeDocument(this.companyId, documentId).subscribe({
-      next: () => this.loadCompany(),
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete document', 'Close', { duration: 3000 })
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Document',
+        message: 'Are you sure you want to delete this document?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.companyService.removeDocument(this.companyId, documentId).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete document', 'Close', { duration: 3000 })
+        });
+      }
     });
   }
 

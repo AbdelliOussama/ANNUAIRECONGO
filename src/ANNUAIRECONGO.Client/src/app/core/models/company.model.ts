@@ -69,9 +69,11 @@ export interface Company {
   coverUrl?: string;
   status: CompanyStatus;
   isFeatured: boolean;
+  ownerId?: string;
   cityId?: string;
   cityName?: string;
   regionName?: string;
+  rejectionReason?: string;
   city?: { id: string; name: string };
   sectors: Sector[];
   contacts?: CompanyContact[];
@@ -212,6 +214,7 @@ export interface CompanyFilter {
   sectorId?: string;
   cityId?: string;
   regionId?: string;
+  ownerId?: string;
   status?: number | null;
   pageNumber?: number;
   pageSize?: number;

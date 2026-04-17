@@ -139,11 +139,16 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
                        Submit for Review
                      </button>
                    }
-                   @if (company.status === 2) {
-                     <button mat-raised-button color="primary" [routerLink]="['/companies', company.id, 'edit']">
-                       Edit Profile
-                     </button>
-                   }
+@if (company.status === 2) {
+                      <button mat-raised-button color="primary" [routerLink]="['/companies', company.id, 'edit']">
+                        Edit Profile
+                      </button>
+                    }
+                    @if (company.status === 3) {
+                      <button mat-raised-button color="warn" [routerLink]="['/companies', company.id, 'edit']">
+                        Fix & Resubmit
+                      </button>
+                    }
                  </div>
               </mat-card-content>
             </mat-card>

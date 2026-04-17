@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { CompanyService } from '@core/services/company.service';
 import { Company, CompanyStatus } from '@core/models/company.model';
 import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
+import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
 
 @Component({
   selector: 'app-admin-companies',
@@ -123,7 +124,7 @@ import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component
       </mat-card>
     </div>
   `,
-  styleUrl: './admin-companies.component.scss'
+  styleUrls: ['./admin-companies.component.scss']
 })
 export class AdminCompaniesComponent implements OnInit, AfterViewInit {
   private companyService = inject(CompanyService);
@@ -206,17 +207,30 @@ export class AdminCompaniesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  rejectCompany(id: string): void {
-    const reason = prompt('Rejection reason:');
-    if (!reason) return;
-    this.companyService.rejectCompany(id, reason).subscribe({
-      next: () => {
-        this.snackBar.open('Company rejected', 'Close', { duration: 3000 });
-        this.loadCompanies();
-      },
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to reject', 'Close', { duration: 3000 })
-    });
-  }
+   rejectCompany(id: string): void {
+     const dialogRef = this.dialog.open(InputDialogComponent, {
+       data: {
+         title: 'Reject Company',
+         label: 'Rejection reason',
+         placeholder: 'Please provide a reason for rejection',
+         confirmText: 'Reject',
+         cancelText: 'Cancel'
+       }
+     });
+
+     dialogRef.afterClosed().subscribe((reason: string | null) => {
+       if (reason === null || reason.trim() === '') {
+         return;
+       }
+       this.companyService.rejectCompany(id, reason.trim()).subscribe({
+         next: () => {
+           this.snackBar.open('Company rejected', 'Close', { duration: 3000 });
+           this.loadCompanies();
+         },
+         error: (err) => this.snackBar.open(err.error?.title || 'Failed to reject', 'Close', { duration: 3000 })
+       });
+     });
+   }
 
   toggleFeatured(company: Company): void {
     this.companyService.setFeatured(company.id, !company.isFeatured)

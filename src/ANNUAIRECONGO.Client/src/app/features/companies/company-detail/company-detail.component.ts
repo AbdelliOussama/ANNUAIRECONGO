@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -16,6 +16,7 @@ import { CompanyService } from '@core/services/company.service';
 import { Company, ContactType } from '@core/models/company.model';
 import { AuthService } from '@core/services/auth.service';
 import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-company-detail',
@@ -66,9 +67,15 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
                           [class.status-pending]="company()?.status === 1"
                           [class.status-rejected]="company()?.status === 3"
                           [class.status-suspended]="company()?.status === 4">
-                 {{ getStatusLabel(company()?.status ?? 0) }}
-               </mat-chip>
-              @if (company()!.cityName) {
+{{ getStatusLabel(company()?.status ?? 0) }}
+                </mat-chip>
+                @if (company()?.status === 3 && company()?.rejectionReason) {
+                  <div class="rejection-reason">
+                    <mat-icon>info</mat-icon>
+                    <span>{{ company()!.rejectionReason }}</span>
+                  </div>
+                }
+               @if (company()!.cityName) {
                 <div class="location">
                   <mat-icon>location_on</mat-icon>
                   {{ company()!.address }}{{ company()!.address && company()!.cityName ? ', ' : '' }}{{ company()!.cityName }}
@@ -80,6 +87,12 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
                 <mat-icon>star</mat-icon>
                 Featured Company
               </div>
+            }
+            @if (isOwner()) {
+              <button mat-raised-button color="primary" class="edit-btn" [routerLink]="['/companies', company()!.id, 'edit']">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
             }
             <button mat-button color="warn" class="report-btn" (click)="openReportDialog()">
               <mat-icon>flag</mat-icon>
@@ -194,6 +207,28 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
               </mat-card>
             </div>
           </mat-tab>
+
+          <mat-tab label="Location">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-content>
+                  @if (company()!.latitude && company()!.longitude) {
+                    <h3>Company Location</h3>
+                    <div id="company-map" class="company-map"></div>
+                    <div class="coordinates">
+                      <mat-icon>place</mat-icon>
+                      <span>Lat: {{ company()!.latitude }}, Lng: {{ company()!.longitude }}</span>
+                    </div>
+                  } @else {
+                    <div class="empty-state">
+                      <mat-icon>location_off</mat-icon>
+                      <p>No location coordinates available.</p>
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
         </mat-tab-group>
       </div>
     } @else {
@@ -267,11 +302,17 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
        flex-wrap: wrap;
      }
 
-     .report-btn {
-       position: absolute;
-       bottom: 16px;
-       right: 16px;
-     }
+.report-btn {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+      }
+
+      .edit-btn {
+        position: absolute;
+        bottom: 16px;
+        right: 140px;
+      }
 
     .company-logo {
       width: 100px;
@@ -305,6 +346,24 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
       align-items: center;
       gap: 4px;
       color: rgba(0, 0, 0, 0.6);
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .rejection-reason {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 12px;
+      background: #ffebee;
+      border-radius: 8px;
+      color: #c62828;
+      font-size: 14px;
 
       mat-icon {
         font-size: 18px;
@@ -525,9 +584,48 @@ import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
         justify-content: center;
       }
     }
+
+    .company-map {
+      height: 300px;
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .leaflet-container {
+      height: 100%;
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .coordinates {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(0, 0, 0, 0.6);
+      
+      mat-icon {
+        color: #f57c00;
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px;
+      color: rgba(0, 0, 0, 0.6);
+      
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 8px;
+      }
+    }
   `]
 })
-export class CompanyDetailComponent implements OnInit {
+export class CompanyDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly companyService = inject(CompanyService);
@@ -538,14 +636,74 @@ export class CompanyDetailComponent implements OnInit {
   company = signal<Company | null>(null);
   isLoading = signal<boolean>(true);
   reportReason = '';
+  isOwner = computed(() => {
+    const company = this.company();
+    const user = this.authService.currentUser();
+    return !!(company && user && company.ownerId === user.id);
+  });
+
+  private map: L.Map | null = null;
+  private marker: L.Marker | null = null;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadCompany(id);
-    } else {
-      this.isLoading.set(false);
     }
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initMap(), 500);
+  }
+
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+
+  private initMap(): void {
+    const company = this.company();
+    if (!company || !company.latitude || !company.longitude) return;
+
+    const mapElement = document.getElementById('company-map');
+    if (!mapElement) {
+      console.error('Map element not found');
+      return;
+    }
+
+    if (this.map) {
+      this.map.remove();
+    }
+
+    this.map = L.map('company-map', {
+      center: [company.latitude, company.longitude],
+      zoom: 15,
+      zoomControl: true,
+      scrollWheelZoom: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 18,
+      minZoom: 10
+    }).addTo(this.map);
+
+    this.marker = L.marker([company.latitude, company.longitude], {
+      icon: L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [16, -28],
+        shadowSize: [41, 41]
+      })
+    }).addTo(this.map);
+
+    this.marker.bindPopup(`<strong>${company.name}</strong><br>${company.address || ''}<br>${company.cityName || ''}`).openPopup();
   }
 
   openReportDialog(): void {
@@ -571,6 +729,7 @@ export class CompanyDetailComponent implements OnInit {
       next: (data) => {
         this.company.set(data);
         this.isLoading.set(false);
+        setTimeout(() => this.initMap(), 100);
       },
       error: (err) => {
         console.error('Error loading company:', err);

@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
@@ -160,6 +160,7 @@ export class RegionsComponent implements OnInit {
   regionStats = signal<RegionStats[]>([]);
   isLoading = signal<boolean>(false);
   selectedRegionId: string | null = null;
+  private readonly router = inject(Router);
   
   ngOnInit(): void {
     this.loadRegionStats();
@@ -181,6 +182,6 @@ export class RegionsComponent implements OnInit {
   
   selectRegion(regionId: string): void {
     this.selectedRegionId = regionId;
-    console.log('Selected region:', regionId);
+    this.router.navigate(['/companies'], { queryParams: { regionId } });
   }
 }

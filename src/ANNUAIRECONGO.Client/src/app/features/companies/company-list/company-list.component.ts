@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -133,6 +133,7 @@ export class CompanyListComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
   private readonly sectorService = inject(SectorService);
   private readonly geographyService = inject(GeographyService);
+  private readonly route = inject(ActivatedRoute);
 
   companies = signal<Company[]>([]);
   sectors = signal<Sector[]>([]);
@@ -155,6 +156,15 @@ export class CompanyListComponent implements OnInit {
   ngOnInit(): void {
     this.loadSectors();
     this.loadRegions();
+    this.route.queryParams.subscribe(params => {
+      if (params['regionId']) {
+        this.selectedRegionId = params['regionId'];
+        this.onRegionChange();
+      }
+      if (params['ownerId']) {
+        this.loadCompaniesByOwner(params['ownerId']);
+      }
+    });
     this.loadCompanies();
   }
 
@@ -210,5 +220,24 @@ export class CompanyListComponent implements OnInit {
     this.pageNumber = event.pageIndex + 1;
     this.pageSize = event.pageSize;
     this.loadCompanies();
+  }
+
+  loadCompaniesByOwner(ownerId: string): void {
+    this.isLoading.set(true);
+    this.companyService.getCompanies({
+      ownerId: ownerId,
+      pageNumber: this.pageNumber,
+      pageSize: this.pageSize
+    }).subscribe({
+      next: (response) => {
+        this.companies.set(response.items);
+        this.totalCount.set(response.totalCount);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading companies:', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 }

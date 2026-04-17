@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
@@ -42,9 +42,9 @@ import { BusinessOwner } from '@core/models/company.model';
                 <td mat-cell *matCellDef="let owner">{{ owner.firstName }} {{ owner.lastName }}</td>
               </ng-container>
               
-              <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef>Email</th>
-                <td mat-cell *matCellDef="let owner">{{ owner.email }}</td>
+              <ng-container matColumnDef="phone">
+                <th mat-header-cell *matHeaderCellDef>Phone</th>
+                <td mat-cell *matCellDef="let owner">{{ owner.phone || '-' }}</td>
               </ng-container>
               
               <ng-container matColumnDef="companyPosition">
@@ -81,10 +81,11 @@ import { BusinessOwner } from '@core/models/company.model';
 export class AdminBusinessOwnersComponent implements OnInit {
   private businessOwnerService = inject(BusinessOwnerService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
   
   owners = signal<BusinessOwner[]>([]);
   isLoading = signal(true);
-  displayedColumns = ['name', 'email', 'companyPosition', 'actions'];
+  displayedColumns = ['name', 'phone', 'companyPosition', 'actions'];
   
   ngOnInit(): void {
     this.loadOwners();
@@ -101,6 +102,6 @@ export class AdminBusinessOwnersComponent implements OnInit {
   }
   
   viewCompanies(ownerId: string): void {
-    this.snackBar.open('View companies for this owner', 'Close', { duration: 3000 });
+    this.router.navigate(['/companies'], { queryParams: { ownerId } });
   }
 }

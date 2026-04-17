@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +15,7 @@ import { Notification } from '@core/models/company.model';
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -40,7 +42,7 @@ import { Notification } from '@core/models/company.model';
               @for (notification of notifications(); track notification.id) {
                 <mat-list-item 
                   [class.unread]="!notification.isRead"
-                  (click)="markAsRead(notification.id)">
+                  (click)="markAsRead(notification)">
                   <mat-icon matListItemIcon [class]="'type-' + notification.type">
                     {{ getIcon(notification.type) }}
                   </mat-icon>
@@ -120,6 +122,7 @@ import { Notification } from '@core/models/company.model';
 export class NotificationsComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   notifications = signal<Notification[]>([]);
   unreadCount = signal(0);
@@ -135,34 +138,39 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
-getIcon(type: string): string {
-      const icons: { [key: string]: string } = {
-        'company_validated': 'check_circle',
-        'company_rejected': 'error',
-        'payment_success': 'check_circle',
-        'payment_failed': 'error',
-        'subscription_expiring': 'warning'
-      };
-      return icons[type] || 'notifications';
-    }
+  getIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'company_validated': 'check_circle',
+      'company_rejected': 'error',
+      'payment_success': 'check_circle',
+      'payment_failed': 'error',
+      'subscription_expiring': 'warning'
+    };
+    return icons[type] || 'notifications';
+  }
 
-    getTitle(type: string): string {
-      const titles: { [key: string]: string } = {
-        'company_validated': 'Company Approved',
-        'company_rejected': 'Company Rejected',
-        'company_suspended': 'Company Suspended',
-        'company_reactivated': 'Company Reactivated',
-        'subscription_activated': 'Subscription Activated',
-        'subscription_cancelled': 'Subscription Cancelled',
-        'payment_success': 'Payment Successful',
-        'payment_failed': 'Payment Failed',
-        'subscription_expiring': 'Subscription Expiring Soon'
-      };
-      return titles[type] || type;
-    }
+  getTitle(type: string): string {
+    const titles: { [key: string]: string } = {
+      'company_validated': 'Company Approved',
+      'company_rejected': 'Company Rejected',
+      'company_suspended': 'Company Suspended',
+      'company_reactivated': 'Company Reactivated',
+      'subscription_activated': 'Subscription Activated',
+      'subscription_cancelled': 'Subscription Cancelled',
+      'payment_success': 'Payment Successful',
+      'payment_failed': 'Payment Failed',
+      'subscription_expiring': 'Subscription Expiring Soon'
+    };
+    return titles[type] || type;
+  }
 
-  markAsRead(id: string): void {
-    this.notificationService.markAsRead(id).subscribe(() => this.loadNotifications());
+  markAsRead(notification: Notification): void {
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe();
+    }
+    if (notification.link) {
+      this.router.navigateByUrl(notification.link);
+    }
   }
 
   markAllRead(): void {

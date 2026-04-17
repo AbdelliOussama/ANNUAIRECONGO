@@ -131,6 +131,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                     }
                   </mat-select>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Payment Method</mat-label>
+                  <mat-select [(ngModel)]="selectedPaymentMethod">
+                    <mat-option [value]="0">Credit Card (Stripe)</mat-option>
+                    <mat-option [value]="1">MTN MoMo</mat-option>
+                    <mat-option [value]="2">Airtel Money</mat-option>
+                  </mat-select>
+                </mat-form-field>
               </div>
             } @else if (isLoadingCompanies()) {
               <div class="loading-companies">
@@ -346,6 +355,7 @@ export class SubscriptionPlansComponent implements OnInit {
   companies = signal<Company[]>([]);
   selectedPlanId = '';
   selectedCompanyId = '';
+  selectedPaymentMethod = 0;
   isLoading = signal<boolean>(false);
   isLoadingCompanies = signal<boolean>(false);
   isSubscribing = signal<boolean>(false);
@@ -400,7 +410,7 @@ export class SubscriptionPlansComponent implements OnInit {
     const subscribeRequest = {
       companyId: companyId,
       planId: planId,
-      method: 1 // Credit card as default
+      method: this.selectedPaymentMethod
     };
 
     this.subscriptionService.createSubscription(subscribeRequest).subscribe({
