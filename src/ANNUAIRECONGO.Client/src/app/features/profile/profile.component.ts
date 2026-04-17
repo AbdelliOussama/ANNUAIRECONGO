@@ -10,10 +10,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { AuthService } from '@core/services/auth.service';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { BusinessOwner, Subscription } from '@core/models/company.model';
+import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-profile',
@@ -28,7 +30,8 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDialogModule
   ],
   template: `
     <div class="profile-container">
@@ -110,8 +113,8 @@ import { BusinessOwner, Subscription } from '@core/models/company.model';
                 </div>
                 <div class="info-item">
                   <mat-icon>subscription</mat-icon>
-                  <span>Active Subscriptions: {{ activeSubscriptions()?.length }}</span>
-                  @if (activeSubscriptions()?.length) {
+                  <span>Active Subscriptions: {{ activeSubscriptions().length }}</span>
+                  @if (activeSubscriptions().length > 0) {
                     <button mat-button color="warn" (click)="cancelSubscription()">
                       Cancel Subscription
                     </button>
@@ -257,6 +260,7 @@ export class ProfileComponent implements OnInit {
   private subscriptionService = inject(SubscriptionService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private dialog = inject(MatDialog);
 
   businessOwner = signal<BusinessOwner | null>(null);
   activeSubscriptions = signal<Subscription[]>([]);
@@ -275,36 +279,48 @@ export class ProfileComponent implements OnInit {
   }
 
 loadProfile(): void {
-    const userId = this.authService.currentUser()?.id;
+    const userId = this.authService.getUserId();
     if (!userId) {
+      console.warn('No user ID found, currentUser:', this.authService.currentUser());
       this.isLoading.set(false);
       return;
     }
 
     this.isLoading.set(true);
+    console.log('Loading profile for user ID:', userId);
+    
     this.businessOwnerService.getBusinessOwnerById(userId).pipe(
       tap(bo => {
+        console.log('Business owner response:', bo);
+        if (!bo) {
+          console.warn('Business owner not found');
+          this.businessOwner.set(null);
+          return;
+        }
         this.businessOwner.set(bo);
         this.form.patchValue({
-          firstName: bo.firstName,
-          lastName: bo.lastName,
+          firstName: bo.firstName || '',
+          lastName: bo.lastName || '',
           phoneNumber: bo.phone || '',
           companyPosition: bo.companyPosition || ''
         });
       }),
       switchMap(() => this.businessOwnerService.getMyCompanies()),
       switchMap(companies => {
-        if (companies.length > 0) {
+        console.log('Companies response:', companies);
+        if (companies && companies.length > 0) {
           return this.subscriptionService.getCompanySubscriptions(companies[0].id);
         }
         return of([]);
       })
     ).subscribe({
       next: (subscriptions) => {
-        this.activeSubscriptions.set(subscriptions.filter(s => s.isActive));
+        console.log('Subscriptions response:', subscriptions);
+        this.activeSubscriptions.set((subscriptions || []).filter(s => s && s.isActive));
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error loading profile:', err);
         this.businessOwner.set(null);
         this.activeSubscriptions.set([]);
         this.isLoading.set(false);
@@ -391,13 +407,26 @@ loadProfile(): void {
   cancelSubscription(): void {
     const subscription = this.activeSubscriptions()[0];
     if (!subscription) return;
-    if (!confirm('Are you sure you want to cancel your subscription?')) return;
-    this.subscriptionService.cancelSubscription(subscription.id).subscribe({
-      next: () => {
-        this.snackBar.open('Subscription cancelled', 'Close', { duration: 3000 });
-        this.loadSubscriptions();
-      },
-      error: (err) => this.snackBar.open(err.error?.title || 'Failed to cancel', 'Close', { duration: 3000 })
+    
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Cancel Subscription',
+        message: 'Are you sure you want to cancel your subscription? This action cannot be undone.',
+        confirmText: 'Cancel Subscription',
+        cancelText: 'Keep'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.subscriptionService.cancelSubscription(subscription.id).subscribe({
+          next: () => {
+            this.snackBar.open('Subscription cancelled', 'Close', { duration: 3000 });
+            this.loadSubscriptions();
+          },
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to cancel', 'Close', { duration: 3000 })
+        });
+      }
     });
   }
 }

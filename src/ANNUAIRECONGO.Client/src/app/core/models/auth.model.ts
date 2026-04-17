@@ -5,10 +5,12 @@ export interface TokenResponse {
 }
 
 export interface User {
+  userId?: string;
   id: string;
+  sub?: string;
   email: string;
   roles: string[];
-  claims: string[];
+  claims?: string[];
 }
 
 export interface LoginRequest {

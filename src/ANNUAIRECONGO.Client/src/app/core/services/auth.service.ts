@@ -23,6 +23,36 @@ export class AuthService {
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly isAdmin = computed(() => this._currentUser()?.roles?.includes('Admin') ?? false);
   readonly isEntrepriseOwner = computed(() => this._currentUser()?.roles?.includes('EntrepriseOwner') ?? false);
+  
+  getUserId(): string | null {
+    const user = this._currentUser();
+    if (user) {
+      // Check userId (from backend), id, sub
+      return user.userId || user.id || user.sub || null;
+    }
+    // Fallback: try to decode from token
+    return this.getUserIdFromToken();
+  }
+  
+  private getUserIdFromToken(): string | null {
+    try {
+      const token = this.getToken();
+      if (!token) return null;
+      
+      // Decode JWT token (base64url to base64)
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const json = atob(base64);
+      const payload = JSON.parse(json);
+      
+      // Try common claim names for user ID
+      return payload.sub || payload.id || payload.nameid || payload.user_id || null;
+    } catch {
+      return null;
+    }
+  }
 
   login(credentials: LoginRequest): Observable<TokenResponse> {
     return this.api.post<TokenResponse>('/identity/token/generate', credentials).pipe(
