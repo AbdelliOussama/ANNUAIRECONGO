@@ -41,7 +41,7 @@ public sealed record UpdatePlanCommandHandler(IAppDbContext Context, ILogger<Upd
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "updated_plan",
+            AdminActions.UpdatedPlan,
             AdminTargetTypes.Plan,
             plan.Id,
             $"Plan '{plan.Name}' updated by admin");

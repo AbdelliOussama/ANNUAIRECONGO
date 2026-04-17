@@ -34,7 +34,7 @@ public sealed record UpdateSectorCommandHandler(ILogger<UpdateSectorCommandHandl
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "updated_sector",
+            AdminActions.UpdatedSector,
             AdminTargetTypes.Sector,
             sector.Id,
             $"Sector '{sector.Name}' updated by admin");

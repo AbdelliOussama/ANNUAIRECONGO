@@ -26,7 +26,7 @@ public sealed record DeActivatePlanCommandHandler(IAppDbContext Context, ILogger
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "deactivated_plan",
+            AdminActions.DeactivatedPlan,
             AdminTargetTypes.Plan,
             plan.Id,
             $"Plan '{plan.Name}' deactivated by admin");

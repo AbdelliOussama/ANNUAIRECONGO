@@ -27,7 +27,7 @@ public sealed record ActivatePlanCommandHandler(ILogger<ActivatePlanCommandHandl
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "activated_plan",
+            AdminActions.ActivatedPlan,
             AdminTargetTypes.Plan,
             plan.Id,
             $"Plan '{plan.Name}' activated by admin");

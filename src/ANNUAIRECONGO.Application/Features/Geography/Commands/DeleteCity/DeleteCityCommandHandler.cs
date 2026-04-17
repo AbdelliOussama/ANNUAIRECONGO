@@ -25,7 +25,7 @@ public sealed record DeleteCityCommandHandler(IAppDbContext Context, ILogger<Del
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "deleted_city",
+            AdminActions.DeletedCity,
             "City",
             city.Id,
             $"City '{city.Name}' deleted by admin");

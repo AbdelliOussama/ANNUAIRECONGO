@@ -35,7 +35,7 @@ public sealed record DeleteSectorCommandHandler(
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "deleted_sector",
+            AdminActions.DeletedSector,
             AdminTargetTypes.Sector,
             sector.Id,
             $"Sector '{sector.Name}' deleted by admin");

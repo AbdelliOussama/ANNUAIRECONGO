@@ -25,7 +25,7 @@ public sealed record DeleteRegionCommandHandler(IAppDbContext Context, ILogger<D
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,
-            "deleted_region",
+            AdminActions.DeletedRegion,
             "Region",
             region.Id,
             $"Region '{region.Name}' deleted by admin");
