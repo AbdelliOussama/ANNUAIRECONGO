@@ -85,7 +85,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [AllowAnonymous]
     public async Task<IActionResult> GetCompanyById([FromRoute] Guid id, CancellationToken ct)
     {
-        var result = await sender.Send(new GetCompanyByIdQuery(id,HttpContext.Connection.RemoteIpAddress.ToString()), ct);
+        var result = await sender.Send(new GetCompanyByIdQuery(id,HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"), ct);
         return result.Match(
             response => Ok(response),
             Problem

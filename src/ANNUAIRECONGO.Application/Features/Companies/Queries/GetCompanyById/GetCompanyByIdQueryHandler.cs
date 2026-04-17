@@ -32,14 +32,16 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
             logger.LogWarning("Company with id {Id} not found", request.id);
             return CompanyErrors.CompanyNotFound(request.id);
         }
-        var profileViewResult = ProfileView.Create(company.Id,request.viewerIp);
-        if(profileViewResult.IsError)
+        var profileViewResult = ProfileView.Create(company.Id, request.viewerIp);
+        if (!profileViewResult.IsError)
         {
-            _logger.LogInformation("Failed To Create A Profile View ");
-            return profileViewResult.Errors.First();
+            await _context.ProfileViews.AddAsync(profileViewResult.Value, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
-        await _context.ProfileViews.AddAsync(profileViewResult.Value,cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        else
+        {
+            _logger.LogWarning("ProfileView creation skipped: {Error}", profileViewResult.Errors.First().Description);
+        }
         return company.ToDto();
     }
 }
