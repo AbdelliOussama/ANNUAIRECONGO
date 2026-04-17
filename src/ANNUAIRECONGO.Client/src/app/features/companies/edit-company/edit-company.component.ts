@@ -17,10 +17,14 @@ import { CompanyService } from '@core/services/company.service';
 import { GeographyService } from '@core/services/geography.service';
 import { SectorService } from '@core/services/sector.service';
 import { AuthService } from '@core/services/auth.service';
+import { UploadService } from '@core/services/upload.service';
 import { Region, City } from '@core/models/geography.model';
-import { Company, Sector, CompanyContact, CompanyService as CompanyServiceModel, CompanyImage, CompanyDocument } from '@core/models/company.model';
-import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
+import { Company, Sector, CompanyContact, CompanyService as CompanyServiceModel, CompanyImage, CompanyDocument, ContactType, DocumentType } from '@core/models/company.model';
 import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component';
+import { ServiceDialogComponent } from '@shared/dialogs/service-dialog/service-dialog.component';
+import { ContactDialogComponent } from '@shared/dialogs/contact-dialog/contact-dialog.component';
+import { ImageDialogComponent } from '@shared/dialogs/image-dialog/image-dialog.component';
+import { DocumentDialogComponent } from '@shared/dialogs/document-dialog/document-dialog.component';
 
 @Component({
   selector: 'app-edit-company',
@@ -134,20 +138,38 @@ import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component
               </mat-tab>
 
               <mat-tab label="Media">
-                <form [formGroup]="mediaForm" (ngSubmit)="onMediaSubmit()">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Logo URL</mat-label>
-                    <input matInput formControlName="logoUrl" placeholder="https://...">
-                  </mat-form-field>
+                <div class="media-tab">
+                  <div class="media-section">
+                    <h3>Logo</h3>
+                    @if (logoBase64() || originalLogoUrl()) {
+                      <img [src]="logoBase64() || originalLogoUrl()" alt="Logo" class="media-preview" />
+                    } @else {
+                      <div class="media-placeholder">No logo</div>
+                    }
+                    <input type="file" #logoFileInput accept="image/*" (change)="onLogoFileSelected($event)" style="display:none" />
+                    <button mat-raised-button (click)="logoFileInput.click()" [disabled]="isSubmitting()">Choose Logo</button>
+                    @if (logoBase64()) {
+                      <button mat-button color="warn" (click)="clearLogo()">Clear</button>
+                    }
+                  </div>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Cover Image URL</mat-label>
-                    <input matInput formControlName="coverUrl" placeholder="https://...">
-                  </mat-form-field>
+                  <div class="media-section">
+                    <h3>Cover Image</h3>
+                    @if (coverBase64() || originalCoverUrl()) {
+                      <img [src]="coverBase64() || originalCoverUrl()" alt="Cover" class="media-preview" />
+                    } @else {
+                      <div class="media-placeholder">No cover image</div>
+                    }
+                    <input type="file" #coverFileInput accept="image/*" (change)="onCoverFileSelected($event)" style="display:none" />
+                    <button mat-raised-button (click)="coverFileInput.click()" [disabled]="isSubmitting()">Choose Cover</button>
+                    @if (coverBase64()) {
+                      <button mat-button color="warn" (click)="clearCover()">Clear</button>
+                    }
+                  </div>
 
                   <div class="form-actions">
                     <button mat-button type="button" routerLink="/companies/{{ companyId }}">Cancel</button>
-                    <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting() || mediaForm.pristine">
+                    <button mat-flat-button color="primary" (click)="onMediaSubmit()" [disabled]="isSubmitting() || !hasMediaChanges()">
                       @if (isSubmitting()) {
                         <mat-spinner diameter="20"></mat-spinner>
                         Saving...
@@ -156,7 +178,7 @@ import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component
                       }
                     </button>
                   </div>
-                </form>
+                </div>
               </mat-tab>
 
               <mat-tab label="Contacts">
@@ -212,7 +234,7 @@ import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component
                       @for (doc of documents(); track doc.id) {
                         <mat-list-item>
                           <mat-icon matListItemIcon>description</mat-icon>
-                          <span matListItemTitle>{{ doc.docType }}</span>
+                          <span matListItemTitle>{{ getDocumentTypeLabel(doc.docType) }}</span>
                           <a matListItemMeta [href]="doc.fileUrl" target="_blank">
                             <mat-icon>open_in_new</mat-icon>
                           </a>
@@ -396,6 +418,47 @@ import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog.component
         object-fit: cover;
       }
     }
+
+    /* Media tab styles */
+    .media-tab {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .media-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .media-preview {
+        max-width: 200px;
+        max-height: 150px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+
+      .media-placeholder {
+        width: 200px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        color: #999;
+        border-radius: 8px;
+        border: 1px dashed #ccc;
+      }
+    }
   `]
 })
 export class EditCompanyComponent implements OnInit {
@@ -408,6 +471,7 @@ export class EditCompanyComponent implements OnInit {
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private uploadService = inject(UploadService);
 
   companyId = '';
   regions = signal<Region[]>([]);
@@ -431,10 +495,11 @@ export class EditCompanyComponent implements OnInit {
     sectorIds: [[]]
   });
 
-  mediaForm: FormGroup = this.fb.group({
-    logoUrl: [''],
-    coverUrl: ['']
-  });
+  // Media handling signals
+  logoBase64 = signal<string | null>(null);
+  coverBase64 = signal<string | null>(null);
+  originalLogoUrl = signal<string>('');
+  originalCoverUrl = signal<string>('');
 
   ngOnInit(): void {
     this.companyId = this.route.snapshot.params['id'];
@@ -451,16 +516,53 @@ export class EditCompanyComponent implements OnInit {
     }
   }
 
+  hasMediaChanges(): boolean {
+    return !!this.logoBase64() || !!this.coverBase64();
+  }
+
+  onLogoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      const file = input.files[0];
+      this.uploadService.toBase64(file).then(base64 => {
+        this.logoBase64.set(base64);
+      }).catch(err => {
+        console.error('Error reading logo file:', err);
+        this.snackBar.open('Failed to read logo file', 'Close', { duration: 3000 });
+      });
+    }
+  }
+
+  onCoverFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      const file = input.files[0];
+      this.uploadService.toBase64(file).then(base64 => {
+        this.coverBase64.set(base64);
+      }).catch(err => {
+        console.error('Error reading cover file:', err);
+        this.snackBar.open('Failed to read cover file', 'Close', { duration: 3000 });
+      });
+    }
+  }
+
+  clearLogo(): void {
+    this.logoBase64.set(null);
+  }
+
+  clearCover(): void {
+    this.coverBase64.set(null);
+  }
+
   onMediaSubmit(): void {
     this.isSubmitting.set(true);
-    const logoUrl = this.mediaForm.value.logoUrl || undefined;
-    const coverUrl = this.mediaForm.value.coverUrl || undefined;
+    const logoUrl = this.logoBase64() || this.originalLogoUrl() || undefined;
+    const coverUrl = this.coverBase64() || this.originalCoverUrl() || undefined;
 
     this.companyService.updateCompanyMedia(this.companyId, logoUrl, coverUrl).subscribe({
       next: () => {
         this.snackBar.open('Media updated successfully!', 'Close', { duration: 3000 });
-        this.mediaForm.markAsPristine();
-        this.router.navigate(['/companies', this.companyId]);
+        this.loadData(); // Refresh original URLs and clear base64 overrides
       },
       error: (error) => {
         this.isSubmitting.set(false);
@@ -469,67 +571,25 @@ export class EditCompanyComponent implements OnInit {
     });
   }
 
-openContactDialog(contact?: CompanyContact): void {
-    // First dialog for contact type
-    const typeDialogRef = this.dialog.open(InputDialogComponent, {
-      data: {
-        title: 'Contact Type',
-        label: 'Enter 0=Phone, 1=Email, 2=Website, 3=Social',
-        placeholder: contact?.type?.toString() || '0',
-        confirmText: 'Next',
-        cancelText: 'Cancel'
-      }
+  openContactDialog(contact?: CompanyContact): void {
+    const dialogRef = this.dialog.open(ContactDialogComponent, {
+      width: '400px',
+      data: contact ? { contact } : undefined
     });
 
-    typeDialogRef.afterClosed().subscribe((typeResult: string | null) => {
-      if (typeResult === null) return;
-      
-      const type = parseInt(typeResult);
-      if (isNaN(type)) {
-        this.snackBar.open('Invalid contact type', 'Close', { duration: 3000 });
-        return;
+    dialogRef.afterClosed().subscribe((result: { type: ContactType; value: string; isPrimary: boolean } | undefined) => {
+      if (!result) return;
+      if (contact) {
+        this.companyService.updateContact(this.companyId, contact.id, result.type, result.value, result.isPrimary).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to update contact', 'Close', { duration: 3000 })
+        });
+      } else {
+        this.companyService.addContact(this.companyId, result.type, result.value, result.isPrimary).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to add contact', 'Close', { duration: 3000 })
+        });
       }
-
-      // Second dialog for contact value
-      const valueDialogRef = this.dialog.open(InputDialogComponent, {
-        data: {
-          title: 'Contact Value',
-          label: 'Enter contact value',
-          placeholder: contact?.value || '',
-          confirmText: 'Next',
-          cancelText: 'Cancel'
-        }
-      });
-
-      valueDialogRef.afterClosed().subscribe((valueResult: string | null) => {
-        if (valueResult === null || valueResult.trim() === '') return;
-        
-        const value = valueResult.trim();
-
-        // Third dialog for isPrimary confirmation
-        const confirmDialogRef = this.dialog.open(ConfirmDialogComponent, {
-          data: {
-            title: 'Primary Contact',
-            message: 'Is this the primary contact?',
-            confirmText: 'Yes',
-            cancelText: 'No'
-          }
-        });
-
-        confirmDialogRef.afterClosed().subscribe((isPrimaryResult: boolean) => {
-          if (contact) {
-            this.companyService.updateContact(this.companyId, contact.id, type, value, isPrimaryResult).subscribe({
-              next: () => this.loadCompany(),
-              error: (err) => this.snackBar.open(err.error?.title || 'Failed to update contact', 'Close', { duration: 3000 })
-            });
-          } else {
-            this.companyService.addContact(this.companyId, type, value, isPrimaryResult).subscribe({
-              next: () => this.loadCompany(),
-              error: (err) => this.snackBar.open(err.error?.title || 'Failed to add contact', 'Close', { duration: 3000 })
-            });
-          }
-        });
-      });
     });
   }
 
@@ -537,33 +597,51 @@ openContactDialog(contact?: CompanyContact): void {
     this.openContactDialog(contact);
   }
 
-   deleteContact(contactId: string): void {
-     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-       data: {
-         title: 'Delete Contact',
-         message: 'Are you sure you want to delete this contact?',
-         confirmText: 'Delete',
-         cancelText: 'Cancel'
-       }
-     });
+  deleteContact(contactId: string): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete Contact',
+        message: 'Are you sure you want to delete this contact?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
 
-     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-       if (confirmed) {
-         this.companyService.removeContact(this.companyId, contactId).subscribe({
-           next: () => this.loadCompany(),
-           error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete contact', 'Close', { duration: 3000 })
-         });
-       }
-     });
-   }
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.companyService.removeContact(this.companyId, contactId).subscribe({
+          next: () => this.loadCompany(),
+          error: (err) => this.snackBar.open(err.error?.title || 'Failed to delete contact', 'Close', { duration: 3000 })
+        });
+      }
+    });
+  }
 
   getContactTypeIcon(type: number): string {
-    const icons: { [key: number]: string } = { 0: 'phone', 1: 'email', 2: 'language', 3: 'share' };
-    return icons[type] || 'contact';
+    const icons: { [key: number]: string } = {
+      [ContactType.Phone]: 'phone',
+      [ContactType.Email]: 'email',
+      [ContactType.Website]: 'language',
+      [ContactType.Facebook]: 'facebook',
+      [ContactType.Instagram]: 'camera_alt',
+      [ContactType.LinkedIn]: 'business',
+      [ContactType.WhatsApp]: 'chat',
+      [ContactType.Twitter]: 'alternate_email'
+    };
+    return icons[type] || 'contact_phone';
   }
 
   getContactTypeLabel(type: number): string {
-    const labels: { [key: number]: string } = { 0: 'Phone', 1: 'Email', 2: 'Website', 3: 'Social' };
+    const labels: { [key: number]: string } = {
+      [ContactType.Phone]: 'Phone',
+      [ContactType.Email]: 'Email',
+      [ContactType.Website]: 'Website',
+      [ContactType.Facebook]: 'Facebook',
+      [ContactType.Instagram]: 'Instagram',
+      [ContactType.LinkedIn]: 'LinkedIn',
+      [ContactType.WhatsApp]: 'WhatsApp',
+      [ContactType.Twitter]: 'Twitter'
+    };
     return labels[type] || 'Unknown';
   }
 
@@ -618,10 +696,11 @@ openContactDialog(contact?: CompanyContact): void {
           sectorIds: company.sectors?.map(s => s.sectorId) || []
         });
 
-        this.mediaForm.patchValue({
-          logoUrl: company.logoUrl || '',
-          coverUrl: company.coverUrl || ''
-        });
+        // Set original media URLs and clear base64 overrides
+        this.originalLogoUrl.set(company.logoUrl || '');
+        this.originalCoverUrl.set(company.coverUrl || '');
+        this.logoBase64.set(null);
+        this.coverBase64.set(null);
 
         this.isLoading.set(false);
 
@@ -629,41 +708,24 @@ openContactDialog(contact?: CompanyContact): void {
         this.services.set(company.services || []);
         this.images.set(company.images || []);
         this.documents.set(company.documents || []);
+      },
+      error: (err) => {
+        console.error('Error loading company:', err);
+        this.isLoading.set(false);
       }
     });
   }
 
   addService(): void {
-    const dialogRef = this.dialog.open(InputDialogComponent, {
-      data: {
-        title: 'Add Service',
-        label: 'Service Title',
-        placeholder: 'Enter service title',
-        confirmText: 'Add',
-        cancelText: 'Cancel'
-      }
+    const dialogRef = this.dialog.open(ServiceDialogComponent, {
+      width: '400px'
     });
 
-    dialogRef.afterClosed().subscribe((title: string | null) => {
-      if (!title || title.trim() === '') return;
-      
-      const titleValue = title.trim();
-      const descDialogRef = this.dialog.open(InputDialogComponent, {
-        data: {
-          title: 'Service Description',
-          label: 'Description (optional)',
-          placeholder: 'Enter description',
-          confirmText: 'Add',
-          cancelText: 'Skip'
-        }
-      });
-
-      descDialogRef.afterClosed().subscribe((description: string | null) => {
-        const descValue = description?.trim() || undefined;
-        this.companyService.addService(this.companyId, titleValue, descValue).subscribe({
-          next: () => this.loadCompany(),
-          error: (err) => this.snackBar.open(err.error?.title || 'Failed to add service', 'Close', { duration: 3000 })
-        });
+    dialogRef.afterClosed().subscribe((result: { title: string; description?: string } | undefined) => {
+      if (!result || !result.title.trim()) return;
+      this.companyService.addService(this.companyId, result.title.trim(), result.description?.trim()).subscribe({
+        next: () => this.loadCompany(),
+        error: (err) => this.snackBar.open(err.error?.title || 'Failed to add service', 'Close', { duration: 3000 })
       });
     });
   }
@@ -689,36 +751,15 @@ openContactDialog(contact?: CompanyContact): void {
   }
 
   addImage(): void {
-    const dialogRef = this.dialog.open(InputDialogComponent, {
-      data: {
-        title: 'Add Image',
-        label: 'Image URL',
-        placeholder: 'https://example.com/image.jpg',
-        confirmText: 'Add',
-        cancelText: 'Cancel'
-      }
+    const dialogRef = this.dialog.open(ImageDialogComponent, {
+      width: '400px'
     });
 
-    dialogRef.afterClosed().subscribe((imageUrl: string | null) => {
-      if (!imageUrl || imageUrl.trim() === '') return;
-      
-      const urlValue = imageUrl.trim();
-      const captionDialogRef = this.dialog.open(InputDialogComponent, {
-        data: {
-          title: 'Image Caption',
-          label: 'Caption (optional)',
-          placeholder: 'Enter caption',
-          confirmText: 'Add',
-          cancelText: 'Skip'
-        }
-      });
-
-      captionDialogRef.afterClosed().subscribe((caption: string | null) => {
-        const captionValue = caption?.trim() || undefined;
-        this.companyService.addImage(this.companyId, urlValue, undefined, captionValue).subscribe({
-          next: () => this.loadCompany(),
-          error: (err) => this.snackBar.open(err.error?.title || 'Failed to add image', 'Close', { duration: 3000 })
-        });
+    dialogRef.afterClosed().subscribe((result: { imageUrl: string; caption?: string } | undefined) => {
+      if (!result || !result.imageUrl) return;
+      this.companyService.addImage(this.companyId, result.imageUrl, undefined, result.caption?.trim()).subscribe({
+        next: () => this.loadCompany(),
+        error: (err) => this.snackBar.open(err.error?.title || 'Failed to add image', 'Close', { duration: 3000 })
       });
     });
   }
@@ -744,61 +785,26 @@ openContactDialog(contact?: CompanyContact): void {
   }
 
   addDocument(): void {
-    const urlDialogRef = this.dialog.open(InputDialogComponent, {
-      data: {
-        title: 'Add Document',
-        label: 'Document URL',
-        placeholder: 'https://example.com/document.pdf',
-        confirmText: 'Next',
-        cancelText: 'Cancel'
-      }
+    const dialogRef = this.dialog.open(DocumentDialogComponent, {
+      width: '400px'
     });
 
-    urlDialogRef.afterClosed().subscribe((documentUrl: string | null) => {
-      if (!documentUrl || documentUrl.trim() === '') return;
-      
-      const urlValue = documentUrl.trim();
-      const typeDialogRef = this.dialog.open(InputDialogComponent, {
-        data: {
-          title: 'Document Type',
-          label: 'Type: 0=Legal, 1=Registration, 2=Certification, 3=Other',
-          placeholder: '3',
-          confirmText: 'Next',
-          cancelText: 'Cancel'
-        }
-      });
-
-      typeDialogRef.afterClosed().subscribe((docType: string | null) => {
-        if (!docType) return;
-        
-        const descDialogRef = this.dialog.open(InputDialogComponent, {
-          data: {
-            title: 'Description',
-            label: 'Description (optional)',
-            placeholder: 'Enter description',
-            confirmText: 'Add',
-            cancelText: 'Skip'
-          }
-        });
-
-        descDialogRef.afterClosed().subscribe((description: string | null) => {
-          const descValue = description?.trim() || undefined;
-          const isPublicDialogRef = this.dialog.open(ConfirmDialogComponent, {
-            data: {
-              title: 'Visibility',
-              message: 'Make this document public?',
-              confirmText: 'Public',
-              cancelText: 'Private'
-            }
-          });
-
-          isPublicDialogRef.afterClosed().subscribe((isPublic: boolean) => {
-            this.companyService.addDocument(this.companyId, urlValue, docType, descValue, isPublic).subscribe({
-              next: () => this.loadCompany(),
-              error: (err) => this.snackBar.open(err.error?.title || 'Failed to add document', 'Close', { duration: 3000 })
-            });
-          });
-        });
+    dialogRef.afterClosed().subscribe((result: {
+      documentUrl: string;
+      documentType: string;
+      description?: string;
+      isPublic: boolean;
+    } | undefined) => {
+      if (!result || !result.documentUrl) return;
+      this.companyService.addDocument(
+        this.companyId,
+        result.documentUrl.trim(),
+        result.documentType,
+        result.description?.trim(),
+        result.isPublic
+      ).subscribe({
+        next: () => this.loadCompany(),
+        error: (err) => this.snackBar.open(err.error?.title || 'Failed to add document', 'Close', { duration: 3000 })
       });
     });
   }
@@ -823,6 +829,16 @@ openContactDialog(contact?: CompanyContact): void {
     });
   }
 
+  getDocumentTypeLabel(docType: number): string {
+    const labels: { [key: number]: string } = {
+      [DocumentType.RCCM]: 'RCCM',
+      [DocumentType.NIF]: 'NIF',
+      [DocumentType.Patent]: 'Patent',
+      [DocumentType.Other]: 'Other'
+    };
+    return labels[docType] || 'Unknown';
+  }
+
   private loadCompany(): void {
     this.companyService.getCompanyById(this.companyId).subscribe({
       next: (company) => {
@@ -830,6 +846,9 @@ openContactDialog(contact?: CompanyContact): void {
         this.services.set(company.services || []);
         this.images.set(company.images || []);
         this.documents.set(company.documents || []);
+      },
+      error: (err) => {
+        console.error('Error reloading company:', err);
       }
     });
   }

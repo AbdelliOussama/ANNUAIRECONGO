@@ -13,7 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CompanyService } from '@core/services/company.service';
-import { Company, ContactType } from '@core/models/company.model';
+import { Company, ContactType, DocumentType } from '@core/models/company.model';
 import { AuthService } from '@core/services/auth.service';
 import { InputDialogComponent } from '@shared/dialogs/input-dialog.component';
 import * as L from 'leaflet';
@@ -190,19 +190,22 @@ import * as L from 'leaflet';
 
                   <mat-divider></mat-divider>
 
-                  <h3>Documents</h3>
-                  @if (company()!.documents && company()!.documents!.length > 0) {
-                    <div class="documents-list">
-                      @for (doc of company()!.documents!; track doc.id) {
-                        <a [href]="doc.fileUrl" target="_blank" class="document-item">
-                          <mat-icon>description</mat-icon>
-                          <span>{{ doc.docType }}</span>
-                        </a>
-                      }
-                    </div>
-                  } @else {
-                    <p class="empty-text">No documents available.</p>
-                  }
+                   <h3>Documents</h3>
+                   @if (company()!.documents && company()!.documents!.length > 0) {
+                     <div class="documents-list">
+                       @for (doc of company()!.documents!; track doc.id) {
+                         <a [href]="doc.fileUrl" target="_blank" class="document-item">
+                           <mat-icon>description</mat-icon>
+                           <span>{{ getDocumentTypeLabel(doc.docType) }}</span>
+                           @if (doc.description) {
+                             <span class="doc-desc">{{ doc.description }}</span>
+                           }
+                         </a>
+                       }
+                     </div>
+                   } @else {
+                     <p class="empty-text">No documents available.</p>
+                   }
                 </mat-card-content>
               </mat-card>
             </div>
@@ -764,6 +767,16 @@ export class CompanyDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       [ContactType.Twitter]: 'Twitter'
     };
     return names[type] || 'Contact';
+  }
+
+  getDocumentTypeLabel(docType: number): string {
+    const labels: { [key: number]: string } = {
+      [DocumentType.RCCM]: 'RCCM',
+      [DocumentType.NIF]: 'NIF',
+      [DocumentType.Patent]: 'Patent',
+      [DocumentType.Other]: 'Other'
+    };
+    return labels[docType] || 'Unknown';
   }
 
 contactAction(contact: { type: ContactType; value: string }): void {

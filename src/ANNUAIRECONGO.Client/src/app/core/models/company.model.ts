@@ -16,6 +16,13 @@ export enum ContactType {
   Twitter = 7
 }
 
+export enum DocumentType {
+  RCCM = 0,
+  NIF = 1,
+  Patent = 2,
+  Other = 3
+}
+
 export interface CompanyService {
   id: string;
   title: string;
@@ -33,6 +40,7 @@ export interface CompanyDocument {
   id: string;
   fileUrl: string;
   docType: number;
+  description?: string;
   isPublic?: boolean;
   uploadedAt: string;
 }

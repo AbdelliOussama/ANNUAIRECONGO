@@ -28,7 +28,7 @@ export interface InputDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="dialogRef.close(null)">{{ data.cancelText || 'Cancel' }}</button>
-      <button mat-raised-button color="primary" (click)="dialogRef.close(value)" [disabled]="!value?.trim()">{{ data.confirmText || 'Submit' }}</button>
+      <button mat-raised-button color="primary" (click)="dialogRef.close(value)" [disabled]="!value.trim()">{{ data.confirmText || 'Submit' }}</button>
     </mat-dialog-actions>
   `,
   styles: [`

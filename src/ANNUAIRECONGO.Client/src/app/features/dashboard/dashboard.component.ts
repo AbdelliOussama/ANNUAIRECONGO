@@ -108,7 +108,15 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
 
       @if (authService.isEntrepriseOwner()) {
         <h2>My Companies</h2>
-<div class="companies-grid">
+
+        <div class="add-company-section">
+          <button mat-raised-button color="primary" routerLink="/companies/create">
+            <mat-icon>add</mat-icon>
+            Add Company
+          </button>
+        </div>
+
+        <div class="companies-grid">
           @for (company of myCompanies(); track company.id) {
             <mat-card class="company-card">
               <img [src]="company.coverUrl || 'assets/placeholder-company.jpg'" alt="{{ company.name }}" [routerLink]="['/companies', company.id]">
@@ -117,49 +125,45 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
                 <mat-card-subtitle>{{ company.cityName }}</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-              <mat-chip-set>
-                    <mat-chip [class.status-active]="company.status === 2"
-                              [class.status-draft]="company.status === 0"
-                              [class.status-pending]="company.status === 1"
-                              [class.status-rejected]="company.status === 3"
-                              [class.status-suspended]="company.status === 4">
-                      {{ getStatusLabel(company.status) }}
-                    </mat-chip>
-                   @if (company.isFeatured) {
-                     <mat-chip color="accent">Featured</mat-chip>
-                   }
-                 </mat-chip-set>
-                 <p>{{ company.description | slice:0:100 }}...</p>
-                 <div class="company-actions">
-                   @if (company.status === 0) {
-                     <button mat-raised-button color="primary" (click)="submitCompany(company.id, $event)">
-                       @if (submittingCompanyId() === company.id) {
-                         <mat-spinner diameter="18"></mat-spinner>
-                       }
-                       Submit for Review
-                     </button>
-                   }
-@if (company.status === 2) {
-                      <button mat-raised-button color="primary" [routerLink]="['/companies', company.id, 'edit']">
-                        Edit Profile
-                      </button>
-                    }
-                    @if (company.status === 3) {
-                      <button mat-raised-button color="warn" [routerLink]="['/companies', company.id, 'edit']">
-                        Fix & Resubmit
-                      </button>
-                    }
-                 </div>
+                <mat-chip-set>
+                  <mat-chip [class.status-active]="company.status === 2"
+                            [class.status-draft]="company.status === 0"
+                            [class.status-pending]="company.status === 1"
+                            [class.status-rejected]="company.status === 3"
+                            [class.status-suspended]="company.status === 4">
+                    {{ getStatusLabel(company.status) }}
+                  </mat-chip>
+                  @if (company.isFeatured) {
+                    <mat-chip color="accent">Featured</mat-chip>
+                  }
+                </mat-chip-set>
+                <p>{{ company.description | slice:0:100 }}...</p>
+                <div class="company-actions">
+                  @if (company.status === 0) {
+                    <button mat-raised-button color="primary" (click)="submitCompany(company.id, $event)">
+                      @if (submittingCompanyId() === company.id) {
+                        <mat-spinner diameter="18"></mat-spinner>
+                      }
+                      Submit for Review
+                    </button>
+                  }
+                  @if (company.status === 2) {
+                    <button mat-raised-button color="primary" [routerLink]="['/companies', company.id, 'edit']">
+                      Edit Profile
+                    </button>
+                  }
+                  @if (company.status === 3) {
+                    <button mat-raised-button color="warn" [routerLink]="['/companies', company.id, 'edit']">
+                      Fix & Resubmit
+                    </button>
+                  }
+                </div>
               </mat-card-content>
             </mat-card>
           } @empty {
             <div class="no-companies">
               <mat-icon>business</mat-icon>
               <p>You don't have any companies yet.</p>
-              <button mat-raised-button color="primary" routerLink="/companies/create">
-                <mat-icon>add</mat-icon>
-                Add Company
-              </button>
             </div>
           }
         </div>
@@ -169,15 +173,19 @@ import { Company, PlatformStats, RegionStats, SectorStats } from '@core/models/c
   styles: [`
     .dashboard-container {
       padding: 24px;
-      
+
       h1 {
         margin-bottom: 24px;
       }
-      
+
       h2 {
         margin-top: 32px;
         margin-bottom: 16px;
       }
+    }
+
+    .add-company-section {
+      margin-bottom: 24px;
     }
 
     .stats-grid {
