@@ -11,6 +11,7 @@ public class CompanyDocument : Entity
     public DocumentType DocType { get; private set; }
     public string FileUrl { get; private set; } = string.Empty;
     public bool? IsPublic { get; private set; }
+    public string? Description { get; private set; }
     public DateTime UploadedAt { get; private set; }
 
     private CompanyDocument() { }

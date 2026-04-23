@@ -43,6 +43,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, IMediator medi
 
     public DbSet<Plan> Plans => Set<Plan>();
 
+    // Competitors Features
+    public DbSet<CompanyFollow> CompanyFollows => Set<CompanyFollow>();
+    public DbSet<CreditRatingQuery> CreditRatings => Set<CreditRatingQuery>();
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await DispatchDomainEventsAsync(cancellationToken);

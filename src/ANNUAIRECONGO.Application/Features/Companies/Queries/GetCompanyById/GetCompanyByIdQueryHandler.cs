@@ -11,11 +11,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
 
-public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandler> logger,IAppDbContext context) : IRequestHandler<GetCompanyByIdQuery, Result<CompanyDto>>
+public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandler> logger,IAppDbContext context) : IRequestHandler<GetCompanyByIdQuery, Result<CompanyFollowDto>>
 {
     private readonly ILogger<GetCompanyByIdQueryHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
-    public async Task<Result<CompanyDto>> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<CompanyFollowDto>> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
     {
         var company = await _context.Companies.AsNoTracking()
             .Include(c => c.City)

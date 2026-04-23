@@ -5,4 +5,4 @@ using MediatR;
 
 namespace ANNUAIRECONGO.Application.Features.BusinessOwners.Queries.GetMyCompanies;
 
-public sealed record GetMyCompaniesQuery : IRequest<Result<List<CompanyDto>>>;
+public sealed record GetMyCompaniesQuery : IRequest<Result<List<CompanyFollowDto>>>;

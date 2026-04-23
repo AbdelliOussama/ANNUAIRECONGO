@@ -57,7 +57,7 @@ public sealed class BusinessOwnersControllers : ApiController
     }
 
     [HttpGet("my-companies")]
-    [ProducesResponseType(typeof(List<CompanyDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<CompanyFollowDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Get my companies.")]
     [EndpointDescription("This endpoint returns a list of companies owned by the authenticated business owner.")]

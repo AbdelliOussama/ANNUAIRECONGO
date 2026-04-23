@@ -16,6 +16,17 @@ public class Company : AuditableEntity
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public string? Description { get; private set; }
+    public string? LegalForm { get; private set; } = string.Empty;
+    public int? FoundedYear { get; private set; }
+    public string? EmployeesRange { get; private set; } = string.Empty;
+    public string? RevenueRange { get; private set; } = string.Empty;
+    public string? RCCM { get; private set; } = string.Empty;
+    public string? NIF { get; private set; } = string.Empty;
+    public string? Capital { get; private set; } = string.Empty;
+    public CreditRating? CreditRating { get; private set; }
+    public DateTimeOffset? CreditRatingDate { get; private set; }
+     public int ProfileCompleteness { get; private set; }
+
 
     // ── Media ─────────────────────────────────────────────────────
     public string? LogoUrl { get; private set; }
@@ -33,6 +44,7 @@ public class Company : AuditableEntity
     public string? RejectionReason { get; private set; }
     public Guid? ActiveSubscriptionId { get; private set; }
     public bool IsFeatured { get; private set; }
+    public bool IsVerified { get; private set; }
 
     // ── Navigation Properties ─────────────────────────────────────
     public BusinessOwner Owner { get; private set; } = null!;
@@ -45,6 +57,7 @@ public class Company : AuditableEntity
     private readonly List<CompanyImage> _images = [];
     private readonly List<CompanyReport> _reports = [];
     private readonly List<Subscription> _subscriptions = [];
+    private readonly List<CompanyFollow> _followers = [];
 
     public IReadOnlyCollection<CompanySector> CompanySectors => _companySectors.AsReadOnly();
     public IReadOnlyCollection<CompanyContact> Contacts => _contacts.AsReadOnly();
@@ -53,6 +66,7 @@ public class Company : AuditableEntity
     public IReadOnlyCollection<CompanyImage> Images => _images.AsReadOnly();
     public IReadOnlyCollection<CompanyReport> Reports => _reports.AsReadOnly();
     public IReadOnlyCollection<Subscription> Subscriptions => _subscriptions.AsReadOnly();
+    public IReadOnlyCollection<CompanyFollow> Followers => _followers.AsReadOnly();
 
     // ── Constructors ──────────────────────────────────────────────
 

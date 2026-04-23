@@ -36,6 +36,10 @@ public interface IAppDbContext
     public DbSet<Payment> Payments { get; }
     public DbSet<Plan> Plans { get; }
 
+    // Competitors Features
+    public DbSet<CompanyFollow> CompanyFollows { get; }
+    public DbSet<CreditRatingQuery> CreditRatings { get; }
+
 
 
 
