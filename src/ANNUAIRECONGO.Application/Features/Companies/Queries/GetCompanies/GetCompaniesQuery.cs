@@ -12,4 +12,4 @@ public sealed record GetCompaniesQuery(
     Guid? RegionId,
     int? Status,
     int PageNumber,
-    int PageSize) : IRequest<Result<PaginatedList<CompanyFollowDto>>>;
+    int PageSize) : IRequest<Result<PaginatedList<CompanyDto>>>;

@@ -35,8 +35,6 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
-using ANNUAIRECONGO.Application.Features.Companies.Commands.Follow.FollowCompany;
-using ANNUAIRECONGO.Application.Features.Companies.Commands.Follow.UnFollowCompany;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -533,26 +531,4 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
             Problem
         );
     }
-
-    // ****************** Company Followers ******************
-
-    [HttpPost("{id:guid}/follow" , Name = "FollowCompany")]
-    public async Task<IActionResult> FollowCompany(Guid id, CancellationToken ct)
-    {
-        var result = await sender.Send(new FollowCompanyCommand(id,DateTimeOffset.UtcNow,true), ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
-    public async Task<IActionResult> UnfollowCompany(Guid id, CancellationToken ct)
-    {
-        var result = await sender.Send(new UnfollowCompanyCommand(id), ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
-    }
-    // ******************* Company Followers ******************
-
 }

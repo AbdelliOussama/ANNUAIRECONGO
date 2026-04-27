@@ -45,7 +45,7 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
         if(company.Images.Any(i => i.ImageUrl == request.ImageUrl))
         {
             _logger.LogWarning("Company with id {CompanyId} already has an image with url {ImageUrl}", request.CompanyId, request.ImageUrl);
-            return CompanyErrors.ImageWithTheSameUrlExists;
+            return CompanyErrors.ImagewithTheSameUrlExists;
         }
         var imageResult = CompanyImage.Create(request.CompanyId,request.ImageUrl,request.DisplayOrder,request.Caption);
         if(imageResult.IsError)

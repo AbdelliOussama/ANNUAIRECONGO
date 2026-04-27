@@ -11,13 +11,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 
-public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> Logger, IAppDbContext context) : IRequestHandler<GetCompaniesQuery, Result<PaginatedList<CompanyFollowDto>>>
+public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> Logger, IAppDbContext context) : IRequestHandler<GetCompaniesQuery, Result<PaginatedList<CompanyDto>>>
 {
     private readonly IAppDbContext _context = context;
 
     private readonly ILogger<GetCompaniesQueryHandler> _logger = Logger;
 
-    public async Task<Result<PaginatedList<CompanyFollowDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedList<CompanyDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Companies.AsNoTracking()
             .Include(c => c.CompanySectors)
@@ -70,9 +70,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         if (companies is null || !companies.Any())
         {
             _logger.LogWarning("No companies found");
-            return new PaginatedList<CompanyFollowDto>
+            return new PaginatedList<CompanyDto>
             {
-                Items = new List<CompanyFollowDto>(),
+                Items = new List<CompanyDto>(),
                 PageNumber = request.PageNumber,
                 PageSize = request.PageSize,
                 TotalCount = 0,
@@ -81,7 +81,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         }
 
         var companiesDto = companies.ToDTos();
-        var paginatedList = new PaginatedList<CompanyFollowDto>
+        var paginatedList = new PaginatedList<CompanyDto>
         {
             Items = companiesDto,
             PageNumber = request.PageNumber,
