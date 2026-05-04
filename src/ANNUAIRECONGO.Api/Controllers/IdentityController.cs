@@ -1,7 +1,8 @@
 using System.Security.Claims;
 using ANNUAIRECONGO.Application.Features.Identity;
-using ANNUAIRECONGO.Application.Features.Identity.Dtos;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
+using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUserInfo;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.RefreshTokens;
@@ -67,18 +68,34 @@ public sealed class IdentityController(ISender sender) : ApiController
             Problem);
     }
 
-    [HttpPost("register")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Registers a new user and creates associated business owner profile.")]
-    [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
-    [EndpointName("Register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+     [HttpPost("register")]
+     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+     [EndpointSummary("Registers a new user and creates associated business owner profile.")]
+     [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
+     [EndpointName("Register")]
+     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+     {
+         var result =await sender.Send(new RegisterCommand(request.Email,request.Password,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition), ct);
+         return result.Match(
+             userId => Created($"identity/{userId}", userId),
+             Problem);
+     }
+
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Sends password reset email.")]
+    [EndpointDescription("Sends a password reset link to the user's registered email address.")]
+    [EndpointName("ForgotPassword")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(new RegisterCommand(request.Email,request.Password,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition), ct);
+        var result = await sender.Send(new ForgotPasswordCommand(request.Email), ct);
         return result.Match(
-            userId => Created($"identity/{userId}", userId),
+            _ => Ok(),
             Problem);
+        }
     }
-}

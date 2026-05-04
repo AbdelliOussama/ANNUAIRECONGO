@@ -1,4 +1,3 @@
-
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Domain.BusinessOwners;
@@ -6,6 +5,8 @@ using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using System.Net;
 
 namespace ANNUAIRECONGO.Infrastructure.Identity;
 
@@ -20,14 +21,19 @@ public class IdentityService : IIdentityService
     #endregion
 
     #region  Constructors
-        public IdentityService(UserManager<AppUser> userManager, IUserClaimsPrincipalFactory<AppUser> claimsPrincipalFactory, IAuthorizationService authorizationService,RoleManager<IdentityRole> roleManager,IAppDbContext context)
-        {
-            _userManager = userManager;
-            _claimsPrincipalFactory = claimsPrincipalFactory;
-            _authorizationService = authorizationService;
-            _roleManager = roleManager;
-            _context  = context;
-        }
+    private readonly IConfiguration _configuration;
+    private readonly INotificationService _notificationService;
+
+    public IdentityService(UserManager<AppUser> userManager, IUserClaimsPrincipalFactory<AppUser> claimsPrincipalFactory, IAuthorizationService authorizationService,RoleManager<IdentityRole> roleManager,IAppDbContext context, IConfiguration configuration, INotificationService notificationService)
+    {
+        _userManager = userManager;
+        _claimsPrincipalFactory = claimsPrincipalFactory;
+        _authorizationService = authorizationService;
+        _roleManager = roleManager;
+        _context  = context;
+        _configuration = configuration;
+        _notificationService = notificationService;
+    }
     #endregion
 
     public async Task<Result<AppUserDto>> AuthenticateAsync(string email, string password)
@@ -156,5 +162,33 @@ public class IdentityService : IIdentityService
         }
 
         return businessOwnerResult.Value.Id;
+    }
+
+    public async Task<Result<Success>> ForgotPasswordAsync(string email, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            // Return success anyway to prevent user enumeration
+            return Result.Success;
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
+        var resetUrl = _configuration["AppSettings:ClientAppUrl"];
+        if (string.IsNullOrEmpty(resetUrl))
+        {
+            resetUrl = "http://localhost:4200";
+        }
+
+        var resetLink = $"{resetUrl}/reset-password?email={WebUtility.UrlEncode(email)}&token={encodedToken}";
+
+        var subject = "Reset your password";
+        var body = $"Please reset your password by clicking <a href='{resetLink}'>here</a>.";
+
+        await _notificationService.SendEmailAsync(email, subject, body, cancellationToken);
+
+        return Result.Success;
     }
 }
