@@ -1,108 +1,364 @@
 import { Routes } from '@angular/router';
-import { LayoutComponent } from './shared/layout/layout.component';
 import { authGuard, adminGuard, publicGuard } from './core/guards/auth.guard';
 
+/**
+ * Annuaire Congo — route table.
+ *
+ * Layout strategy (audit C8, M3, M4):
+ *   ''           → PublicLayout
+ *   '/auth/*'    → AuthLayout
+ *   '/espace/*'  → EspaceLayout (authGuard)
+ *   '/admin/*'   → AdminLayout  (authGuard + adminGuard)
+ *
+ * Sprint 3 — public/* feature components are now real (accueil, annuaire,
+ * fiche, secteurs, tarifs, cartographie, registre, contact, support, mentions,
+ * confidentialité, 404, dirigeants, trust-score, rapport-ia, appels-offres).
+ *
+ * Sprints 4–6 will replace the auth/espace/admin placeholders one by one.
+ */
 export const routes: Routes = [
+  /* ─── Public ──────────────────────────────────────────────────────── */
   {
     path: '',
-    component: LayoutComponent,
+    loadComponent: () =>
+      import('./layout/public/public-layout.component').then((m) => m.PublicLayoutComponent),
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/public/accueil/accueil.component').then((m) => m.AccueilComponent),
+        title: 'Annuaire Congo — Accueil',
       },
       {
-        path: 'companies',
-        loadComponent: () => import('./features/companies/company-list/company-list.component').then(m => m.CompanyListComponent)
+        path: 'annuaire',
+        loadComponent: () =>
+          import('./features/public/annuaire/annuaire-list.component').then((m) => m.AnnuaireListComponent),
+        title: 'Annuaire — Entreprises de Congo-Brazzaville',
       },
       {
-        path: 'companies/create',
-        loadComponent: () => import('./features/companies/create-company/create-company.component').then(m => m.CreateCompanyComponent),
-        canActivate: [authGuard]
+        path: 'annuaire/:id',
+        loadComponent: () =>
+          import('./features/public/annuaire/fiche-entreprise.component').then((m) => m.FicheEntrepriseComponent),
+        title: 'Fiche entreprise — Annuaire Congo',
       },
       {
-        path: 'companies/:id/edit',
-        loadComponent: () => import('./features/companies/edit-company/edit-company.component').then(m => m.EditCompanyComponent),
-        canActivate: [authGuard]
+        path: 'secteurs',
+        loadComponent: () =>
+          import('./features/public/secteurs/secteurs.component').then((m) => m.SecteursComponent),
+        title: '6 secteurs stratégiques — Annuaire Congo',
       },
       {
-        path: 'companies/:id',
-        loadComponent: () => import('./features/companies/company-detail/company-detail.component').then(m => m.CompanyDetailComponent)
+        path: 'cartographie',
+        loadComponent: () =>
+          import('./features/public/cartographie/cartographie.component').then((m) => m.CartographieComponent),
+        title: 'Cartographie des entreprises — Annuaire Congo',
       },
       {
-        path: 'regions',
-        loadComponent: () => import('./features/regions/regions.component').then(m => m.RegionsComponent)
+        path: 'tarifs',
+        loadComponent: () =>
+          import('./features/public/tarifs/tarifs.component').then((m) => m.TarifsComponent),
+        title: 'Forfaits & Tarifs — Annuaire Congo',
       },
       {
-        path: 'subscription',
-        loadComponent: () => import('./features/subscription/subscription-plans.component').then(m => m.SubscriptionPlansComponent)
+        path: 'registre',
+        loadComponent: () =>
+          import('./features/public/registre/registre.component').then((m) => m.RegistreComponent),
+        title: 'Registre national — Annuaire Congo',
       },
       {
-        path: 'payment-history',
-        loadComponent: () => import('./features/subscription/payment-history.component').then(m => m.PaymentHistoryComponent),
-        canActivate: [authGuard]
+        path: 'contact',
+        loadComponent: () =>
+          import('./features/public/contact/contact.component').then((m) => m.ContactComponent),
+        title: 'Nous contacter — Annuaire Congo',
       },
       {
-        path: 'login',
-        loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
-        canActivate: [publicGuard]
+        path: 'support',
+        loadComponent: () =>
+          import('./features/public/support/support.component').then((m) => m.SupportComponent),
+        title: 'Support & Aide — Annuaire Congo',
       },
       {
-        path: 'register',
-        loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
-        canActivate: [publicGuard]
+        path: 'mentions-legales',
+        loadComponent: () =>
+          import('./features/public/legal/legal-page.component').then((m) => m.LegalPageComponent),
+        data: { kind: 'mentions' },
+        title: 'Mentions légales — Annuaire Congo',
       },
       {
-        path: 'dashboard',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-        canActivate: [authGuard]
+        path: 'confidentialite',
+        loadComponent: () =>
+          import('./features/public/legal/legal-page.component').then((m) => m.LegalPageComponent),
+        data: { kind: 'confidentialite' },
+        title: 'Confidentialité — Annuaire Congo',
+      },
+
+      /* Hors-spec, kept per user decision */
+      {
+        path: 'dirigeants',
+        loadComponent: () =>
+          import('./features/public/extras/dirigeants.component').then((m) => m.DirigeantsComponent),
+        title: 'Dirigeants — Annuaire Congo',
       },
       {
-        path: 'profile',
-        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
-        canActivate: [authGuard]
+        path: 'trust-score',
+        loadComponent: () =>
+          import('./features/public/extras/trust-score.component').then((m) => m.TrustScoreComponent),
+        title: 'Trust Score — Annuaire Congo',
+      },
+      {
+        path: 'rapport-ia',
+        loadComponent: () =>
+          import('./features/public/extras/rapport-ia.component').then((m) => m.RapportIaComponent),
+        title: 'Rapports IA — Annuaire Congo',
+      },
+      {
+        path: 'appels-offres',
+        loadComponent: () =>
+          import('./features/public/extras/appels-offres.component').then((m) => m.AppelsOffresComponent),
+        title: 'Appels d\'offres — Annuaire Congo',
+      },
+
+      /* 404 — child of PublicLayout so the public chrome stays visible. */
+      {
+        path: '404',
+        loadComponent: () =>
+          import('./features/public/not-found/not-found.component').then((m) => m.NotFoundComponent),
+        title: 'Page introuvable — Annuaire Congo',
+      },
+    ],
+  },
+
+  /* ─── Auth (placeholders rebuilt in Sprint 4) ─────────────────────── */
+  {
+    path: 'auth',
+    loadComponent: () =>
+      import('./layout/auth/auth-layout.component').then((m) => m.AuthLayoutComponent),
+    canActivateChild: [publicGuard],
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'connexion' },
+      {
+        path: 'connexion',
+        loadComponent: () =>
+          import('./features/auth/connexion/connexion.component').then((m) => m.ConnexionComponent),
+        title: 'Connexion — Annuaire Congo',
+      },
+      {
+        path: 'inscription',
+        loadComponent: () =>
+          import('./features/auth/inscription/inscription.component').then((m) => m.InscriptionComponent),
+        title: 'Inscription — Annuaire Congo',
+      },
+      {
+        path: 'mot-de-passe-oublie',
+        loadComponent: () =>
+          import('./features/auth/mot-de-passe-oublie/mot-de-passe-oublie.component').then((m) => m.MotDePasseOublieComponent),
+        title: 'Mot de passe oublié — Annuaire Congo',
+      },
+      {
+        path: 'reinitialiser-mot-de-passe',
+        loadComponent: () =>
+          import('./features/auth/reinitialiser-mot-de-passe/reinitialiser-mot-de-passe.component').then((m) => m.ReinitialiserMotDePasseComponent),
+        title: 'Réinitialiser le mot de passe — Annuaire Congo',
+      },
+      {
+        path: 'verification-email',
+        loadComponent: () =>
+          import('./features/auth/verification-email/verification-email.component').then((m) => m.VerificationEmailComponent),
+        title: 'Vérification de l\'adresse e-mail — Annuaire Congo',
+      },
+    ],
+  },
+
+  /* Top-level shortcuts for typical URLs */
+  { path: 'connexion',                  redirectTo: 'auth/connexion',                pathMatch: 'full' },
+  { path: 'inscription',                redirectTo: 'auth/inscription',              pathMatch: 'full' },
+  { path: 'mot-de-passe-oublie',        redirectTo: 'auth/mot-de-passe-oublie',      pathMatch: 'full' },
+  { path: 'reinitialiser-mot-de-passe', redirectTo: 'auth/reinitialiser-mot-de-passe', pathMatch: 'full' },
+  { path: 'verification-email',         redirectTo: 'auth/verification-email',       pathMatch: 'full' },
+
+  /* ─── Espace entreprise (placeholders rebuilt in Sprint 5) ────────── */
+  {
+    path: 'espace',
+    loadComponent: () =>
+      import('./layout/espace/espace-layout.component').then((m) => m.EspaceLayoutComponent),
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/espace/console/console.component').then((m) => m.EspaceConsoleComponent),
+        title: 'Mon espace — Annuaire Congo',
+      },
+      {
+        path: 'fiche/creer',
+        loadComponent: () =>
+          import('./features/espace/fiche/fiche-creer.component').then((m) => m.FicheCreerComponent),
+        title: 'Créer ma fiche — Annuaire Congo',
+      },
+      {
+        path: 'fiche/editer',
+        loadComponent: () =>
+          import('./features/espace/fiche/fiche-editer.component').then((m) => m.FicheEditerComponent),
+        title: 'Modifier ma fiche — Annuaire Congo',
+      },
+      {
+        path: 'fiche/editer/:id',
+        loadComponent: () =>
+          import('./features/espace/fiche/fiche-editer.component').then((m) => m.FicheEditerComponent),
+        title: 'Modifier ma fiche — Annuaire Congo',
+      },
+      {
+        path: 'abonnement',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/espace/abonnement/abonnement.component').then((m) => m.EspaceAbonnementComponent),
+        title: 'Mon abonnement — Annuaire Congo',
+      },
+      {
+        path: 'abonnement/historique',
+        loadComponent: () =>
+          import('./features/espace/abonnement/historique.component').then((m) => m.HistoriquePaiementsComponent),
+        title: 'Historique de paiement — Annuaire Congo',
+      },
+      {
+        path: 'abonnement/succes',
+        loadComponent: () =>
+          import('./features/espace/abonnement/paiement-succes.component').then((m) => m.PaiementSuccesComponent),
+        title: 'Paiement validé — Annuaire Congo',
+      },
+      {
+        path: 'abonnement/echec',
+        loadComponent: () =>
+          import('./features/espace/abonnement/paiement-echec.component').then((m) => m.PaiementEchecComponent),
+        title: 'Paiement échoué — Annuaire Congo',
       },
       {
         path: 'notifications',
-        loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent),
-        canActivate: [authGuard]
+        loadComponent: () =>
+          import('./features/espace/notifications/notifications.component').then((m) => m.EspaceNotificationsComponent),
+        title: 'Notifications — Annuaire Congo',
       },
       {
-        path: 'admin/sectors',
-        loadComponent: () => import('./features/admin/sectors/admin-sectors.component').then(m => m.AdminSectorsComponent),
-        canActivate: [authGuard, adminGuard]
+        path: 'statistiques',
+        loadComponent: () =>
+          import('./features/espace/statistiques/statistiques.component').then((m) => m.EspaceStatistiquesComponent),
+        title: 'Statistiques — Mon espace',
       },
       {
-        path: 'admin/companies',
-        loadComponent: () => import('./features/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
-        canActivate: [authGuard, adminGuard]
+        path: 'compte',
+        loadComponent: () =>
+          import('./features/espace/compte/compte.component').then((m) => m.EspaceCompteComponent),
+        title: 'Mon compte — Annuaire Congo',
       },
-      {
-        path: 'admin/plans',
-        loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent),
-        canActivate: [authGuard, adminGuard]
-      },
-      {
-        path: 'admin/geography',
-        loadComponent: () => import('./features/admin/geography/admin-geography.component').then(m => m.AdminGeographyComponent),
-        canActivate: [authGuard, adminGuard]
-      },
-      {
-        path: 'admin/reports',
-        loadComponent: () => import('./features/admin/reports/admin-reports.component').then(m => m.AdminReportsComponent),
-        canActivate: [authGuard, adminGuard]
-      },
-      {
-        path: 'admin/business-owners',
-        loadComponent: () => import('./features/admin/business-owners/admin-business-owners.component').then(m => m.AdminBusinessOwnersComponent),
-        canActivate: [authGuard, adminGuard]
-      },
-      {
-        path: 'admin/logs',
-        loadComponent: () => import('./features/admin/logs/admin-logs.component').then(m => m.AdminLogsComponent),
-        canActivate: [authGuard, adminGuard]
-      },
-    ]
+    ],
   },
-  { path: '**', redirectTo: '' }
+
+  /* ─── Admin (placeholders rebuilt in Sprint 6) ───────────────────── */
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./layout/admin/admin-layout.component').then((m) => m.AdminLayoutComponent),
+    canActivate: [authGuard, adminGuard],
+    canActivateChild: [authGuard, adminGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/admin/dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+        title: 'Tableau de bord — Admin',
+      },
+      {
+        path: 'statistiques',
+        loadComponent: () =>
+          import('./features/admin/statistiques/admin-statistiques.component').then((m) => m.AdminStatistiquesComponent),
+        title: 'Statistiques — Admin',
+      },
+      {
+        path: 'validation',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/admin/validation/admin-validation-list.component').then((m) => m.AdminValidationListComponent),
+        title: 'Validation des fiches — Admin',
+      },
+      {
+        path: 'validation/:id',
+        loadComponent: () =>
+          import('./features/admin/validation/admin-validation-detail.component').then((m) => m.AdminValidationDetailComponent),
+        title: 'Examen de fiche — Admin',
+      },
+      {
+        path: 'entreprises',
+        loadComponent: () =>
+          import('./features/admin/entreprises/admin-entreprises.component').then((m) => m.AdminEntreprisesComponent),
+        title: 'Entreprises — Admin',
+      },
+      {
+        path: 'utilisateurs',
+        loadComponent: () =>
+          import('./features/admin/utilisateurs/admin-utilisateurs.component').then((m) => m.AdminUtilisateursComponent),
+        title: 'Gestion des utilisateurs — Admin',
+      },
+      {
+        path: 'dirigeants',
+        loadComponent: () =>
+          import('./features/admin/dirigeants/admin-dirigeants.component').then((m) => m.AdminDirigeantsComponent),
+        title: 'Dirigeants — Admin',
+      },
+      {
+        path: 'secteurs',
+        loadComponent: () =>
+          import('./features/admin/secteurs/admin-secteurs.component').then((m) => m.AdminSecteursComponent),
+        title: 'Secteurs — Admin',
+      },
+      {
+        path: 'geographie',
+        loadComponent: () =>
+          import('./features/admin/geographie/admin-geographie.component').then((m) => m.AdminGeographieComponent),
+        title: 'Géographie — Admin',
+      },
+      {
+        path: 'forfaits',
+        loadComponent: () =>
+          import('./features/admin/forfaits/admin-forfaits.component').then((m) => m.AdminForfaitsComponent),
+        title: 'Forfaits — Admin',
+      },
+      {
+        path: 'audit',
+        loadComponent: () =>
+          import('./features/admin/audit/admin-audit.component').then((m) => m.AdminAuditComponent),
+        title: 'Journal d\'audit — Admin',
+      },
+      {
+        path: 'parametres',
+        loadComponent: () =>
+          import('./features/admin/parametres/admin-parametres.component').then((m) => m.AdminParametresComponent),
+        title: 'Paramètres plateforme — Admin',
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/admin/notifications/admin-notifications.component').then((m) => m.AdminNotificationsComponent),
+        title: 'Notifications — Admin',
+      },
+    ],
+  },
+
+  /* ─── Legacy English-path redirects ────────────────────────────────── */
+  { path: 'login',           redirectTo: 'auth/connexion',               pathMatch: 'full' },
+  { path: 'register',        redirectTo: 'auth/inscription',             pathMatch: 'full' },
+  { path: 'companies',       redirectTo: 'annuaire',                     pathMatch: 'full' },
+  { path: 'companies/:id',   redirectTo: 'annuaire/:id',                 pathMatch: 'full' },
+  { path: 'regions',         redirectTo: 'cartographie',                 pathMatch: 'full' },
+  { path: 'subscription',    redirectTo: 'tarifs',                       pathMatch: 'full' },
+  { path: 'payment-history', redirectTo: 'espace/abonnement/historique', pathMatch: 'full' },
+  { path: 'dashboard',       redirectTo: 'espace',                       pathMatch: 'full' },
+  { path: 'profile',         redirectTo: 'espace/compte',                pathMatch: 'full' },
+  { path: 'notifications',   redirectTo: 'espace/notifications',         pathMatch: 'full' },
+
+  /* ─── Catch-all → 404 (kept inside PublicLayout for the chrome) ──── */
+  { path: '**', redirectTo: '/404' },
 ];

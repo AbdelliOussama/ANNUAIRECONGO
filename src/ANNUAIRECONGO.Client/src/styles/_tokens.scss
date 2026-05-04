@@ -1,0 +1,85 @@
+/* ============================================================
+   Annuaire Congo — Design tokens
+   CSS custom properties shared across the app. Mirrors the
+   maquette Material 3 token set (audit M1 — no more hardcoded
+   hex values in component templates).
+   ============================================================ */
+
+:root {
+  /* Primary */
+  --color-primary:                   #004e34;
+  --color-primary-container:         #006847;
+  --color-on-primary:                #ffffff;
+  --color-on-primary-container:      #90e4ba;
+  --color-primary-fixed:             #9ff4c9;
+  --color-primary-fixed-dim:         #84d7ae;
+  --color-on-primary-fixed:          #002114;
+  --color-on-primary-fixed-variant:  #005237;
+  --color-inverse-primary:           #84d7ae;
+
+  /* Secondary */
+  --color-secondary:                 #515f74;
+  --color-secondary-container:       #d5e3fc;
+  --color-on-secondary:              #ffffff;
+  --color-on-secondary-container:    #57657a;
+
+  /* Tertiary */
+  --color-tertiary:                  #564000;
+  --color-tertiary-container:        #735600;
+  --color-on-tertiary-container:     #ffcb4a;
+  --color-tertiary-fixed:            #ffdf9a;
+  --color-on-tertiary-fixed:         #251a00;
+
+  /* Error */
+  --color-error:                     #ba1a1a;
+  --color-error-container:           #ffdad6;
+  --color-on-error:                  #ffffff;
+  --color-on-error-container:        #93000a;
+
+  /* Surface */
+  --color-background:                #f7f9fb;
+  --color-on-background:             #191c1e;
+  --color-surface:                   #f7f9fb;
+  --color-surface-container-lowest:  #ffffff;
+  --color-surface-container-low:     #f2f4f6;
+  --color-surface-container:         #eceef0;
+  --color-surface-container-high:    #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-surface-variant:           #e0e3e5;
+  --color-on-surface:                #191c1e;
+  --color-on-surface-variant:        #3f4943;
+
+  /* Outline */
+  --color-outline:                   #6f7a72;
+  --color-outline-variant:           #bec9c1;
+
+  /* Inverse */
+  --color-inverse-surface:           #2d3133;
+  --color-inverse-on-surface:        #eff1f3;
+
+  /* Typography */
+  --font-headline: 'DM Serif Display', Georgia, serif;
+  --font-body:     'DM Sans', system-ui, sans-serif;
+
+  /* Radius (audit P2) */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+
+  /* Spacing rhythm (audit P3) */
+  --space-section-y:    5rem;
+  --space-section-y-lg: 8rem;
+
+  /* Layout chrome */
+  --topbar-height:  56px;
+  --sidebar-w-admin: 260px;
+  --sidebar-w-ent:   240px;
+
+  /* Elevation */
+  --shadow-card:      0 2px 12px rgba(25, 28, 30, 0.05);
+  --shadow-editorial: 0 8px 32px rgba(25, 28, 30, 0.06);
+  --shadow-modal:     0 24px 60px rgba(0, 0, 0, 0.25);
+  --shadow-toast:     0 8px 32px rgba(0, 0, 0, 0.12);
+}

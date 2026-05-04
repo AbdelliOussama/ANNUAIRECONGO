@@ -1,39 +1,47 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { ToastService } from '@shared/services/toast.service';
+import { FR } from '@core/i18n/fr.constants';
 
+/**
+ * Global HTTP error handler.
+ *
+ * Surfaces a French user-facing message via the in-house ToastService
+ * (Sprint 8 — replaced MatSnackBar to drop the @angular/material dep).
+ * On 401, clears the auth state and redirects to /auth/connexion (the new FR
+ * route — audit C4 + Sprint 4 routing).
+ */
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
-  const snackBar = inject(MatSnackBar);
+  const toast  = inject(ToastService);
   const router = inject(Router);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      let message = 'An unexpected error occurred';
       const status = error.status;
+      // Explicit `string` widening — FR is `as const`, so `let message = …`
+      // would be inferred as the literal type and reject every reassignment.
+      let message: string = FR.errors.serverError;
 
       if (status === 0) {
-        message = 'Unable to connect to server. Please check your internet connection.';
+        message = FR.errors.network;
       } else if (status === 400) {
-        message = error.error?.message || 'Invalid request. Please check your input.';
+        message = error.error?.message || error.error?.title || FR.errors.validation;
       } else if (status === 401) {
-        message = 'Your session has expired. Please log in again.';
+        message = 'Votre session a expiré. Veuillez vous reconnecter.';
         localStorage.clear();
-        router.navigate(['/login']);
+        const returnUrl = router.url && router.url !== '/' ? router.url : undefined;
+        router.navigate(['/auth/connexion'], returnUrl ? { queryParams: { returnUrl } } : undefined);
       } else if (status === 403) {
-        message = 'You do not have permission to perform this action.';
+        message = FR.errors.unauthorized;
       } else if (status === 404) {
-        message = 'The requested resource was not found.';
+        message = FR.errors.notFound;
       } else if (status >= 500) {
-        message = 'Server error. Please try again later.';
+        message = FR.errors.serverError;
       }
 
-      snackBar.open(message, 'Close', {
-        duration: 5000,
-        panelClass: ['error-snackbar']
-      });
-
+      toast.error(message);
       console.error('HTTP Error:', error.message, error);
       return throwError(() => error);
     })

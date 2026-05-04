@@ -11,6 +11,11 @@ export interface User {
   email: string;
   roles: string[];
   claims?: string[];
+  /** Optional — populated by /identity/current-user/claims when available. */
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  companyPosition?: string;
 }
 
 export interface LoginRequest {

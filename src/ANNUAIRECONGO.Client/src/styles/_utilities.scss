@@ -1,0 +1,26 @@
+/* ============================================================
+   Annuaire Congo — Bespoke utilities
+   Reserved for utilities that Tailwind doesn't cover by default.
+   Keep this file small — prefer Tailwind utility classes.
+   ============================================================ */
+
+/* Smooth scroll for anchor navigation */
+html { scroll-behavior: smooth; }
+
+/* Selection color */
+::selection {
+  background: rgba(0, 78, 52, 0.18);
+  color: var(--color-on-surface);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track { background: var(--color-surface-container-low); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-container-highest);
+  border-radius: var(--radius-md);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-outline-variant); }

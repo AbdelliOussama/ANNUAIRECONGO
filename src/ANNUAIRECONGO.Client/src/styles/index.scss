@@ -1,0 +1,34 @@
+/* ============================================================
+   Annuaire Congo — Global stylesheet entry point
+   Order matters: tokens → tailwind base → typography → tailwind
+   components → tailwind utilities → custom components → utilities.
+   ============================================================ */
+
+/* 1. Design tokens (CSS custom properties) */
+@use 'tokens';
+
+/* 3. Typography (must come after base so our font rules win) */
+@use 'typography';
+
+/* 6. Component classes ported from the maquette */
+@use 'components';
+
+/* 7. Bespoke utilities */
+@use 'utilities';
+
+/* 2. Tailwind base (preflight + plugin resets) */
+@tailwind base;
+
+/* 4. Tailwind component classes (none of ours yet — kept for plugin output) */
+@tailwind components;
+
+/* 5. Tailwind utility classes */
+@tailwind utilities;
+
+/* Global reset addendum */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; padding: 0; }
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font: inherit; }
