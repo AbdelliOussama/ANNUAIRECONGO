@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ANNUAIRECONGO.Application.Features.Identity;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
@@ -97,5 +98,21 @@ public sealed class IdentityController(ISender sender) : ApiController
         return result.Match(
             _ => Ok(),
             Problem);
-        }
     }
+
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Resets user password with token.")]
+    [EndpointDescription("Resets a user's password using a valid reset token sent via email.")]
+    [EndpointName("ResetPassword")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new ResetPasswordCommand(request.Email, request.Token, request.NewPassword), ct);
+        return result.Match(
+            _ => Ok(),
+            Problem);
+    }
+}

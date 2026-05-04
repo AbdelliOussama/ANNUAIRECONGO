@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using System.Linq;
 
 namespace ANNUAIRECONGO.Infrastructure.Identity;
 
@@ -188,6 +189,24 @@ public class IdentityService : IIdentityService
         var body = $"Please reset your password by clicking <a href='{resetLink}'>here</a>.";
 
         await _notificationService.SendEmailAsync(email, subject, body, cancellationToken);
+
+        return Result.Success;
+    }
+
+    public async Task<Result<Success>> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            return IdentityErrors.UserNotFound;
+        }
+
+        var resetResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!resetResult.Succeeded)
+        {
+            var errors = resetResult.Errors.Select(e => Error.Validation(e.Code, e.Description)).ToList();
+            return errors;
+        }
 
         return Result.Success;
     }

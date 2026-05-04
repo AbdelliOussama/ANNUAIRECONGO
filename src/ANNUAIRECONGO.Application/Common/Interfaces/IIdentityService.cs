@@ -17,4 +17,6 @@ public interface IIdentityService
     Task<Result<Guid>> RegisterAsync(string email, string password, string firstName, string lastName, string phoneNumber, string? companyPosition, CancellationToken cancellationToken);
 
     Task<Result<Success>> ForgotPasswordAsync(string email, CancellationToken cancellationToken);
+
+    Task<Result<Success>> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken);
 }
