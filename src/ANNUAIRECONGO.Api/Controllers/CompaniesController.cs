@@ -34,7 +34,7 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.ContactClick;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
-using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
+using ANNUAIRECONGO.Contracts.Requests.Companies.StatusTransitions;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -124,7 +124,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPut("{id:guid}/UpdateCompanyProfile" , Name = "UpdateCompanyProfile")]
+    [HttpPost("{id:guid}/update-company-profile" , Name = "UpdateCompanyProfile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -154,7 +154,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     }
 
 
-    [HttpPut("{id:guid}/UpdateMedia" , Name = "UpdateMedia")]
+    [HttpPost("{id:guid}/update-media" , Name = "UpdateMedia")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -173,7 +173,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPut("{id:guid}/ReactivateCompany" , Name = "ReactivateCompany")]
+     [HttpPost("{id:guid}/reactivate-company" , Name = "ReactivateCompany")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -191,7 +191,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPut("{id:guid}/RejectCompany" , Name = "RejectCompany")]
+     [HttpPost("{id:guid}/reject-company" , Name = "RejectCompany")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Reject a company by id.")]
@@ -199,16 +199,16 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [EndpointName("RejectCompany")]
     [MapToApiVersion("1.0")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult>RejectCompany([FromRoute] Guid id,[FromBody] string reason,CancellationToken ct)
-    {
-        var result = await sender.Send(new RejectCompanyCommand(id,reason), ct);
+     public async Task<IActionResult>RejectCompany([FromRoute] Guid id,[FromBody] RejectCompanyRequest request,CancellationToken ct)
+     {
+         var result = await sender.Send(new RejectCompanyCommand(id,request.Reason), ct);
         return result.Match(
             response => Ok(response),
             Problem
         );
     }
 
-    [HttpPut("{id:guid}/SubmitCompany" , Name = "SubmitCompany")]
+     [HttpPost("{id:guid}/submit-company" , Name = "SubmitCompany")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Submit a company by id.")]
@@ -225,7 +225,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPut("{id:guid}/SuspendCompany" , Name = "SuspendCompany")]
+     [HttpPost("{id:guid}/suspend-company" , Name = "SuspendCompany")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Suspend a company by id.")]
@@ -242,7 +242,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPut("{id:guid}/ValidateCompany" , Name = "ValidateCompany")]
+     [HttpPost("{id:guid}/validate-company" , Name = "ValidateCompany")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Validate a company by id.")]
@@ -261,7 +261,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
 
     // Plan Management
 
-    [HttpPut("{id:guid}/ClearActiveSubscription" , Name = "ClearActiveSubscription")]
+    [HttpPost("{id:guid}/clear-active-subscription" , Name = "ClearActiveSubscription")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Clear active subscription for a company by id.")]
@@ -279,7 +279,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     }
 
 
-    [HttpPut("{id:guid}/SetActiveSubscription" , Name = "SetActiveSubscription")]
+    [HttpPost("{id:guid}/set-active-subscription" , Name = "SetActiveSubscription")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Set active subscription for a company by id.")]
@@ -298,15 +298,15 @@ public sealed class CompaniesController(ISender sender) : ApiController
     }
 
 
-    [HttpPut("{id:guid}/setFeatured" , Name = "setFeatured")]
+    [HttpPost("{id:guid}/set-featured" , Name = "SetFeatured")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Set featured for a company by id.")]
     [EndpointDescription("This endpoint set featured for a company by id.")]
-    [EndpointName("setFeatured")]
+     [EndpointName("SetFeatured")]
     [MapToApiVersion("1.0")]
     [Authorize(Roles = "Admin,EntrepriseOwner")]
-    public async Task<IActionResult> setFeatured(Guid id,[FromBody] bool isFeatured, CancellationToken ct)
+     public async Task<IActionResult> SetFeatured(Guid id,[FromBody] bool isFeatured, CancellationToken ct)
     {
         var result = await sender.Send(new SetFeatureCommand(id,isFeatured), ct);
         return result.Match(
@@ -316,7 +316,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     }
 
 // ****************** Company Contacts ******************
-[HttpPost("{id:guid}/AddContact" , Name = "AddContact")]
+[HttpPost("{id:guid}/add-contact" , Name = "AddContact")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Add contact for a company by id.")]
@@ -334,7 +334,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
     );
 }
 
-[HttpDelete("{id:guid}/RemoveContact" , Name = "RemoveContact")]
+    [HttpDelete("{id:guid}/contacts/{contactId:guid}" , Name = "RemoveContact")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Remove contact for a company by id.")]
@@ -342,7 +342,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
 [EndpointName("RemoveContact")]
 [MapToApiVersion("1.0")]
 [Authorize(Roles ="EntrepriseOwner")]
-public async Task<IActionResult> RemoveContact(Guid id, [FromBody] Guid contactId, CancellationToken ct)
+     public async Task<IActionResult> RemoveContact(Guid id, Guid contactId, CancellationToken ct)
 {
     var command = new RemoveContactCommand(id, contactId);
     var result = await sender.Send(command, ct);
@@ -352,7 +352,7 @@ public async Task<IActionResult> RemoveContact(Guid id, [FromBody] Guid contactI
     );
 }
 
-[HttpPut("{id:guid}/UpdateContact" , Name = "UpdateContact")]
+[HttpPost("{id:guid}/update-contact" , Name = "UpdateContact")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Update contact for a company by id.")]
@@ -372,7 +372,7 @@ public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContact
 // ****************** Company Contacts ******************
 
 // ****************** Company Services ******************
-[HttpPost("{id:guid}/AddService" , Name = "AddService")]
+[HttpPost("{id:guid}/add-service" , Name = "AddService")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -391,7 +391,7 @@ public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceReques
     );
 }
 
-[HttpDelete("{id:guid}/RemoveService" , Name = "RemoveService")]
+    [HttpDelete("{id:guid}/services/{serviceId:guid}" , Name = "RemoveService")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -400,9 +400,9 @@ public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceReques
 [EndpointName("RemoveService")]
 [MapToApiVersion("1.0")]
 [Authorize(Roles ="EntrepriseOwner")]
-public async Task<IActionResult> RemoveService(Guid id, [FromBody] RemoveServiceRequest commandRequest, CancellationToken ct)
-{
-    var command = new RemoveServiceCommand(id,commandRequest.ServiceId);
+      public async Task<IActionResult> RemoveService(Guid id, Guid serviceId, CancellationToken ct)
+     {
+         var command = new RemoveServiceCommand(id, serviceId);
     var result = await sender.Send(command, ct);
     return result.Match(
         response => Ok(response),
@@ -412,7 +412,7 @@ public async Task<IActionResult> RemoveService(Guid id, [FromBody] RemoveService
 // ****************** Company Services ******************
 
 // ****************** Company Reports ******************
-[HttpPost("{id:guid}/AddReport" , Name = "AddReport")]
+[HttpPost("{id:guid}/add-report" , Name = "AddReport")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -434,7 +434,7 @@ public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest 
 // ****************** Company Reports ******************
 
 // ****************** Company Images ******************
-[HttpPost("{id:guid}/AddImage" , Name = "AddImage")]
+[HttpPost("{id:guid}/add-image" , Name = "AddImage")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Add image for a company by id.")]
@@ -452,7 +452,7 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
 }
 
 
-    [HttpDelete("{id:guid}/RemoveImage" , Name = "RemoveImage")]
+     [HttpDelete("{id:guid}/images/{imageId:guid}" , Name = "RemoveImage")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Remove image for a company by id.")]
@@ -460,9 +460,9 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     [EndpointName("RemoveImage")]
     [MapToApiVersion("1.0")]
     [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> RemoveImage(Guid id, [FromBody] RemoveImageRequest commandRequest, CancellationToken ct)
-    {
-        var result = await sender.Send(new RemoveImageCommand(id,commandRequest.ImageId), ct);
+     public async Task<IActionResult> RemoveImage(Guid id, Guid imageId, CancellationToken ct)
+     {
+         var result = await sender.Send(new RemoveImageCommand(id, imageId), ct);
         return result.Match(
             response => Ok(response),
             Problem
@@ -470,8 +470,8 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     }
       // ****************** Company Images ******************
 
-      // ****************** Company Documents ******************
-    [HttpPost("{id:guid}/AddDocument" , Name = "AddDocument")]
+       // ****************** Company Documents ******************
+    [HttpPost("{id:guid}/add-document" , Name = "AddDocument")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Add document for a company by id.")]
@@ -494,7 +494,7 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     }
 
 
-    [HttpDelete("{id:guid}/RemoveDocument" , Name = "RemoveDocument")]
+     [HttpDelete("{id:guid}/documents/{documentId:guid}" , Name = "RemoveDocument")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Remove document for a company by id.")]
@@ -502,7 +502,7 @@ public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest co
     [EndpointName("RemoveDocument")]
     [MapToApiVersion("1.0")]
     [Authorize(Roles ="EntrepriseOwner")]
-    public async Task<IActionResult> RemoveDocument(Guid id, [FromBody] Guid documentId, CancellationToken ct)
+     public async Task<IActionResult> RemoveDocument(Guid id, Guid documentId, CancellationToken ct)
     {
         var command = new RemoveDocumentCommand(id, documentId);
         var result = await sender.Send(command, ct);
