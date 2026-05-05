@@ -25,7 +25,7 @@ public sealed record CreateCompanyCommandHandler(ILogger<CreateCompanyCommandHan
             _logger.LogWarning("Company with name {Name} already exists", request.Name);
             return CompanyErrors.NameAlreadyExists(request.Name);
         }
-        var CompanyCreateResult = Company.Create(Guid.NewGuid(), Guid.Parse(_user.Id), request.Name, request.CityId,request.Description,request.Address,request.Latitude,request.Longitude, request.SectorIds);
+        var CompanyCreateResult = Company.Create(Guid.NewGuid(), Guid.Parse(_user.Id), request.Name, request.CityId,request.Description,request.Address,request.Latitude,request.Longitude, request.SectorIds, request.Rccm, request.Niu, request.YearFounded, request.IsVerified, request.IsPremium);
         if (CompanyCreateResult.IsError)
         {
             _logger.LogWarning("Failed to create company with name {Name}", request.Name);

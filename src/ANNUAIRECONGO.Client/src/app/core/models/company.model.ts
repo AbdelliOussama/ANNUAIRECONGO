@@ -77,11 +77,15 @@ export interface Company {
   coverUrl?: string;
   status: CompanyStatus;
   isFeatured: boolean;
+  isVerified: boolean;
+  isPremium: boolean;
+  rccm?: string;
+  niu?: string;
+  yearFounded?: number;
   ownerId?: string;
   cityId?: string;
   cityName?: string;
   regionName?: string;
-  rejectionReason?: string;
   city?: { id: string; name: string };
   sectors: Sector[];
   contacts?: CompanyContact[];
@@ -236,6 +240,11 @@ export interface CreateCompanyRequest {
   address?: string;
   latitude?: number;
   longitude?: number;
+  rccm?: string;
+  niu?: string;
+  yearFounded?: number;
+  isVerified?: boolean;
+  isPremium?: boolean;
 }
 
 export interface UpdateCompanyProfileRequest {
@@ -247,4 +256,9 @@ export interface UpdateCompanyProfileRequest {
   latitude?: number;
   longitude?: number;
   sectorIds?: string[];
+  rccm?: string;
+  niu?: string;
+  yearFounded?: number;
+  isVerified?: boolean;
+  isPremium?: boolean;
 }

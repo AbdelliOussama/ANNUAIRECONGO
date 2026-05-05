@@ -12,5 +12,10 @@ public sealed record UpdateCompanyProfileCommand(
         string? address,
         decimal? latitude,
         decimal? longitude,
-        IEnumerable<Guid> sectorIds
+        IEnumerable<Guid> sectorIds,
+        string? rccm,
+        string? niu,
+        int? yearFounded,
+        bool? isVerified,
+        bool? isPremium
 ): IRequest<Result<Updated>>;

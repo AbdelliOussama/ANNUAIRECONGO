@@ -19,5 +19,10 @@ public class CompanyConfigurations : IEntityTypeConfiguration<Company>
         builder.Property(x => x.Address).IsRequired(false);
         builder.Property(x => x.Latitude).HasPrecision(9, 6);
         builder.Property(x => x.Longitude).HasPrecision(9, 6);
+        builder.Property(x => x.Rccm).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.Niu).IsRequired(false).HasMaxLength(100);
+        builder.Property(x => x.YearFounded).IsRequired(false);
+        builder.Property(x => x.IsVerified).HasDefaultValue(false);
+        builder.Property(x => x.IsPremium).HasDefaultValue(false);
     }
 }

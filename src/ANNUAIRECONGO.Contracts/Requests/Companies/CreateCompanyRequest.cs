@@ -9,4 +9,9 @@ public class CreateCompanyRequest
     public string Address { get; set; } = string.Empty;
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
+    public string? Rccm { get; set; }
+    public string? Niu { get; set; }
+    public int? YearFounded { get; set; }
+    public bool IsVerified { get; set; } = false;
+    public bool IsPremium { get; set; } = false;
 }

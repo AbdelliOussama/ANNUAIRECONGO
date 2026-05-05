@@ -28,11 +28,18 @@ public class Company : AuditableEntity
     public decimal? Latitude { get; private set; }
     public decimal? Longitude { get; private set; }
 
+    // ── Registration Details ──────────────────────────────────────
+    public string? Rccm { get; private set; }
+    public string? Niu { get; private set; }
+    public int? YearFounded { get; private set; }
+
     // ── Status & Plan ─────────────────────────────────────────────
     public CompanyStatus Status { get; private set; }
     public string? RejectionReason { get; private set; }
     public Guid? ActiveSubscriptionId { get; private set; }
     public bool IsFeatured { get; private set; }
+    public bool IsVerified { get; private set; }
+    public bool IsPremium { get; private set; }
 
     // ── Navigation Properties ─────────────────────────────────────
     public BusinessOwner Owner { get; private set; } = null!;
@@ -59,7 +66,7 @@ public class Company : AuditableEntity
     #pragma warning disable CS8618
     private Company() { }
 
-    private Company(Guid id, Guid ownerId, string name, Guid cityId, CompanyStatus status,string description, bool isFeatured, string? rejectionReason,string address,decimal ?latitude,decimal? longitude):base(id)
+    private Company(Guid id, Guid ownerId, string name, Guid cityId, CompanyStatus status,string description, bool isFeatured, string? rejectionReason,string address,decimal ?latitude,decimal? longitude, string? rccm, string? niu, int? yearFounded, bool isVerified, bool isPremium):base(id)
     {
         OwnerId = ownerId;
         Name = name;
@@ -72,6 +79,11 @@ public class Company : AuditableEntity
         Status = status;
         IsFeatured = isFeatured;
         RejectionReason = rejectionReason;
+        Rccm = rccm;
+        Niu = niu;
+        YearFounded = yearFounded;
+        IsVerified = isVerified;
+        IsPremium = isPremium;
         CreatedAtUtc = DateTime.UtcNow;
     }
 
@@ -86,9 +98,14 @@ public class Company : AuditableEntity
         string Address,
         decimal ?Latitude,
         decimal? Longitude,
-        IEnumerable<Guid> sectorIds)
+        IEnumerable<Guid> sectorIds,
+        string? rccm = null,
+        string? niu = null,
+        int? yearFounded = null,
+        bool isVerified = false,
+        bool isPremium = false)
     {
-        var company = new Company(Id,ownerId,name,cityId,CompanyStatus.Draft,description,false,null,Address,Latitude,Longitude);
+        var company = new Company(Id,ownerId,name,cityId,CompanyStatus.Draft,description,false,null,Address,Latitude,Longitude, rccm, niu, yearFounded, isVerified, isPremium);
 
 
         foreach (var sectorId in sectorIds)
@@ -106,7 +123,12 @@ public class Company : AuditableEntity
         string address,
         decimal? latitude,
         decimal? longitude,
-        IEnumerable<Guid> sectorIds)
+        IEnumerable<Guid> sectorIds,
+        string? rccm = null,
+        string? niu = null,
+        int? yearFounded = null,
+        bool? isVerified = null,
+        bool? isPremium = null)
     {
         Name = name;
         Slug = GenerateSlug(name);
@@ -116,6 +138,11 @@ public class Company : AuditableEntity
         Address = address;
         Latitude = latitude;
         Longitude = longitude;
+        if (rccm != null) Rccm = rccm;
+        if (niu != null) Niu = niu;
+        if (yearFounded != null) YearFounded = yearFounded;
+        if (isVerified.HasValue) IsVerified = isVerified.Value;
+        if (isPremium.HasValue) IsPremium = isPremium.Value;
 
         _companySectors.Clear();
         foreach (var sectorId in sectorIds)

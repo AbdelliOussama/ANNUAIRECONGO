@@ -23,6 +23,13 @@ public class CompanyDto
     public CompanyStatus Status { get; set; }
     public string? RejectionReason { get; set; }
     public bool IsFeatured { get; set; }
+    public bool IsVerified { get; set; }
+    public bool IsPremium { get; set; }
+    public string? Rccm { get; set; }
+    public string? Niu { get; set; }
+    public int? YearFounded { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset LastModifiedUtc { get; set; }
     public Guid? ActiveSubscriptionId { get; set; }
     public List<SectorDto> Sectors { get; set; } = new();
     public List<ServiceDto> Services { get; set; } = new();

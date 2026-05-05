@@ -63,7 +63,12 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.Description,
             request.Address,
             request.Latitude,
-            request.Longitude
+            request.Longitude,
+            request.Rccm,
+            request.Niu,
+            request.YearFounded,
+            request.IsVerified,
+            request.IsPremium
         ), ct);
         return result.Match(
             response => CreatedAtRoute(
@@ -145,7 +150,12 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.Address,
             request.Latitude,
             request.Longitude,
-            request.SectorIds
+            request.SectorIds,
+            request.Rccm,
+            request.Niu,
+            request.YearFounded,
+            request.IsVerified,
+            request.IsPremium
         ), ct);
         return result.Match(
             response => Ok(response),

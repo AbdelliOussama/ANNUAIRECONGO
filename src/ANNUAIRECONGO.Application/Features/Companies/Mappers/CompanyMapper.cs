@@ -28,6 +28,13 @@ public static class CompanyMapper
             Status = company.Status,
             RejectionReason = company.RejectionReason,
             IsFeatured = company.IsFeatured,
+            IsVerified = company.IsVerified,
+            IsPremium = company.IsPremium,
+            Rccm = company.Rccm,
+            Niu = company.Niu,
+            YearFounded = company.YearFounded,
+            CreatedAtUtc = company.CreatedAtUtc,
+            LastModifiedUtc = company.LastModifiedUtc,
             ActiveSubscriptionId = company.ActiveSubscriptionId,
             Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
             Services = company.Services.Select(s => new ServiceDto
