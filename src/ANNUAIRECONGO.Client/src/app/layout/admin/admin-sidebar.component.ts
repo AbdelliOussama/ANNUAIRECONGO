@@ -102,6 +102,13 @@ export class AdminSidebarComponent {
 
   protected readonly sections: ReadonlyArray<SidebarSection> = [
     {
+      label: 'Navigation',
+      links: [
+        { path: '/', label: 'Accueil', icon: 'home' },
+        { path: '/espace', label: 'Mon espace', icon: 'space_dashboard' },
+      ],
+    },
+    {
       label: 'Vue d\'ensemble',
       links: [
         { path: '/admin',              label: 'Tableau de bord', icon: 'dashboard' },

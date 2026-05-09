@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, signal, computed } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
+import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
 interface NavItem {
@@ -9,11 +10,12 @@ interface NavItem {
   label: string;
 }
 
-/**
+/*
  * <ac-public-header> — universal header for every public page (audit C8, M3, M4).
  *
  * Five primary entries (Annuaire, Registre, Secteurs, Cartographie, Tarifs) +
- * Connexion / S'inscrire CTAs. Mobile drawer below 1024 px.
+ * Connexion / S'inscrire CTAs for unauthenticated users, or Mon espace / Admin for authenticated.
+ * Mobile drawer below 1024 px.
  *
  * The drawer uses Tailwind utilities for show/hide so it never bleeds into
  * the desktop layout (this is the bug-fix vs. the first iteration that used
@@ -24,7 +26,7 @@ interface NavItem {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, RouterLinkActive],
-  template: `
+template: `
     <header>
         <nav
          class="bg-[#191c1e] border-b border-white/10 sticky top-0 z-50"
@@ -54,11 +56,24 @@ interface NavItem {
             }
           </ul>
 
-          <!-- Desktop CTAs -->
-          <div class="hidden lg:flex items-center gap-3">
-            <a routerLink="/auth/connexion" class="nav-link">{{ FR.nav.login }}</a>
-            <a routerLink="/auth/inscription" class="btn btn-primary">{{ FR.nav.register }}</a>
-          </div>
+          <!-- Desktop CTAs for unauthenticated users -->
+          @if (!isAuthenticated()) {
+            <div class="hidden lg:flex items-center gap-3">
+              <a routerLink="/auth/connexion" class="nav-link">{{ FR.nav.login }}</a>
+              <a routerLink="/auth/inscription" class="btn btn-primary">{{ FR.nav.register }}</a>
+            </div>
+          }
+
+          <!-- Desktop CTAs for authenticated users -->
+          @if (isAuthenticated()) {
+            <div class="hidden lg:flex items-center gap-3">
+              <a routerLink="/espace" class="nav-link">{{ FR.nav.espace }}</a>
+              @if (isAdmin()) {
+                <a routerLink="/admin" class="nav-link">{{ FR.nav.admin }}</a>
+              }
+              <button type="button" class="nav-link" (click)="onLogout()">{{ FR.nav.logout }}</button>
+            </div>
+          }
 
           <!-- Mobile hamburger -->
           <button
@@ -94,10 +109,17 @@ interface NavItem {
                  (click)="closeMobile()"
                >{{ item.label }}</a>
              }
-             <div class="flex items-center gap-3 border-t border-white/10 mt-2 pt-3 px-6 pb-2">
-               <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
-               <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
-             </div>
+<div class="flex items-center gap-3 border-t border-white/10 mt-2 pt-3 px-6 pb-2">
+                @if (!isAuthenticated()) {
+                  <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
+                  <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
+                } @else {
+                  <a routerLink="/espace" class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.espace }}</a>
+                  @if (isAdmin()) {
+                    <a routerLink="/admin" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.admin }}</a>
+                  }
+                }
+              </div>
            </div>
          }
       </nav>
@@ -115,6 +137,8 @@ interface NavItem {
 export class PublicHeaderComponent {
   protected readonly FR = FR;
   protected readonly mobileOpen = signal(false);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected readonly navItems: ReadonlyArray<NavItem> = [
     { path: '/annuaire',     label: FR.nav.annuaire },
@@ -124,7 +148,8 @@ export class PublicHeaderComponent {
     { path: '/tarifs',       label: FR.nav.tarifs },
   ];
 
-  private readonly router = inject(Router);
+  protected readonly isAuthenticated = computed(() => this.auth.isAuthenticated());
+  protected readonly isAdmin = computed(() => this.auth.isAdmin());
 
   constructor() {
     // Auto-close drawer when the route changes.
@@ -135,6 +160,9 @@ export class PublicHeaderComponent {
 
   protected toggleMobile(): void { this.mobileOpen.update((v) => !v); }
   protected closeMobile(): void  { this.mobileOpen.set(false); }
+  protected onLogout(): void {
+    this.auth.logout();
+  }
 
   @HostListener('document:keydown.escape')
   protected onEscape(): void {

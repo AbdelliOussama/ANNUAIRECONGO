@@ -178,8 +178,15 @@ export class ConnexionComponent {
       next: () => {
         this.submitting.set(false);
         this.toast.success(FR.toast.loginSuccess);
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/espace';
-        this.router.navigateByUrl(returnUrl);
+
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+        if (returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        } else if (this.auth.isAdmin()) {
+          this.router.navigateByUrl('/admin');
+        } else {
+          this.router.navigateByUrl('/espace');
+        }
       },
       error: (err) => {
         this.submitting.set(false);

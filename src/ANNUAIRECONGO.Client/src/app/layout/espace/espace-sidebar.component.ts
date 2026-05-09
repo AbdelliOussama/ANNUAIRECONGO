@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
 interface SidebarLink { path: string; label: string; icon: string; }
@@ -41,6 +42,20 @@ interface SidebarSection { label: string; links: SidebarLink[]; }
               {{ link.label }}
             </a>
           }
+        }
+        @if (isAdmin()) {
+          <p class="sidebar-section-label">Administration</p>
+          <a
+            routerLink="/admin"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            ariaCurrentWhenActive="page"
+            class="sidebar-link"
+            (click)="navigate.emit()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
+            Panneau admin
+          </a>
         }
       </nav>
     </aside>
@@ -84,10 +99,19 @@ interface SidebarSection { label: string; links: SidebarLink[]; }
 })
 export class EspaceSidebarComponent {
   protected readonly FR = FR;
+  private readonly auth = inject(AuthService);
   readonly open = input<boolean>(false);
   readonly navigate = output<void>();
 
+  protected readonly isAdmin = computed(() => this.auth.isAdmin());
+
   protected readonly sections: ReadonlyArray<SidebarSection> = [
+    {
+      label: 'Navigation',
+      links: [
+        { path: '/', label: 'Accueil', icon: 'home' },
+      ],
+    },
     {
       label: 'Mon entreprise',
       links: [

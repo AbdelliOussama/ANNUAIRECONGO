@@ -78,7 +78,7 @@ export class AuthService {
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
     this._isAuthenticated.set(false);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
    refreshToken(): Observable<TokenResponse> {
