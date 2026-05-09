@@ -5,6 +5,14 @@ import { SectorTileComponent } from '@shared/components/sector-tile/sector-tile.
 import { StatTileComponent } from '@shared/components/stat-tile/stat-tile.component';
 import { FR } from '@core/i18n/fr.constants';
 
+interface SectorView {
+  slug: string;
+  name: string;
+  icon: string;
+  description: string;
+  highlights: string[];
+}
+
 /**
  * Accueil — / (PublicLayout child).
  * Faithful Angular port of the maquette `index.html`.
@@ -96,103 +104,39 @@ import { FR } from '@core/i18n/fr.constants';
       </div>
     </section>
 
-    <!-- ─── 6 Sectors bento ─────────────────────────────── -->
-    <section class="py-28 px-6 md:px-12 max-w-7xl mx-auto" aria-labelledby="sectors-title">
-      <div class="mb-14 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <p class="text-xs font-bold font-label text-primary uppercase tracking-[0.2em] mb-3">Paysage Économique</p>
-          <h2 id="sectors-title" class="text-4xl font-bold font-headline tracking-tight">Les 6 Secteurs Stratégiques</h2>
-        </div>
-        <a routerLink="/secteurs" class="btn btn-outline text-xs" aria-label="Explorer tous les secteurs">
-          Tous les secteurs
-          <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_forward</span>
-        </a>
-      </div>
+     <!-- ─── 6 Sectors bento ─────────────────────────────── -->
+     <section class="py-28 px-6 md:px-12 max-w-7xl mx-auto" aria-labelledby="sectors-title">
+       <div class="mb-14 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+         <div>
+           <p class="text-xs font-bold font-label text-primary uppercase tracking-[0.2em] mb-3">Paysage Économique</p>
+           <h2 id="sectors-title" class="text-4xl font-bold font-headline tracking-tight">Les 6 Secteurs Stratégiques</h2>
+         </div>
+         <a routerLink="/secteurs" class="btn btn-outline text-xs" aria-label="Explorer tous les secteurs">
+           Tous les secteurs
+           <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_forward</span>
+         </a>
+       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-        <div class="md:col-span-8">
-          <ac-sector-tile
-            slug="maritime"
-            name="Maritime & Portuaire"
-            icon="directions_boat"
-            description="Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore."
-            badge="Port Principal"
-            size="lg"
-            theme="primary"
-          />
-        </div>
+       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+         @for (s of sectors; track s.slug) {
+           <ac-sector-tile
+             [slug]="s.slug"
+             [name]="s.name"
+             [icon]="s.icon"
+             [description]="s.description"
+             [chips]="s.highlights"
+             size="lg"
+             theme="primary"
+           />
+         }
+       </div>
 
-        <div class="md:col-span-4">
-          <ac-sector-tile
-            slug="logistique"
-            name="Logistique & Transport"
-            icon="local_shipping"
-            description="Transport routier, ferroviaire, aérien et solutions intégrées."
-            size="lg"
-            theme="primary"
-          />
-        </div>
-
-        <div class="md:col-span-4">
-          <ac-sector-tile
-            slug="douane"
-            name="Douane & Transit"
-            icon="receipt_long"
-            description="Dédouanement, transit et conseil réglementaire."
-            size="md"
-            theme="tertiary"
-          />
-        </div>
-
-        <div class="md:col-span-4">
-          <ac-sector-tile
-            slug="industrie"
-            name="Industrie"
-            icon="factory"
-            description="Manufacture, transformation industrielle et production."
-            size="md"
-            theme="primary"
-          />
-        </div>
-
-        <div class="md:col-span-4">
-          <ac-sector-tile
-            slug="securite"
-            name="Sécurité"
-            icon="security"
-            description="Services de surveillance, protection des biens et systèmes de sécurité avancés."
-            [chips]="['Gardiennage', 'Systèmes']"
-            size="md"
-            theme="primary"
-          />
-        </div>
-
-        <div class="md:col-span-4">
-          <ac-sector-tile
-            slug="manutention"
-            name="Manutention & Entreposage"
-            icon="conveyor_belt"
-            description="Stockage, gestion d'entrepôts et opérations portuaires lourdes."
-            [chips]="['Entrepôts', 'Portuaire']"
-            size="md"
-            theme="primary"
-          />
-        </div>
-
-        <!-- All sectors CTA -->
-        <a routerLink="/annuaire" class="md:col-span-4 cta-card">
-          <span class="material-symbols-outlined text-primary-fixed text-3xl mb-4 block" aria-hidden="true">hub</span>
-          <h3 class="text-xl font-bold font-headline text-white">Tous les secteurs</h3>
-          <p class="text-primary-fixed/80 mt-2 text-sm leading-relaxed">
-            Accédez à l'ensemble du répertoire national des entreprises congolaises.
-          </p>
-          <span class="cta-arrow">
-            Consulter l'annuaire
-            <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_forward</span>
-          </span>
-        </a>
-      </div>
-    </section>
+       <div class="text-center">
+         <a routerLink="/annuaire" class="btn btn-primary py-4 px-10 text-sm">
+           Accéder à l'annuaire complet
+         </a>
+       </div>
+     </section>
 
     <!-- ─── Trust band ──────────────────────────────────── -->
     <section class="trust-band" aria-labelledby="trust-title">
@@ -408,4 +352,49 @@ import { FR } from '@core/i18n/fr.constants';
 })
 export class AccueilComponent {
   protected readonly FR = FR;
+
+  protected readonly sectors: ReadonlyArray<SectorView> = [
+    {
+      slug: FR.sectors.maritime.slug,
+      name: FR.sectors.maritime.name,
+      icon: FR.sectors.maritime.icon,
+      description: 'Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore.',
+      highlights: ['Pointe-Noire', 'Offshore', 'Agences'],
+    },
+    {
+      slug: FR.sectors.logistique.slug,
+      name: FR.sectors.logistique.name,
+      icon: FR.sectors.logistique.icon,
+      description: 'Transport routier, ferroviaire, aérien et solutions intégrées.',
+      highlights: ['Routier', 'Ferroviaire', 'Aérien'],
+    },
+    {
+      slug: FR.sectors.douane.slug,
+      name: FR.sectors.douane.name,
+      icon: FR.sectors.douane.icon,
+      description: 'Dédouanement, transit et conseil en réglementation des échanges extérieurs.',
+      highlights: ['Dédouanement', 'Transit', 'Conseil'],
+    },
+    {
+      slug: FR.sectors.industrie.slug,
+      name: FR.sectors.industrie.name,
+      icon: FR.sectors.industrie.icon,
+      description: 'Manufacture, transformation industrielle, agro-industrie et production locale à valeur ajoutée.',
+      highlights: ['Manufacture', 'Transformation', 'Production'],
+    },
+    {
+      slug: FR.sectors.securite.slug,
+      name: FR.sectors.securite.name,
+      icon: FR.sectors.securite.icon,
+      description: 'Sociétés de surveillance, gardiennage, protection rapprochée et systèmes de sécurité électroniques.',
+      highlights: ['Gardiennage', 'Vidéosurveillance', 'Audit'],
+    },
+    {
+      slug: FR.sectors.manutention.slug,
+      name: FR.sectors.manutention.name,
+      icon: FR.sectors.manutention.icon,
+      description: 'Stockage, gestion d\'entrepôts, opérations portuaires lourdes et service au navire.',
+      highlights: ['Entrepôts', 'Conteneurs', 'Service navire'],
+    },
+  ];
 }
