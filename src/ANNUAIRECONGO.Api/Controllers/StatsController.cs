@@ -60,8 +60,8 @@ public sealed class StatsController(ISender sender) : ApiController
     }
 
     /// <summary>
-    /// Audit fix #3 — per-company analytics for the espace/statistiques page.
-    /// Owner-scoped: only the company's owner may read its stats.
+    /// Audit fix #3 - per-company analytics for the espace/statistiques page.
+    /// Owner-scoped: only the company owner may read its stats.
     /// </summary>
     [HttpGet("companies/{companyId:guid}")]
     [Authorize]
@@ -70,7 +70,7 @@ public sealed class StatsController(ISender sender) : ApiController
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [EndpointSummary("Get analytics for one company.")]
-    [EndpointDescription("Owner-scoped — returns views, unique visitors, contact clicks, search appearances and a 6-month bar chart of profile views.")]
+    [EndpointDescription("Owner-scoped. Returns views, unique visitors, contact clicks, search appearances and a 6-month bar chart of profile views.")]
     [EndpointName("GetCompanyStats")]
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanyStats([FromRoute] Guid companyId, CancellationToken ct)
