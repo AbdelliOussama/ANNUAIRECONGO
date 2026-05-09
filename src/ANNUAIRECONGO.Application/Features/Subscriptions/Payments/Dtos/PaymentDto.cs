@@ -1,15 +1,29 @@
+using ANNUAIRECONGO.Domain.Subscriptions.Plans.Enums;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Dtos;
 
+/// <summary>
+/// Payment read model. Field names align with the FE's <c>Payment</c>
+/// interface so the JSON contract is 1:1 with the espace historique table.
+///
+/// Audit fix #1 (May 2026 deep audit):
+///   - <see cref="Reference"/>: human-readable invoice number (F-YYYY-XXXXXX)
+///     surfaced in the historique "Référence" column.
+///   - <see cref="PlanName"/>: convenience join from the related Plan via
+///     Subscription so the historique "Forfait" column doesn't need a
+///     second round-trip to /api/v1/plans.
+/// </summary>
 public sealed record PaymentDto(
-    Guid Id,
-    Guid CompanyId,
-    Guid SubscriptionId,
-    decimal Amount,
-    string Currency,
+    Guid          Id,
+    Guid          CompanyId,
+    Guid          SubscriptionId,
+    string        Reference,
+    PlanName?     PlanName,
+    decimal       Amount,
+    string        Currency,
     PaymentMethod Method,
     PaymentStatus Status,
-    string? GatewayRef,
-    string? InvoiceUrl,
-    DateTime? PaidAt);
+    string?       GatewayRef,
+    string?       InvoiceUrl,
+    DateTime?     PaidAt);

@@ -28,7 +28,13 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
         var payments = await _context.Payments
             .Include(p => p.Subscription)
             .ThenInclude(s => s.Company)
+            // Audit fix #1 — Plan join lets the mapper expose PaymentDto.PlanName
+            // so the FE historique table renders the "Forfait" column without
+            // a second round-trip to /api/v1/plans.
+            .Include(p => p.Subscription)
+            .ThenInclude(s => s.Plan)
             .Where(p => p.CompanyId == request.CompanyId)
+            .OrderByDescending(p => p.CreatedAtUtc)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

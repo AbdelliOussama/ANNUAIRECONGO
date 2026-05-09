@@ -25,7 +25,9 @@ public sealed class GetMyNotificationsQueryHandler(
             n.Id,
             n.UserId,
             n.Type,
+            n.Tone,
             n.Message,
+            n.Link,
             n.IsRead,
             n.CreatedAt)).ToList();
 

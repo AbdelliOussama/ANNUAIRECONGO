@@ -16,6 +16,9 @@ public class PaymentConfigurations : IEntityTypeConfiguration<Payment>
 
         builder.Property(x => x.CompanyId).IsRequired();
         builder.Property(x => x.SubscriptionId).IsRequired();
+        // Audit fix #1 — human-readable invoice number (F-YYYY-XXXXXX)
+        builder.Property(x => x.Reference).IsRequired().HasMaxLength(20);
+        builder.HasIndex(x => x.Reference).IsUnique();
         builder.Property(x => x.Amount).IsRequired().HasColumnType("decimal(18,2)");
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3);
         builder.Property(x => x.Method).IsRequired();

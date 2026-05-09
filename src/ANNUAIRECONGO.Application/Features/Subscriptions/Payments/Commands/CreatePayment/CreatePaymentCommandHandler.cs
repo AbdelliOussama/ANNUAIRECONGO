@@ -6,6 +6,7 @@ using ANNUAIRECONGO.Domain.Subscriptions;
 
 using Microsoft.EntityFrameworkCore;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments;
+using ANNUAIRECONGO.Domain.Subscriptions.Plans.Enums;
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.CreatePayment;
 
 public sealed class CreatePaymentCommandHandler(
@@ -49,6 +50,8 @@ public sealed class CreatePaymentCommandHandler(
             payment.Id,
             payment.CompanyId,
             payment.SubscriptionId,
+            payment.Reference,
+            payment.Subscription.Plan.Name,
             payment.Amount,
             payment.Currency,
             payment.Method,
