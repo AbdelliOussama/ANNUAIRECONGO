@@ -142,10 +142,10 @@ interface SectorView {
     <section class="trust-band" aria-labelledby="trust-title">
       <div class="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
         <div class="relative z-10">
-          <p class="text-xs font-bold font-label text-primary-fixed uppercase tracking-[0.2em] mb-5">
-            Protocole de Vérification
-          </p>
-          <h2 id="trust-title" class="text-4xl md:text-5xl font-black font-headline tracking-tight mb-8 leading-[1.1]">
+           <p class="text-xs font-bold font-label text-white uppercase tracking-[0.2em] mb-5">
+             Protocole de Vérification
+           </p>
+          <h2 id="trust-title" class="text-4xl md:text-5xl text-white font-headline tracking-tight mb-8 leading-[1.1]">
             La référence nationale<br />pour les données d'entreprises.
           </h2>
 
@@ -195,9 +195,9 @@ interface SectorView {
         <div class="cert-card glass">
           <div class="flex items-center justify-between mb-7">
             <div class="flex items-center gap-3">
-              <div class="cert-lock" aria-hidden="true">
-                <span class="material-symbols-outlined text-on-tertiary-fixed text-sm icon-filled">lock</span>
-              </div>
+               <div class="cert-lock" aria-hidden="true">
+                 <span class="material-symbols-outlined text-white text-sm icon-filled">lock</span>
+               </div>
               <span class="text-sm font-bold font-label uppercase">Certification Officielle</span>
             </div>
             <span class="text-[10px] font-bold font-label text-primary-fixed uppercase tracking-widest">2026</span>
@@ -296,19 +296,19 @@ interface SectorView {
     }
     .trust-list { display: flex; flex-direction: column; gap: 28px; }
     .trust-item { display: flex; gap: 20px; }
-    .trust-icon {
-      width: 44px; height: 44px;
-      background: var(--color-primary-container);
-      color: var(--color-primary-fixed);
-      border-radius: var(--radius-md);
-      display: inline-flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .trust-description {
-      color: rgba(255, 255, 255, 0.78);
-      font-size: 14px;
-      line-height: 1.55;
-    }
+     .trust-icon {
+       width: 44px; height: 44px;
+       background: var(--color-primary-container);
+       color: #fff;
+       border-radius: var(--radius-md);
+       display: inline-flex; align-items: center; justify-content: center;
+       flex-shrink: 0;
+     }
+     .trust-description {
+       color: rgba(255, 255, 255, 0.95);
+       font-size: 14px;
+       line-height: 1.55;
+     }
 
     /* Certification card */
     .cert-card {
