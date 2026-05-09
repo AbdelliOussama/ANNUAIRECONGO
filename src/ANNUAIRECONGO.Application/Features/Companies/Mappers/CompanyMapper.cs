@@ -1,14 +1,23 @@
 using ANNUAIRECONGO.Application.Features.Companies.Dtos;
 using ANNUAIRECONGO.Application.Features.Companies.Dtos.Services;
-using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
+using ANNUAIRECONGO.Application.Features.Geography.Dtos;
 using ANNUAIRECONGO.Application.Features.Sectors.Mappers;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Mappers;
 using ANNUAIRECONGO.Domain.Companies;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Mappers;
+
 public static class CompanyMapper
 {
     public static CompanyDto ToDto(this Company company)
     {
+        // Locate the active subscription if it has been .Include()d on the query.
+        // If the navigation collection wasn't loaded the field stays null and
+        // the FE falls back to the flat ActiveSubscriptionId — no over-fetching.
+        var activeSub = company.ActiveSubscriptionId.HasValue
+            ? company.Subscriptions?.FirstOrDefault(s => s.Id == company.ActiveSubscriptionId.Value)
+            : null;
+
         return new CompanyDto
         {
             Id = company.Id,
@@ -23,8 +32,18 @@ public static class CompanyMapper
             Address = company.Address,
             Latitude = company.Latitude,
             Longitude = company.Longitude,
-            CityName = company.City.Name,
-            RegionName = company.City.Region.Name,
+            CityName = company.City?.Name,
+            RegionName = company.City?.Region?.Name,
+
+            // Audit fix #1 — nested City object the FE templates can bind to
+            // (e.g. {{ company.city.name }} or *ngIf="company.city").
+            City = company.City is null ? null : new CityDto
+            {
+                Id = company.City.Id,
+                Name = company.City.Name,
+                RegionId = company.City.RegionId,
+            },
+
             Status = company.Status,
             RejectionReason = company.RejectionReason,
             IsFeatured = company.IsFeatured,
@@ -36,6 +55,11 @@ public static class CompanyMapper
             CreatedAtUtc = company.CreatedAtUtc,
             LastModifiedUtc = company.LastModifiedUtc,
             ActiveSubscriptionId = company.ActiveSubscriptionId,
+
+            // Audit fix #4 — nested SubscriptionDto so the espace console doesn't
+            // need a second round-trip to render the current plan.
+            ActiveSubscription = activeSub?.ToDto(),
+
             Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
             Services = company.Services.Select(s => new ServiceDto
             {
@@ -72,6 +96,7 @@ public static class CompanyMapper
             }).ToList()
         };
     }
+
     public static List<CompanyDto> ToDTos(this IEnumerable<Company> companies)
     {
         return [..companies.Select(c => c.ToDto())];

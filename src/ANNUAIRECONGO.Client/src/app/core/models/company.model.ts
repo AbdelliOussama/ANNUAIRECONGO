@@ -82,8 +82,8 @@ export interface Company {
   rccm?: string;
   niu?: string;
   yearFounded?: number;
-  ownerId?: string;
-  cityId?: string;
+  ownerId: string;
+  cityId: string;
   cityName?: string;
   regionName?: string;
   city?: { id: string; name: string };
@@ -140,7 +140,8 @@ export interface Payment {
   status: number;
   gatewayRef?: string;   // was paymentGatewayReference
   invoiceUrl?: string;
-  paidAt?: string;       // was createdAt
+  paidAt?: string;     // was createdAt
+  LastModifiedAt: string; //
 }
 
 export enum PaymentStatus {
@@ -194,8 +195,11 @@ export interface BusinessOwner {
   firstName: string;
   lastName: string;
   fullName: string;
-  phone?: string;            // was "phoneNumber"
-  companyPosition?: string;
+  phone: string;            // was "phoneNumber"
+  companyPosition: string;
+  Role: string;
+  IsVerified: boolean;
+  Companies: Company[];
 }
 
 export interface Plan {

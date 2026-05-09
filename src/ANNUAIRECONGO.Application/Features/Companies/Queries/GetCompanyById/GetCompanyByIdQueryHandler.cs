@@ -26,6 +26,10 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
             .Include(c => c.Contacts)
             .Include(c => c.Images)
             .Include(c => c.Documents)
+            // Audit fix #4 — load subscriptions + plan so CompanyMapper can
+            // populate the nested ActiveSubscription DTO for the FE.
+            .Include(c => c.Subscriptions)
+            .ThenInclude(s => s.Plan)
             .FirstOrDefaultAsync(c => c.Id == request.id, cancellationToken);
         if (company is null)
         {
