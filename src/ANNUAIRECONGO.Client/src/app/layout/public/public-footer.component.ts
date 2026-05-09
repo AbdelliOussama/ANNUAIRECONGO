@@ -20,9 +20,9 @@ interface FooterColumn {
     <footer class="footer" role="contentinfo">
       <div class="footer-inner">
         <div class="footer-top">
-          <div class="brand-block">
-            <img src="/logo2.png" alt="" class="logo-mark" width="160" height="32"/>
-            <p class="tagline">
+           <div class="brand-block">
+             <img src="/logo2.png" alt="" class="h-9 w-auto" width="160" height="36"/>
+             <p class="tagline">
               © {{ year }} République du Congo.<br/>
               Plateforme Numérique Officielle des Entreprises.
             </p>
@@ -82,7 +82,7 @@ interface FooterColumn {
     }
 
     .brand-block { display: flex; flex-direction: column; gap: 12px; }
-    .logo-mark   { height: 32px; width: auto; filter: brightness(0) invert(1); }
+     .logo-mark   { height: 24px; width: auto; }
     .tagline     {
       color: rgba(255, 255, 255, 0.55);
       font-size: 14px;

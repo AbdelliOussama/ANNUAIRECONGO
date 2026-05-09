@@ -26,17 +26,17 @@ interface NavItem {
   imports: [RouterLink, RouterLinkActive],
   template: `
     <header>
-      <nav
-        class="bg-surface/95 border-b border-surface-variant/50 sticky top-0 z-50 backdrop-blur-md"
-        aria-label="Navigation principale"
-      >
+        <nav
+         class="bg-[#191c1e] border-b border-white/10 sticky top-0 z-50"
+         aria-label="Navigation principale"
+       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between h-16">
 
-          <!-- Logo -->
-          <a routerLink="/" class="flex items-center gap-2.5 flex-shrink-0" aria-label="Accueil Annuaire Congo">
-            <img src="/logo2.png" alt="" class="h-9 w-auto" width="160" height="36"/>
-            <span class="sr-only">{{ FR.app.name }}</span>
-          </a>
+           <!-- Logo -->
+           <a routerLink="/" class="flex items-center gap-2.5 flex-shrink-0" aria-label="Accueil Annuaire Congo">
+             <img src="/logo2.png" alt="" class="h-9 w-auto" width="160" height="36"/>
+             <span class="sr-only">{{ FR.app.name }}</span>
+           </a>
 
           <!-- Desktop nav -->
           <ul class="hidden lg:flex items-center gap-1 list-none m-0 p-0" role="menubar">
@@ -62,50 +62,54 @@ interface NavItem {
 
           <!-- Mobile hamburger -->
           <button
-            type="button"
-            class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-surface-container transition-colors"
-            [attr.aria-expanded]="mobileOpen()"
-            aria-controls="ac-mobile-menu"
-            [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
-            (click)="toggleMobile()"
-          >
-            <span class="material-symbols-outlined text-on-surface" aria-hidden="true">
-              {{ mobileOpen() ? 'close' : 'menu' }}
-            </span>
-          </button>
+             type="button"
+             class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white/10 transition-colors"
+             [attr.aria-expanded]="mobileOpen()"
+             aria-controls="ac-mobile-menu"
+             [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
+             (click)="toggleMobile()"
+           >
+             <span class="material-symbols-outlined text-white" aria-hidden="true">
+               {{ mobileOpen() ? 'close' : 'menu' }}
+             </span>
+           </button>
         </div>
 
         <!-- Mobile drawer — hidden on lg+, opens via signal on smaller screens -->
-        @if (mobileOpen()) {
-          <div
-            id="ac-mobile-menu"
-            class="lg:hidden flex flex-col bg-surface border-t border-surface-variant py-3"
-            role="menu"
-            aria-label="Menu mobile"
-          >
-            @for (item of navItems; track item.path) {
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="item.path === '/' ? { exact: true } : { exact: false }"
-                ariaCurrentWhenActive="page"
-                class="px-6 py-3 text-sm font-bold uppercase tracking-wider text-on-secondary-container hover:text-primary hover:bg-surface-container-low transition-colors"
-                role="menuitem"
-                (click)="closeMobile()"
-              >{{ item.label }}</a>
-            }
-            <div class="flex items-center gap-3 border-t border-surface-variant mt-2 pt-3 px-6 pb-2">
-              <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
-              <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
-            </div>
-          </div>
-        }
+         @if (mobileOpen()) {
+           <div
+             id="ac-mobile-menu"
+             class="lg:hidden flex flex-col bg-[#191c1e] border-t border-white/10 py-3"
+             role="menu"
+             aria-label="Menu mobile"
+           >
+             @for (item of navItems; track item.path) {
+               <a
+                 [routerLink]="item.path"
+                 routerLinkActive="active"
+                 [routerLinkActiveOptions]="item.path === '/' ? { exact: true } : { exact: false }"
+                 ariaCurrentWhenActive="page"
+                 class="px-6 py-3 text-sm font-bold uppercase tracking-wider text-white/65 hover:text-white hover:bg-white/5 transition-colors"
+                 role="menuitem"
+                 (click)="closeMobile()"
+               >{{ item.label }}</a>
+             }
+             <div class="flex items-center gap-3 border-t border-white/10 mt-2 pt-3 px-6 pb-2">
+               <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
+               <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
+             </div>
+           </div>
+         }
       </nav>
     </header>
   `,
-  styles: [`
+   styles: [`
     :host { display: block; }
     .flex-1 { flex: 1; }
+    .nav-link { color: rgba(255,255,255,0.65); }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active,
+    .nav-link[aria-current='page'] { color: #fff !important; }
   `],
 })
 export class PublicHeaderComponent {
