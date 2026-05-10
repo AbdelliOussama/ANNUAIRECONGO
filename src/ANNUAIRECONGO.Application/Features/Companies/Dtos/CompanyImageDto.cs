@@ -7,5 +7,5 @@ public class CompanyImageDto
     public string ImageUrl { get; set; } = string.Empty;
     public string? Caption { get; set; }
     public int? DisplayOrder { get; set; }
-    public DateTime UploadedAt { get; set; }
+    public DateTimeOffset UploadedAt { get; set; }
 }

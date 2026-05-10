@@ -14,5 +14,5 @@ public sealed record CreatePaymentCommand(
     PaymentMethod Method,
     string? GatewayRef,
     string? InvoiceUrl,
-    DateTime? PaidAt)
+    DateTimeOffset? PaidAt)
 : IRequest<Result<PaymentDto>>;

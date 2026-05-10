@@ -9,5 +9,5 @@ public class DocumentDto
     public DocumentType DocType { get; set; }
     public string FileUrl { get; set; } = string.Empty;
     public bool? IsPublic { get; set; }
-    public DateTime UploadedAt { get; set; }
+    public DateTimeOffset UploadedAt { get; set; }
 }

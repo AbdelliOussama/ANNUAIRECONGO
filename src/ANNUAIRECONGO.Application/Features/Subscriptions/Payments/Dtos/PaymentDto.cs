@@ -26,4 +26,4 @@ public sealed record PaymentDto(
     PaymentStatus Status,
     string?       GatewayRef,
     string?       InvoiceUrl,
-    DateTime?     PaidAt);
+    DateTimeOffset?     PaidAt);

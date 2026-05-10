@@ -11,12 +11,12 @@ public class ContactClick : Entity
 {
     public Guid CompanyId { get; private set; }
     public ContactType ContactType { get; private set; }
-    public DateTime ClickedAt { get; private set; }
+    public DateTimeOffset ClickedAt { get; private set; }
     public Company Company { get; private set; } = null!;
 
 
     private ContactClick() { }
-    private ContactClick(Guid companyId,ContactType contactType,DateTime clickedAt) : base(Guid.NewGuid())
+    private ContactClick(Guid companyId,ContactType contactType,DateTimeOffset clickedAt) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ContactType = contactType;
@@ -25,6 +25,6 @@ public class ContactClick : Entity
 
     public static Result<ContactClick> Create(Guid companyId, ContactType contactType)
     {
-        return new ContactClick(companyId,contactType,DateTime.Now);
+        return new ContactClick(companyId,contactType,DateTimeOffset.Now);
     }
 }

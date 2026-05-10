@@ -8,4 +8,4 @@ public sealed record SubscriptionActivatedEvent(
     Guid CompanyId,
     string OwnerId,
     string PlanName,
-    DateTime ExpiresAt) : DomainEvent;
+    DateTimeOffset ExpiresAt) : DomainEvent;

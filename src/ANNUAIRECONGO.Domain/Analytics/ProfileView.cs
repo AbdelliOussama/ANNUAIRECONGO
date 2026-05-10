@@ -9,13 +9,13 @@ public sealed class ProfileView : Entity
 {
     public Guid CompanyId { get; private set; }
     public string ViewerIp { get; private set; } = string.Empty;
-    public DateTime ViewedAt { get; private set; }
+    public DateTimeOffset ViewedAt { get; private set; }
     public Company Company { get; private set; } = null!;
 
 
     private ProfileView() { }
 
-    private ProfileView(Guid companyId, string viewerIp, DateTime viewedAt) : base(Guid.NewGuid())
+    private ProfileView(Guid companyId, string viewerIp, DateTimeOffset viewedAt) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ViewerIp = viewerIp;
@@ -29,6 +29,6 @@ public sealed class ProfileView : Entity
         {
             return ProfileViewErrors.viewerIpRequired;
         }
-        return new ProfileView(companyId,viewerIp,DateTime.UtcNow);
+        return new ProfileView(companyId,viewerIp,DateTimeOffset.UtcNow);
     }
 }

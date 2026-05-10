@@ -13,5 +13,5 @@ public sealed record SubscriptionWithPaymentDto
     public decimal Amount { get; set; }
     public string Currency { get; set; } = null!;
     public PaymentMethod Method { get; set; }
-    public DateTime? PaymentDate { get; set; }
+    public DateTimeOffset? PaymentDate { get; set; }
 }

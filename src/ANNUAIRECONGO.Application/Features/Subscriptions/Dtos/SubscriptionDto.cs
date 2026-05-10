@@ -10,6 +10,6 @@ public sealed record SubscriptionDto(
     Guid PlanId,
     string PlanName,
     SubscriptionStatus Status,
-    DateTime StartedAt,
-    DateTime ExpiresAt,
+    DateTimeOffset StartedAt,
+    DateTimeOffset ExpiresAt,
     bool IsActive);

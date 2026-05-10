@@ -11,7 +11,7 @@ public class CompanyDocument : Entity
     public DocumentType DocType { get; private set; }
     public string FileUrl { get; private set; } = string.Empty;
     public bool? IsPublic { get; private set; }
-    public DateTime UploadedAt { get; private set; }
+    public DateTimeOffset UploadedAt { get; private set; }
 
     private CompanyDocument() { }
 
@@ -21,7 +21,7 @@ public class CompanyDocument : Entity
         DocType = docType;
         FileUrl = fileUrl;
         IsPublic = isPublic;
-        UploadedAt = DateTime.UtcNow;
+        UploadedAt = DateTimeOffset.UtcNow;
     }
 
     public static Result<CompanyDocument> Create(

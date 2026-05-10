@@ -60,7 +60,7 @@ public sealed class GetCompanyStatsQueryHandler(
             .SumAsync(s => (int?)s.SearchAppearances, cancellationToken) ?? 0;
 
         // ── 6-month bar chart ────────────────────────────────────────
-        var sixMonthsAgo = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-5);
+        var sixMonthsAgo = DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime).AddMonths(-5);
         var startOfMonth = new DateOnly(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
 
         var monthly = await _context.AnalyticsDailySummaries

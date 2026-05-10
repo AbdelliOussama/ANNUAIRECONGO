@@ -18,4 +18,4 @@ public sealed record NotificationDto(
     string   Message,
     string?  Link,
     bool     IsRead,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

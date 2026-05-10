@@ -49,7 +49,7 @@ public class RefreshTokenQueryHandler(ILogger<RefreshTokenQueryHandler> logger, 
 
         var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == request.RefreshToken && r.UserId == userId, ct);
 
-        if (refreshToken is null || refreshToken.ExpiresOnUtc < DateTime.UtcNow)
+        if (refreshToken is null || refreshToken.ExpiresOnUtc < DateTimeOffset.UtcNow)
         {
             _logger.LogError("Refresh token has expired");
 

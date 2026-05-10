@@ -11,7 +11,7 @@ public class CompanyReport : Entity
     public string ReporterIp { get; private set; } = string.Empty;
     public string Reason { get; private set; } = string.Empty;
     public ReportStatus Status { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
     private CompanyReport() { }
 
@@ -21,7 +21,7 @@ public class CompanyReport : Entity
         ReporterIp = reporterIp;
         Reason = reason;
         Status = ReportStatus.Pending;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 
 

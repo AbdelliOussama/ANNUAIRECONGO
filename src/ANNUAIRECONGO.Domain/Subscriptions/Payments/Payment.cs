@@ -26,7 +26,7 @@ public class Payment : AuditableEntity
     public PaymentStatus Status { get; private set; }
     public string? GatewayRef { get; private set; }
     public string? InvoiceUrl { get; private set; }
-    public DateTime? PaidAt { get; private set; }
+    public DateTimeOffset? PaidAt { get; private set; }
 
     public Company Company { get; private set; } = null!;
     public Subscription Subscription { get; private set; } = null!;
@@ -43,7 +43,7 @@ public class Payment : AuditableEntity
         PaymentMethod method,
         string? gatewayRef,
         string? invoiceUrl,
-        DateTime? paidAt) : base(id)
+        DateTimeOffset? paidAt) : base(id)
     {
         CompanyId = companyId;
         SubscriptionId = subscriptionId;
@@ -66,9 +66,9 @@ public class Payment : AuditableEntity
         PaymentMethod method,
         string? GatewayRef,
         string? InvoiceUrl,
-        DateTime? paidAt)
+        DateTimeOffset? paidAt)
     {
-        var reference = GenerateReference(id, DateTime.UtcNow);
+        var reference = GenerateReference(id, DateTimeOffset.UtcNow);
         return new Payment(id, companyId, subscriptionId, reference, amount, currency, method, GatewayRef, InvoiceUrl, paidAt);
     }
 
@@ -78,7 +78,7 @@ public class Payment : AuditableEntity
             return PaymentErrors.NotPending;
 
         Status = PaymentStatus.Success;
-        PaidAt = DateTime.UtcNow;
+        PaidAt = DateTimeOffset.UtcNow;
         return Result.Updated;
     }
 
@@ -111,7 +111,7 @@ public class Payment : AuditableEntity
     /// 30 bits of the GUID hash — collision probability per year is
     /// negligible at MVP volume (1B payments before a 50% chance).
     /// </summary>
-    private static string GenerateReference(Guid id, DateTime utcNow)
+    private static string GenerateReference(Guid id, DateTimeOffset utcNow)
     {
         const string Alphabet = "23456789ABCDEFGHJKLMNPQRSTVWXYZ"; // no 0/1/I/O/U
         

@@ -22,7 +22,7 @@ public class Notification : Entity
     public string Message { get; private set; } = string.Empty;
     public string? Link { get; private set; }
     public bool IsRead { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
     private Notification() { }
 
@@ -34,7 +34,7 @@ public class Notification : Entity
         Message = message;
         Link = link;
         IsRead = false;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>

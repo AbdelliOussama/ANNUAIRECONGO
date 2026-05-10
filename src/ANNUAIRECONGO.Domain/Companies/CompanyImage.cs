@@ -10,7 +10,7 @@ public class CompanyImage : Entity
     public string ImageUrl { get; private set; } = string.Empty;
     public string? Caption { get; private set; }
     public int? DisplayOrder { get; private set; }
-    public DateTime UploadedAt { get; private set; }
+    public DateTimeOffset UploadedAt { get; private set; }
 
     private CompanyImage() { }
     private CompanyImage(Guid companyId, string imageUrl, int? displayOrder, string? caption) : base(Guid.NewGuid())
@@ -19,7 +19,7 @@ public class CompanyImage : Entity
         ImageUrl = imageUrl;
         Caption = caption;
         DisplayOrder = displayOrder;
-        UploadedAt = DateTime.UtcNow;
+        UploadedAt = DateTimeOffset.UtcNow;
     }
 
     public static Result<CompanyImage> Create(

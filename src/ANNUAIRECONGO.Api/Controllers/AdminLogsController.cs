@@ -24,8 +24,8 @@ public sealed class AdminLogsController(ISender sender) : ApiController
         [FromQuery] string? action,
         [FromQuery] string? targetType,
         [FromQuery] string? adminId,
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate,
+        [FromQuery] DateTimeOffset? startDate,
+        [FromQuery] DateTimeOffset? endDate,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)

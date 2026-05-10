@@ -76,7 +76,7 @@ public class TokenProvider : ITokenProvider
         var audience = jwtSettings["Audience"]!;
         var key = jwtSettings["Secret"]!;
 
-        var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["TokenExpirationInMinutes"]!));
+        var expires = DateTimeOffset.UtcNow.AddMinutes(int.Parse(jwtSettings["TokenExpirationInMinutes"]!));
 
         var claims = new List<Claim>
         {
@@ -92,7 +92,7 @@ public class TokenProvider : ITokenProvider
         var descriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = expires,
+            Expires = expires.UtcDateTime,
             Issuer = issuer,
             Audience = audience,
             SigningCredentials = new SigningCredentials(
@@ -112,7 +112,7 @@ public class TokenProvider : ITokenProvider
             Guid.NewGuid(),
             GenerateRefreshToken(),
             user.UserId,
-            DateTime.UtcNow.AddDays(7));
+            DateTimeOffset.UtcNow.AddDays(7));
 
         if (refreshTokenResult.IsError)
         {

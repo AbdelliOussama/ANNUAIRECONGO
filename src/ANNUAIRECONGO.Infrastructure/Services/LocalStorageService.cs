@@ -28,6 +28,9 @@ public sealed class LocalStorageService : IStorageService
     private static readonly HashSet<string> AllowedDocumentExtensions =
         [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"];
 
+    private static readonly HashSet<string> AllowedFolders = 
+        ["logos", "covers", "documents", "services", "images"];
+
     public LocalStorageService(
         IWebHostEnvironment env,
         IOptions<StorageSettings> options,
@@ -35,6 +38,12 @@ public sealed class LocalStorageService : IStorageService
     {
         _webRootPath = env.WebRootPath
             ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            
+        if (!Directory.Exists(_webRootPath))
+        {
+            Directory.CreateDirectory(_webRootPath);
+        }
+
         _baseUrl = options.Value.BaseUrl.TrimEnd('/');
         _logger = logger;
     }
@@ -91,6 +100,9 @@ public sealed class LocalStorageService : IStorageService
 
     private static void ValidateExtension(string ext, string folder)
     {
+        if (!AllowedFolders.Contains(folder.ToLowerInvariant()))
+            throw new InvalidOperationException($"Target folder '{folder}' is not permitted.");
+
         var allowed = folder == "documents"
             ? AllowedDocumentExtensions
             : AllowedImageExtensions;

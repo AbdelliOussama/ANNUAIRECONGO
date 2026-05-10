@@ -13,8 +13,8 @@ public class Subscription : AuditableEntity
     public Guid CompanyId { get; private set; }
     public Guid PlanId { get; private set; }
     public SubscriptionStatus Status { get; private set; }
-    public DateTime StartedAt { get; private set; }
-    public DateTime ExpiresAt { get; private set; }
+    public DateTimeOffset StartedAt { get; private set; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
     public Company Company { get; private set; } = null!;
     public Plan Plan { get; private set; } = null!;
@@ -28,7 +28,7 @@ public class Subscription : AuditableEntity
         CompanyId = companyId;
         PlanId = planId;
         Status = SubscriptionStatus.Pending;
-        StartedAt = DateTime.UtcNow;
+        StartedAt = DateTimeOffset.UtcNow;
         ExpiresAt = StartedAt.AddDays(durationDays);
 
     }
@@ -39,7 +39,7 @@ public class Subscription : AuditableEntity
         Guid planId,
         int durationDays)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         if (durationDays <= 0)
             return SubscriptionErrors.InvalidDuration;
         if (planId == Guid.Empty)
@@ -60,12 +60,18 @@ public class Subscription : AuditableEntity
 
     public Result<Updated> MarkAsExpiringSoon()
     {
+        if (Status != SubscriptionStatus.Active)
+            return SubscriptionErrors.NotActive;
+
         Status = SubscriptionStatus.ExpiringSoon;
         return Result.Updated;
     }
 
     public Result<Updated> MarkAsExpired()
     {
+        if (Status is not (SubscriptionStatus.Active or SubscriptionStatus.ExpiringSoon))
+            return SubscriptionErrors.NotActive;
+
         Status = SubscriptionStatus.Expired;
         return Result.Updated;
     }
@@ -85,7 +91,7 @@ public class Subscription : AuditableEntity
     }
     public Result<Success> IsActive() {
         var result = (Status is SubscriptionStatus.Active or SubscriptionStatus.ExpiringSoon) 
-                     && ExpiresAt > DateTime.UtcNow;
+                     && ExpiresAt > DateTimeOffset.UtcNow;
         if(result)
         {
             return Result.Success;

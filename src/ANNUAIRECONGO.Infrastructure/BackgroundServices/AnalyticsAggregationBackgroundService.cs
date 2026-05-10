@@ -42,7 +42,7 @@ public class AnalyticsAggregationBackgroundService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
 
-        var targetDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+        var targetDate = DateOnly.FromDateTime(DateTimeOffset.UtcNow.AddDays(-1).DateTime);
 
         _logger.LogInformation("Starting analytics aggregation for date {Date}", targetDate);
 

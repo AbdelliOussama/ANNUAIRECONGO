@@ -8,6 +8,6 @@ namespace ANNUAIRECONGO.Application.Features.AdminLogs.Dtos
         public string TargetType { get; set; } = default!;
         public Guid TargetId { get; set; }
         public string? Details { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }

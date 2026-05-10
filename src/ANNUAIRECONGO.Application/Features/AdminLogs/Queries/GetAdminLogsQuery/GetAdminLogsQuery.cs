@@ -10,7 +10,7 @@ public sealed record GetAdminLogsQuery(
     string? Action,
     string? TargetType,
     string? AdminId,
-    DateTime? StartDate,
-    DateTime? EndDate,
+    DateTimeOffset? StartDate,
+    DateTimeOffset? EndDate,
     int PageNumber,
     int PageSize) : IRequest<Result<PaginatedList<AdminLogDto>>>;
