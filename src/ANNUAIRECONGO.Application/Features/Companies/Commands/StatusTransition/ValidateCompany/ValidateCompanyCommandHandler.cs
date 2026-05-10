@@ -35,7 +35,7 @@ public sealed record ValidateCompanyCommandHandler(ILogger<ValidateCompanyComman
     }
 
     company.AddDomainEvent(new CompanyValidatedEvent(
-        company.Id, company.OwnerId.ToString(), company.Name));
+        company.Id, company.OwnerId?.ToString() ?? string.Empty, company.Name));
 
     // ── Admin Log (non-blocking) ──────────────────────────────────
     var adminLogResult = AdminLog.Create(

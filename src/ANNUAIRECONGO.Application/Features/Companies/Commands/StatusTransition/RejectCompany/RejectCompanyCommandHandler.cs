@@ -30,7 +30,7 @@ public sealed record RejectCompanyCommandHandler(ILogger<RejectCompanyCommandHan
             _logger.LogError("Failed To Reject Company with id = {CompanyId} , Errors = {2}", request.companyId,rejectResult.Errors);
             return rejectResult.Errors;
         }
-        company.AddDomainEvent(new CompanyRejectedEvent(company.Id, company.OwnerId.ToString(), company.Name, company.RejectionReason));
+        company.AddDomainEvent(new CompanyRejectedEvent(company.Id, company.OwnerId?.ToString() ?? string.Empty, company.Name, company.RejectionReason));
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,

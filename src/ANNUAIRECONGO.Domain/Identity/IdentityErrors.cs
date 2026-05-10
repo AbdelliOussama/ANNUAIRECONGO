@@ -18,4 +18,15 @@ public static class IdentityErrors
     public static readonly Error UserNotFound =
         Error.NotFound("Identity.UserNotFound", "User not found.");
 
+    public static readonly Error InvalidToken =
+        Error.Validation("Identity.InvalidToken", "The provided token is invalid or has expired.");
+
+    public static readonly Error EmailConfirmationFailed =
+        Error.Failure("Identity.EmailConfirmationFailed", "Failed to confirm email.");
+
+    public static readonly Error PasswordChangeFailed =
+        Error.Failure("Identity.PasswordChangeFailed", "Failed to change password.");
+
+    public static readonly Error AccountDeletionFailed =
+        Error.Failure("Identity.AccountDeletionFailed", "Failed to delete account.");
 }

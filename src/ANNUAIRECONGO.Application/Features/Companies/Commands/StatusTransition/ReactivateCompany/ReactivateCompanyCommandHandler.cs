@@ -30,7 +30,7 @@ public sealed record ReactivateCompanyCommandHandler(ILogger<ReactivateCompanyCo
             _logger.LogError("Failed To Reactivate Company with id = {CompanyId} , Errors = {2}", request.companyId,reactivateResult.Errors);
             return reactivateResult.Errors;
         }
-        company.AddDomainEvent(new CompanyReactivatedEvent(company.Id, company.OwnerId.ToString(), company.Name) );
+        company.AddDomainEvent(new CompanyReactivatedEvent(company.Id, company.OwnerId?.ToString() ?? string.Empty, company.Name) );
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,

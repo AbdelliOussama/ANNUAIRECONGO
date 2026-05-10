@@ -29,7 +29,7 @@ public sealed record SuspendCompanyCommandHandler(ILogger<SuspendCompanyCommandH
         {
             return suspendResult.Errors;
         }
-        company.AddDomainEvent(new CompanySuspendedEvent(company.Id, company.OwnerId.ToString(), company.Name));
+        company.AddDomainEvent(new CompanySuspendedEvent(company.Id, company.OwnerId?.ToString() ?? string.Empty, company.Name));
 
         var adminLogResult = AdminLog.Create(
             _currentUser.Id,

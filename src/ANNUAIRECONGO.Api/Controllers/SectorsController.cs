@@ -1,4 +1,6 @@
 using ANNUAIRECONGO.Application.Features.Sectors.Commands;
+using ANNUAIRECONGO.Application.Features.Sectors.Commands.ActivateSector;
+using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeactivateSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeleteSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorById;
@@ -105,6 +107,38 @@ public sealed class SectorsController(ISender sender) : ApiController
         var result = await sender.Send(new DeleteSectorCommand(SectorId), ct);
         return result.Match(
             _ => NoContent(),
+            Problem);
+    }
+
+    [HttpPut("Deactivate/{SectorId:guid}", Name = "DeactivateSector")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Deactivates a sector by ID.")]
+    [EndpointDescription("Deactivates the specified sector.")]
+    [EndpointName("DeactivateSector")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeactivateSector(Guid SectorId, CancellationToken ct)
+    {
+        var result = await sender.Send(new DeactivateSectorCommand(SectorId), ct);
+        return result.Match(
+            _ => Ok(),
+            Problem);
+    }
+
+    [HttpPut("Activate/{SectorId:guid}", Name = "ActivateSector")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Activates a sector by ID.")]
+    [EndpointDescription("Activates the specified sector.")]
+    [EndpointName("ActivateSector")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ActivateSector(Guid SectorId, CancellationToken ct)
+    {
+        var result = await sender.Send(new ActivateSectorCommand(SectorId), ct);
+        return result.Match(
+            _ => Ok(),
             Problem);
     }
 }

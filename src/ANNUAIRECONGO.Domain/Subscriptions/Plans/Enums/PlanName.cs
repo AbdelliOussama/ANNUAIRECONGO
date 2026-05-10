@@ -3,6 +3,7 @@ namespace ANNUAIRECONGO.Domain.Subscriptions.Plans.Enums;
 public enum PlanName
 {
     Free = 0,
-    Basic = 1,
+    Pro = 1,
     Premium = 2
 }
+

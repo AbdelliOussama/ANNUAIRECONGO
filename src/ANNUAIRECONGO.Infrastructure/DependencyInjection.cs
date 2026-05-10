@@ -1,6 +1,7 @@
 
 using System.Text;
 using AnnuaireCongo.Infrastructure.Identity;
+using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
 using ANNUAIRECONGO.Infrastructure.Data;
 using ANNUAIRECONGO.Infrastructure.Data.Interceptors;
@@ -87,6 +88,13 @@ public static class DependencyInjection
         services.AddScoped<ITokenProvider, TokenProvider>();
 
         services.AddScoped<INotificationService, NotificationService>();
+
+        services.AddScoped<IStorageService, LocalStorageService>();
+
+        services.AddOptions<StorageSettings>()
+            .BindConfiguration(StorageSettings.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddHostedService<AnalyticsAggregationBackgroundService>();
 

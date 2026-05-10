@@ -1,8 +1,12 @@
 using System.Security.Claims;
 using ANNUAIRECONGO.Application.Features.Identity;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.ChangePassword;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.DeleteAccount;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
-using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.ResendVerificationEmail;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.VerifyEmail;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUserInfo;
@@ -113,6 +117,70 @@ public sealed class IdentityController(ISender sender) : ApiController
         var result = await sender.Send(new ResetPasswordCommand(request.Email, request.Token, request.NewPassword), ct);
         return result.Match(
             _ => Ok(),
+            Problem);
+    }
+
+    [HttpPost("verify-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Verifies user email with token.")]
+    [EndpointDescription("Verifies a user's email address using a token sent during registration.")]
+    [EndpointName("VerifyEmail")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new VerifyEmailCommand(request.Email, request.Token), ct);
+        return result.Match(
+            _ => Ok(),
+            Problem);
+    }
+
+    [HttpPost("resend-verification-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Resends verification email.")]
+    [EndpointDescription("Sends a new verification link to the user's registered email address.")]
+    [EndpointName("ResendVerificationEmail")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new ResendVerificationEmailCommand(request.Email), ct);
+        return result.Match(
+            _ => Ok(),
+            Problem);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Changes user password.")]
+    [EndpointDescription("Changes the currently authenticated user's password.")]
+    [EndpointName("ChangePassword")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
+        return result.Match(
+            _ => Ok(),
+            Problem);
+    }
+
+    [HttpDelete("delete-account")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Deletes user account.")]
+    [EndpointDescription("Permanently deletes the currently authenticated user's account and associated profile data.")]
+    [EndpointName("DeleteAccount")]
+    public async Task<IActionResult> DeleteAccount(CancellationToken ct)
+    {
+        var result = await sender.Send(new DeleteAccountCommand(), ct);
+        return result.Match(
+            _ => NoContent(),
             Problem);
     }
 }

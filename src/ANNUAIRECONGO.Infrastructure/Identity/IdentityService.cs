@@ -6,8 +6,8 @@ using ANNUAIRECONGO.Domain.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
-using System.Linq;
 
 namespace ANNUAIRECONGO.Infrastructure.Identity;
 
@@ -119,7 +119,7 @@ public class IdentityService : IIdentityService
             Id = Guid.NewGuid().ToString(),
             Email = email,
             UserName = email,
-            EmailConfirmed = true
+            EmailConfirmed = false
         };
 
         var createResult = await _userManager.CreateAsync(appUser, password);
@@ -127,6 +127,9 @@ public class IdentityService : IIdentityService
         {
             return IdentityErrors.UserCreationFailed;
         }
+
+        // Send verification email
+        await ResendVerificationEmailAsync(email, cancellationToken);
 
         var businessOwnerRole = await _roleManager.FindByNameAsync(nameof(Role.EntrepriseOwner));
         if (businessOwnerRole == null)
@@ -207,6 +210,92 @@ public class IdentityService : IIdentityService
             var errors = resetResult.Errors.Select(e => Error.Validation(e.Code, e.Description)).ToList();
             return errors;
         }
+
+        return Result.Success;
+    }
+
+    public async Task<Result<Success>> VerifyEmailAsync(string email, string token, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return IdentityErrors.UserNotFound;
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        if (!result.Succeeded)
+        {
+            return IdentityErrors.EmailConfirmationFailed;
+        }
+
+        return Result.Success;
+    }
+
+    public async Task<Result<Success>> ResendVerificationEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null || user.EmailConfirmed)
+        {
+            return Result.Success;
+        }
+
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
+        var baseUrl = _configuration["AppSettings:ClientAppUrl"] ?? "http://localhost:4200";
+        var verificationLink = $"{baseUrl}/verify-email?email={WebUtility.UrlEncode(email)}&token={encodedToken}";
+
+        var subject = "Confirm your email";
+        var body = $"Please confirm your account by clicking <a href='{verificationLink}'>here</a>.";
+
+        await _notificationService.SendEmailAsync(email, subject, body, cancellationToken);
+
+        return Result.Success;
+    }
+
+    public async Task<Result<Success>> ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null) return IdentityErrors.UserNotFound;
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
+        {
+            return IdentityErrors.PasswordChangeFailed;
+        }
+
+        return Result.Success;
+    }
+
+    public async Task<Result<Success>> DeleteAccountAsync(string userId, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null) return IdentityErrors.UserNotFound;
+
+        // 1. Detach companies
+        var companies = await _context.Companies
+            .Where(c => c.OwnerId == Guid.Parse(userId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var company in companies)
+        {
+            company.ClearOwner();
+        }
+
+        // 2. Remove business owner profile
+        var businessOwner = await _context.BusinessOwners
+            .FirstOrDefaultAsync(b => b.Id == Guid.Parse(userId), cancellationToken);
+
+        if (businessOwner != null)
+        {
+            _context.BusinessOwners.Remove(businessOwner);
+        }
+
+        // 3. Delete user account
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            return IdentityErrors.AccountDeletionFailed;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success;
     }

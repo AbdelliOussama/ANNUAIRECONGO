@@ -34,7 +34,7 @@ public sealed record CreateCompanyCommandHandler(ILogger<CreateCompanyCommandHan
         var company = CompanyCreateResult.Value;
         await _context.Companies.AddAsync(company);
 
-        company.AddDomainEvent(new CompanyCreatedEvent(company.Id,company.OwnerId.ToString(), company.Name));
+        company.AddDomainEvent(new CompanyCreatedEvent(company.Id,company.OwnerId?.ToString() ?? string.Empty, company.Name));
         _logger.LogInformation("Company with name {Name} created successfully", request.Name);
 
         await _context.SaveChangesAsync(cancellationToken);

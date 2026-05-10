@@ -367,7 +367,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
     );
 }
 
-    [HttpDelete("{id:guid}/contacts/{contactId:guid}" , Name = "RemoveContact")]
+[HttpDelete("{id:guid}/contacts/{contactId:guid}" , Name = "RemoveContact")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Remove contact for a company by id.")]

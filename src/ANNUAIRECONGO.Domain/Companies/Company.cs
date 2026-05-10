@@ -12,7 +12,7 @@ namespace ANNUAIRECONGO.Domain.Companies;
 public class Company : AuditableEntity
 {
     // ── Identity ──────────────────────────────────────────────────
-    public Guid OwnerId { get; private set; }
+    public Guid? OwnerId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -42,7 +42,7 @@ public class Company : AuditableEntity
     public bool IsPremium { get; private set; }
 
     // ── Navigation Properties ─────────────────────────────────────
-    public BusinessOwner Owner { get; private set; } = null!;
+    public BusinessOwner? Owner { get; private set; }
     public City City { get; private set; } = null!;
 
     private readonly List<CompanySector> _companySectors = [];
@@ -66,7 +66,7 @@ public class Company : AuditableEntity
     #pragma warning disable CS8618
     private Company() { }
 
-    private Company(Guid id, Guid ownerId, string name, Guid cityId, CompanyStatus status,string description, bool isFeatured, string? rejectionReason,string address,decimal ?latitude,decimal? longitude, string? rccm, string? niu, int? yearFounded, bool isVerified, bool isPremium):base(id)
+    private Company(Guid id, Guid? ownerId, string name, Guid cityId, CompanyStatus status,string description, bool isFeatured, string? rejectionReason,string address,decimal ?latitude,decimal? longitude, string? rccm, string? niu, int? yearFounded, bool isVerified, bool isPremium):base(id)
     {
         OwnerId = ownerId;
         Name = name;
@@ -91,7 +91,7 @@ public class Company : AuditableEntity
 
     public static Result<Company> Create(
         Guid Id,
-        Guid ownerId,
+        Guid? ownerId,
         string name,
         Guid cityId,
         string description,
@@ -232,6 +232,11 @@ public class Company : AuditableEntity
         if (!Guid.TryParse(userId, out var id)) return false;
         return OwnerId == id;
     }
+    public void ClearOwner()
+    {
+        OwnerId = null;
+    }
+
     private static string GenerateSlug(string name) =>
         System.Text.RegularExpressions.Regex.Replace(
             name.ToLowerInvariant()
