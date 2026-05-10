@@ -1,4 +1,4 @@
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Domain.Common.Results;

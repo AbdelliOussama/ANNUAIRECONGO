@@ -1,16 +1,16 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace ANNUAIRECONGO.Application.Common.Behaviours;
+namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
-public class UnhandledExceptionBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+public class UnhandledExceptionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     #region Fields
     private readonly ILogger<TRequest> _logger;
     #endregion
 
     #region Constructor
-    public UnhandledExceptionBehaviour(ILogger<TRequest> logger)
+    public UnhandledExceptionBehavior(ILogger<TRequest> logger)
     {
         _logger = logger;
     }

@@ -2,9 +2,9 @@ using ANNUAIRECONGO.Application.Common.Interfaces;
 using MediatR.Pipeline;
 using Microsoft.Extensions.Logging;
 
-namespace ANNUAIRECONGO.Application.Common.Behaviours;
+namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
-public class LoggingBehaviour<TRequest> : IRequestPreProcessor<TRequest> where TRequest : notnull
+public class LoggingBehavior<TRequest> : IRequestPreProcessor<TRequest> where TRequest : notnull
 {
 
     #region Fields
@@ -15,7 +15,7 @@ public class LoggingBehaviour<TRequest> : IRequestPreProcessor<TRequest> where T
     #endregion
 
     #region  Constructor
-    public LoggingBehaviour(IUser user ,ILogger<TRequest>logger,IIdentityService identityService)
+    public LoggingBehavior(IUser user ,ILogger<TRequest>logger,IIdentityService identityService)
     {
         _identityService = identityService;
         _user = user;

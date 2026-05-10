@@ -1,6 +1,6 @@
 using ANNUAIRECONGO.Domain.Common.Results;
 
-namespace AnnuaireCongo.Domain.Notifications;
+namespace ANNUAIRECONGO.Domain.Notifications;
 
 public static class NotificationErrors
 {

@@ -42,20 +42,28 @@ public class AnalyticsAggregationBackgroundService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
 
-        var targetDate = DateOnly.FromDateTime(DateTime.Now.AddDays(-1));
+        var targetDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
 
         _logger.LogInformation("Starting analytics aggregation for date {Date}", targetDate);
 
         var companyIds = await dbContext.Companies
-            .Where(c => c.Status == Domain.Companies.Enums.CompanyStatus.Active)
             .Select(c => c.Id)
             .ToListAsync(stoppingToken);
 
+        int count = 0;
         foreach (var companyId in companyIds)
         {
             await AggregateCompanyAnalyticsAsync(dbContext, companyId, targetDate, stoppingToken);
+            
+            count++;
+            if (count % 100 == 0)
+            {
+                await dbContext.SaveChangesAsync(stoppingToken);
+                _logger.LogDebug("Processed {Count} companies", count);
+            }
         }
 
+        await dbContext.SaveChangesAsync(stoppingToken);
         _logger.LogInformation("Completed analytics aggregation for date {Date}", targetDate);
     }
 
@@ -65,8 +73,8 @@ public class AnalyticsAggregationBackgroundService : BackgroundService
         DateOnly targetDate,
         CancellationToken stoppingToken)
     {
-        var startOfDay = targetDate.ToDateTime(TimeOnly.MinValue);
-        var endOfDay = targetDate.ToDateTime(TimeOnly.MaxValue);
+        var startOfDay = targetDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var endOfDay = targetDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
         var profileViewCount = await dbContext.ProfileViews
             .Where(pv => pv.CompanyId == companyId && pv.ViewedAt >= startOfDay && pv.ViewedAt <= endOfDay)
@@ -97,7 +105,5 @@ public class AnalyticsAggregationBackgroundService : BackgroundService
         {
             existingSummary.UpdateCounts(profileViewCount, contactClickCount, existingSummary.SearchAppearances);
         }
-
-        await dbContext.SaveChangesAsync(stoppingToken);
     }
 }

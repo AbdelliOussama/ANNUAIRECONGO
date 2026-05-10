@@ -1,4 +1,4 @@
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

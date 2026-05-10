@@ -15,6 +15,7 @@ public static class Result
     public static Updated Updated => default;
 
     public static Result<Error> Failure(Error error) => new(error);
+    public static List<Error> Failure(List<Error> errors) => errors;
 }
 
 public sealed class Result<TValue> : IResult<TValue>

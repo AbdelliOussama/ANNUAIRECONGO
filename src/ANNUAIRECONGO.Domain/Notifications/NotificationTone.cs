@@ -1,4 +1,4 @@
-namespace AnnuaireCongo.Domain.Notifications;
+namespace ANNUAIRECONGO.Domain.Notifications;
 
 /// <summary>
 /// Canonical tones used by the frontend to colour-code notifications.

@@ -1,7 +1,7 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Notifications.Dtos;
 using ANNUAIRECONGO.Domain.Common.Results;
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

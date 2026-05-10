@@ -1,4 +1,4 @@
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Companies.Events;
 using MediatR;

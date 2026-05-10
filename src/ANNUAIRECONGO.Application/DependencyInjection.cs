@@ -1,6 +1,6 @@
 
 using System.Reflection;
-using ANNUAIRECONGO.Application.Common.Behaviours;
+using ANNUAIRECONGO.Application.Common.Behaviors;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,11 +14,10 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            cfg.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(PerformanceBehaviour<,>));
-            cfg.AddOpenBehavior(typeof(UnhandledExceptionBehaviour<,>));
+            cfg.AddOpenBehavior(typeof(PerformanceBehavior<,>));
             cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
-
         }
         );
         return services;

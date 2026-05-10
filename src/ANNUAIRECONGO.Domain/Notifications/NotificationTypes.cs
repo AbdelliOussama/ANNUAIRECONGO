@@ -1,4 +1,4 @@
-namespace AnnuaireCongo.Domain.Notifications;
+namespace ANNUAIRECONGO.Domain.Notifications;
 
 // ── Notification type constants ───────────────────────────────────────────
 public static class NotificationTypes

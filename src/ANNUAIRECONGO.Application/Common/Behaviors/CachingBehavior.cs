@@ -5,7 +5,7 @@ using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Domain.Common.Results;
 
 
-namespace ANNUAIRECONGO.Application.Common.Behaviours;
+namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
 public class CachingBehavior<TRequest, TResponse>(
     HybridCache cache,
@@ -28,35 +28,26 @@ public class CachingBehavior<TRequest, TResponse>(
 
         _logger.LogInformation("Checking cache for {RequestName}", typeof(TRequest).Name);
 
-        var result = await _cache.GetOrCreateAsync<TResponse>(
+        return await _cache.GetOrCreateAsync(
             cachedRequest.CacheKey,
-            _ => new ValueTask<TResponse>((TResponse)(object)null!),
+            async token =>
+            {
+                _logger.LogInformation("Cache miss for {RequestName}. Fetching from database.", typeof(TRequest).Name);
+                
+                var response = await next(token);
+
+                if (response is IResult res && !res.IsSuccess)
+                {
+                    return response;
+                }
+
+                return response;
+            },
             new HybridCacheEntryOptions
             {
-                Flags = HybridCacheEntryFlags.DisableUnderlyingData
+                Expiration = cachedRequest.Expiration
             },
+            cachedRequest.Tags,
             cancellationToken: ct);
-
-        if (result is null)
-        {
-            result = await next(ct);
-
-            if (result is IResult res && res.IsSuccess)
-            {
-                _logger.LogInformation("Caching result for {RequestName}", typeof(TRequest).Name);
-
-                await _cache.SetAsync(
-                    cachedRequest.CacheKey,
-                    result,
-                    new HybridCacheEntryOptions
-                    {
-                        Expiration = cachedRequest.Expiration
-                    },
-                    cachedRequest.Tags,
-                    ct);
-            }
-        }
-
-        return result;
     }
 }

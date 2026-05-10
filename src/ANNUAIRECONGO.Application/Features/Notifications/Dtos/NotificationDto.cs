@@ -1,4 +1,4 @@
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 
 namespace ANNUAIRECONGO.Application.Features.Notifications.Dtos;
 

@@ -10,7 +10,7 @@ using ANNUAIRECONGO.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-namespace AnnuaireCongo.Infrastructure.Identity;
+namespace ANNUAIRECONGO.Infrastructure.Identity;
 
 public class TokenProvider : ITokenProvider
 {

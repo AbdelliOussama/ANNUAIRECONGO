@@ -1,4 +1,4 @@
-﻿namespace ANNUAIRECONGO.Application.Common.Interfaces;
+namespace ANNUAIRECONGO.Application.Common.Interfaces;
 
 public interface INotificationService
 {

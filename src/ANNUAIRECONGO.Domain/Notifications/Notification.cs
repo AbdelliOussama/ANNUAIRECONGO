@@ -1,7 +1,7 @@
 using ANNUAIRECONGO.Domain.Common;
 using ANNUAIRECONGO.Domain.Common.Results;
 
-namespace AnnuaireCongo.Domain.Notifications;
+namespace ANNUAIRECONGO.Domain.Notifications;
 
 /// <summary>
 /// User-facing notification.
@@ -26,7 +26,7 @@ public class Notification : Entity
 
     private Notification() { }
 
-    private Notification(string userId, string type, string tone, string message, string? link)
+    private Notification(string userId, string type, string tone, string message, string? link) : base(Guid.NewGuid())
     {
         UserId = userId;
         Type = type;

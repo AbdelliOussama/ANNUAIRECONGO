@@ -3,9 +3,9 @@ using ANNUAIRECONGO.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace ANNUAIRECONGO.Application.Common.Behaviours;
+namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
-public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     #region  Fields
         private readonly Stopwatch _timer;
@@ -15,7 +15,7 @@ public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequ
     #endregion
 
     #region Constructor
-        public PerformanceBehaviour(ILogger<TRequest>logger,IUser user, IIdentityService identityService)
+        public PerformanceBehavior(ILogger<TRequest>logger,IUser user, IIdentityService identityService)
     {
         _identityService = identityService;
         _logger = logger;
@@ -26,7 +26,7 @@ public class PerformanceBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequ
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         _timer.Start();
-        var response = await next();
+        var response = await next(cancellationToken);
         _timer.Stop();
 
         var elapsedMilliseconds = _timer.ElapsedMilliseconds;

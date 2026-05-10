@@ -1,4 +1,4 @@
-using AnnuaireCongo.Domain.Notifications;
+using ANNUAIRECONGO.Domain.Notifications;
 using ANNUAIRECONGO.Domain.Analytics;
 using ANNUAIRECONGO.Domain.BusinessOwners;
 using ANNUAIRECONGO.Domain.Companies;
