@@ -135,9 +135,9 @@ import { FR } from '@core/i18n/fr.constants';
               }
             </header>
             <dl class="kv">
-              <div><dt>Statut</dt><dd>{{ subscription()?.isActive ? 'Actif' : 'Non payé' }}</dd></div>
-              <div><dt>Expiration</dt><dd>{{ (subscription()?.expiresAt | date:'dd/MM/yyyy') || 'N/A' }}</dd></div>
-              <div><dt>Mode</dt><dd>{{ getMethodLabel(subscription()?.paymentMethod) }}</dd></div>
+              <div><dt>Statut</dt><dd>{{ subscription() ? (subscription()!.isActive ? 'Actif' : 'Non payé') : 'Non payé' }}</dd></div>
+              <div><dt>Expiration</dt><dd>{{ subscription() ? (subscription()!.expiresAt | date:'dd/MM/yyyy') : 'N/A' }}</dd></div>
+              <div><dt>Mode</dt><dd>{{ subscription() ? getMethodLabel(subscription()!.paymentMethod) : 'N/A' }}</dd></div>
             </dl>
             <div class="panel-actions">
               <a routerLink="/espace/abonnement/historique" class="btn btn-ghost btn-sm">Historique</a>

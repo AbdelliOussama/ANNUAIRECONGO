@@ -222,14 +222,12 @@ public class ApplicationDbContextInitialiser(
         {
             _context.Sectors.AddRange(
             [
-                Sector.Create(Guid.NewGuid(), "Agriculture", "Agriculture, élevage et pêche").Value,
-                Sector.Create(Guid.NewGuid(), "Commerce", "Vente en gros, détail et e-commerce").Value,
-                Sector.Create(Guid.NewGuid(), "Énergie", "Pétrole, gaz et énergies renouvelables").Value,
-                Sector.Create(Guid.NewGuid(), "Finances", "Banques, assurances et micro-finances").Value,
-                Sector.Create(Guid.NewGuid(), "Santé", "Hôpitaux, cliniques, et pharmacies").Value,
-                Sector.Create(Guid.NewGuid(), "Technologies", "Informatique, télécoms et startups").Value,
-                Sector.Create(Guid.NewGuid(), "Transport", "Transport terrestre, aérien, et logistique").Value,
-                Sector.Create(Guid.NewGuid(), "Tourisme", "Hôtellerie, restauration et agences de voyage").Value
+                Sector.Create(Guid.NewGuid(), "Maritime & Portuaire", "Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore.").Value,
+                Sector.Create(Guid.NewGuid(), "Logistique & Transport", "Transport routier, ferroviaire, aérien et solutions intégrées.").Value,
+                Sector.Create(Guid.NewGuid(), "Douane & Transit", "Dédouanement, transit et conseil en réglementation des échanges extérieurs.").Value,
+                Sector.Create(Guid.NewGuid(), "Industrie", "Manufacture, transformation industrielle, agro-industrie et production locale à valeur ajoutée.").Value,
+                Sector.Create(Guid.NewGuid(), "Sécurité", "Sociétés de surveillance, gardiennage, protection rapprochée et systèmes de sécurité électroniques.").Value,
+                Sector.Create(Guid.NewGuid(), "Manutention & Entreposage", "Stockage, gestion d'entrepôts, opérations portuaires lourdes et service au navire.").Value
             ]);
             await _context.SaveChangesAsync();
         }

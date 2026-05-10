@@ -48,34 +48,33 @@ public static class CompanySeeder
         var brazzaville = cities.FirstOrDefault(c => c.Name == "Brazzaville") ?? cities.First();
         var pointeNoire = cities.FirstOrDefault(c => c.Name == "Pointe-Noire") ?? cities.Last();
 
-        var techSector = sectors.FirstOrDefault(s => s.Name == "Technologies") ?? sectors.First();
-        var energySector = sectors.FirstOrDefault(s => s.Name == "Énergie") ?? sectors.First();
-        var telecompSector = sectors.FirstOrDefault(s => s.Name == "Technologies") ?? sectors.First();
-        var financeSector = sectors.FirstOrDefault(s => s.Name == "Finances") ?? sectors.First();
-        var healthSector = sectors.FirstOrDefault(s => s.Name == "Santé") ?? sectors.First();
-        var tourismSector = sectors.FirstOrDefault(s => s.Name == "Tourisme") ?? sectors.First();
-        var retailSector = sectors.FirstOrDefault(s => s.Name == "Commerce") ?? sectors.First();
+        var maritimeSector = sectors.FirstOrDefault(s => s.Name == "Maritime & Portuaire") ?? sectors.First();
+        var logistiqueSector = sectors.FirstOrDefault(s => s.Name == "Logistique & Transport") ?? sectors.First();
+        var douaneSector = sectors.FirstOrDefault(s => s.Name == "Douane & Transit") ?? sectors.First();
+        var industrieSector = sectors.FirstOrDefault(s => s.Name == "Industrie") ?? sectors.First();
+        var securiteSector = sectors.FirstOrDefault(s => s.Name == "Sécurité") ?? sectors.First();
+        var manutentionSector = sectors.FirstOrDefault(s => s.Name == "Manutention & Entreposage") ?? sectors.First();
 
         var premiumPlan = plans.FirstOrDefault(p => p.Name == PlanName.Premium) ?? plans.First();
         var enterprisePlan = plans.FirstOrDefault(p => p.Name == PlanName.Pro) ?? plans.Last();
 
         var companyDataList = new List<(string Name, string Desc, Guid CityId, Guid SectorId, Guid OwnerId, bool IsPremium, string Logo)>
         {
-            ("MTN Congo", "Leader de la téléphonie mobile au Congo, offrant des services voix et internet de haute qualité.", brazzaville.Id, telecompSector.Id, owners[random.Next(owners.Count)].Id, true, "https://upload.wikimedia.org/wikipedia/commons/9/93/MTN_Logo.svg"),
-            ("Airtel Congo", "Opérateur de télécommunications proposant des offres internet, mobile money et forfaits voix.", pointeNoire.Id, telecompSector.Id, owners[random.Next(owners.Count)].Id, true, "https://upload.wikimedia.org/wikipedia/commons/f/fb/Airtel_logo.svg"),
-            ("TotalEnergies EP Congo", "Filiale du groupe TotalEnergies, spécialisée dans l'exploration et la production pétrolière.", pointeNoire.Id, energySector.Id, owners[random.Next(owners.Count)].Id, true, "https://upload.wikimedia.org/wikipedia/commons/8/86/TotalEnergies_logo.svg"),
-            ("Eni Congo", "Acteur majeur de l'exploration pétrolière et gazière en République du Congo.", pointeNoire.Id, energySector.Id, owners[random.Next(owners.Count)].Id, true, "https://upload.wikimedia.org/wikipedia/commons/0/07/Eni_SpA.svg"),
-            ("Brasco", "Brasseries du Congo, principal producteur et distributeur de boissons au Congo.", brazzaville.Id, retailSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ff0000/ffffff?text=Brasco"),
-            ("Ecobank Congo", "Banque panafricaine offrant des services bancaires aux particuliers et entreprises.", brazzaville.Id, financeSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/0033a0/ffffff?text=Ecobank"),
-            ("Banque Commerciale Internationale (BCI)", "Banque de référence au Congo pour vos projets personnels et professionnels.", pointeNoire.Id, financeSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/008000/ffffff?text=BCI"),
-            ("Radisson Blu M'Bamou Palace Hotel", "Hôtel de luxe situé sur les rives du fleuve Congo à Brazzaville.", brazzaville.Id, tourismSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/1e1e1e/ffffff?text=Radisson"),
-            ("Clinique Securex", "Établissement médical de pointe offrant des soins de qualité à Brazzaville.", brazzaville.Id, healthSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ff0000/ffffff?text=Securex"),
-            ("Société Nationale des Pétroles du Congo (SNPC)", "Entreprise nationale congolaise chargée de la valorisation des ressources pétrolières.", brazzaville.Id, energySector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/000000/ffffff?text=SNPC"),
-            ("LCDE (La Congolaise des Eaux)", "Entreprise publique chargée de la distribution d'eau potable.", brazzaville.Id, energySector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/0000ff/ffffff?text=LCDE"),
-            ("Énergie Électrique du Congo (E2C)", "Société de production, transport et distribution de l'électricité.", pointeNoire.Id, energySector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ffff00/000000?text=E2C"),
-            ("Maya-Maya Airport Services", "Services de gestion aéroportuaire et logistique au Congo.", brazzaville.Id, tourismSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/808080/ffffff?text=Aero"),
-            ("Congo Telecom", "L'opérateur historique des télécommunications en République du Congo.", brazzaville.Id, telecompSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/0033cc/ffffff?text=CT"),
-            ("Pétro Congo", "Réseau de stations-services et distribution de produits pétroliers.", pointeNoire.Id, energySector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ff6600/ffffff?text=Petro")
+            ("Bolloré Transport & Logistics", "Leader de la logistique et de la manutention portuaire au Congo.", pointeNoire.Id, logistiqueSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/0033a0/ffffff?text=Bollore"),
+            ("Congo Terminal", "Opérateur du terminal à conteneurs du Port de Pointe-Noire.", pointeNoire.Id, manutentionSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/ff6600/ffffff?text=Congo+Terminal"),
+            ("Société de Services Maritimes (SSM)", "Services maritimes, consignation de navires et assistance portuaire.", pointeNoire.Id, maritimeSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/000080/ffffff?text=SSM"),
+            ("SARIS Congo", "Agro-industrie spécialisée dans la production et la transformation sucrière.", brazzaville.Id, industrieSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/008000/ffffff?text=SARIS"),
+            ("Brasco", "Brasseries du Congo, principal producteur et distributeur de boissons industrielles au Congo.", brazzaville.Id, industrieSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ff0000/ffffff?text=Brasco"),
+            ("G4S Congo", "Leader mondial des solutions de sécurité intégrées et de gardiennage.", brazzaville.Id, securiteSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/d32f2f/ffffff?text=G4S"),
+            ("SCG-Ré", "Société congolaise spécialisée dans la sécurité et la prévention des risques.", pointeNoire.Id, securiteSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/1e1e1e/ffffff?text=SCG"),
+            ("GETMA Congo", "Manutention, transit et consignation au Port Autonome de Pointe-Noire.", pointeNoire.Id, douaneSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/1976d2/ffffff?text=GETMA"),
+            ("DHL Express Congo", "Leader mondial de la logistique et du transport express international.", brazzaville.Id, logistiqueSector.Id, owners[random.Next(owners.Count)].Id, false, "https://upload.wikimedia.org/wikipedia/commons/b/b3/DHL_Logo.svg"),
+            ("Société Nationale des Pétroles du Congo (SNPC)", "Industrie lourde et valorisation des ressources pétrolières congolaises.", brazzaville.Id, industrieSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/000000/ffffff?text=SNPC"),
+            ("SOCOTRAN", "Transit, douane et commissionnaire en douane agréé en République du Congo.", pointeNoire.Id, douaneSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ff9800/ffffff?text=SOCOTRAN"),
+            ("Énergie Électrique du Congo (E2C)", "Industrie de production, transport et distribution de l'électricité.", pointeNoire.Id, industrieSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/ffff00/000000?text=E2C"),
+            ("Ocean Network Express (ONE)", "Transport maritime par conteneurs et logistique internationale.", pointeNoire.Id, maritimeSector.Id, owners[random.Next(owners.Count)].Id, false, "https://upload.wikimedia.org/wikipedia/commons/2/2f/ONE_Ocean_Network_Express_logo.svg"),
+            ("Brazza Sécurité", "Services de gardiennage, vidéosurveillance et transport de fonds.", brazzaville.Id, securiteSector.Id, owners[random.Next(owners.Count)].Id, true, "https://via.placeholder.com/150/0033cc/ffffff?text=Brazza+Securite"),
+            ("Entreprise de Manutention Congolaise", "Services d'entreposage, de levage et de manutention industrielle.", pointeNoire.Id, manutentionSector.Id, owners[random.Next(owners.Count)].Id, false, "https://via.placeholder.com/150/808080/ffffff?text=EMC")
         };
 
         var notifications = new List<Notification>();
