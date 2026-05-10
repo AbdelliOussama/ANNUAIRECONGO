@@ -19,7 +19,7 @@ namespace ANNUAIRECONGO.Api.Controllers;
 [Route("api/v{version:apiVersion}/subscriptions")]
 [ApiVersion("1.0")]
 [Authorize]
-public sealed class SubscriptionsController(ISender sender, IUser currentUser) : ApiController
+public sealed class SubscriptionsController(ISender sender) : ApiController
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]

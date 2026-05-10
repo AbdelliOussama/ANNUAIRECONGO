@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, AfterViewInit, computed, inject, signal, effect } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of, catchError, map, tap } from 'rxjs';
 import { Params } from '@angular/router';
@@ -10,7 +11,7 @@ import { CompanyService } from '@core/services/company.service';
 import { Company, CompanyContact, CompanyDocument, ContactType, DocumentType as DocTypeEnum } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 
-type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
+type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
 
 @Component({
   selector: 'ac-fiche-entreprise',
@@ -66,7 +67,9 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
             <div class="badges">
               @if (fiche()!.isVerified) { <span class="badge badge-verified">Vérifiée RCCM</span> }
               @if (fiche()!.isPremium)  { <span class="badge badge-premium">Premium</span> }
-              <span class="badge badge-free">{{ fiche()!.sectorLabel }}</span>
+              @for (s of fiche()!.allSectors; track s.id) {
+                <span class="badge badge-free">{{ s.name }}</span>
+              }
             </div>
             <h1 class="title">{{ fiche()!.name }}</h1>
             <p class="city">
@@ -111,6 +114,22 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
                 <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
                 <div><dt>Secteur</dt><dd>{{ fiche()!.sectorLabel }}</dd></div>
               </dl>
+            }
+            @case ('services') {
+              <h2 class="panel-title">Services & Produits</h2>
+              <div class="services-grid">
+                @for (s of fiche()!.services; track s.id) {
+                  <div class="service-card">
+                    <span class="material-symbols-outlined text-primary" aria-hidden="true">check_circle</span>
+                    <div class="service-content">
+                      <h3 class="service-name">{{ s.title }}</h3>
+                      <p class="service-desc">{{ s.description }}</p>
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="muted">Aucun service spécifique n'a été listé pour le moment.</p>
+                }
+              </div>
             }
             @case ('contacts') {
               <h2 class="panel-title">Contacts</h2>
@@ -279,6 +298,12 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
     .contact-list a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
     .contact-list a:hover { text-decoration: underline; }
 
+    .services-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 640px) { .services-grid { grid-template-columns: repeat(2, 1fr); } }
+    .service-card { display: flex; gap: 16px; padding: 20px; background: var(--color-surface-container-low); border-radius: var(--radius-xl); border: 1px solid var(--color-outline-variant); }
+    .service-name { font-size: 16px; font-weight: 700; color: var(--color-on-surface); margin: 0 0 4px; }
+    .service-desc { font-size: 14px; color: var(--color-on-surface-variant); line-height: 1.5; margin: 0; }
+
     .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
     .gallery-item img { width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-lg); }
     .gallery-item .caption { font-size: 12px; color: var(--color-outline); margin-top: 4px; }
@@ -303,9 +328,12 @@ export class FicheEntrepriseComponent {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
   private readonly route          = inject(ActivatedRoute);
+  private readonly titleService   = inject(Title);
+  private readonly metaService    = inject(Meta);
 
   protected readonly tabs: TabDescriptor[] = [
     { id: 'apropos',     label: 'À propos',    icon: 'description' },
+    { id: 'services',    label: 'Services',    icon: 'category' },
     { id: 'contacts',    label: 'Contacts',    icon: 'contact_page' },
     { id: 'galerie',     label: 'Galerie',     icon: 'photo_library' },
     { id: 'localisation',label: 'Localisation',icon: 'location_on' },
@@ -324,6 +352,24 @@ export class FicheEntrepriseComponent {
     ),
     { initialValue: null }
   );
+  
+  constructor() {
+    effect(() => {
+      const f = this.fiche();
+      if (f) {
+        const title = `${f.name} - ${f.sectorLabel} à ${f.city} | Annuaire Congo`;
+        const desc  = `${f.name} à ${f.city} (${f.region}). ${f.description.slice(0, 150)}... Retrouvez les contacts, services et documents officiels sur Annuaire Congo.`;
+        
+        this.titleService.setTitle(title);
+        this.metaService.updateTag({ name: 'description', content: desc });
+        this.metaService.updateTag({ property: 'og:title', content: title });
+        this.metaService.updateTag({ property: 'og:description', content: desc });
+        if (f.logoUrl) {
+          this.metaService.updateTag({ property: 'og:image', content: f.logoUrl });
+        }
+      }
+    });
+  }
 
   protected readonly fiche = computed(() => {
     const c = this.companyData();
@@ -350,6 +396,8 @@ export class FicheEntrepriseComponent {
       niu: c.niu,
       gallery: c.images || [],
       publicDocuments: c.documents?.filter((d: CompanyDocument) => d.isPublic) || [],
+      services: c.services || [],
+      allSectors: c.sectors || [],
     };
   });
 
@@ -363,6 +411,10 @@ export class FicheEntrepriseComponent {
       case ContactType.Email: return 'mail';
       case ContactType.Website: return 'language';
       case ContactType.WhatsApp: return 'chat';
+      case ContactType.Facebook: return 'facebook';
+      case ContactType.LinkedIn: return 'share';
+      case ContactType.Instagram: return 'photo_camera';
+      case ContactType.Twitter: return 'alternate_email';
       default: return 'link';
     }
   }

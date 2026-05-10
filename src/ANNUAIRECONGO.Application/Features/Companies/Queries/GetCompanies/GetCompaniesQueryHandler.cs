@@ -20,6 +20,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
     public async Task<Result<PaginatedList<CompanyDto>>> Handle(GetCompaniesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Companies.AsNoTracking()
+            .Include(c => c.Owner)
             .Include(c => c.CompanySectors)
             .ThenInclude(cs => cs.Sector)
             .Include(c => c.City)

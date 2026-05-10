@@ -9,6 +9,7 @@ export interface CompanyCardData {
   slug: string;
   sectorLabel: string;
   sectorIcon: string;
+  sectors?: { id?: string; name: string }[];
   description: string;
   city: string;
   isVerified?: boolean;
@@ -41,7 +42,15 @@ export interface CompanyCardData {
         </div>
 
         <h3 class="title">{{ data().name }}</h3>
-        <p class="sector">{{ data().sectorLabel }}</p>
+        <div class="sectors">
+          @if (data().sectors && data().sectors!.length > 0) {
+            @for (s of data().sectors; track $index) {
+              <span class="sector-badge">{{ s.name }}</span>
+            }
+          } @else {
+            <p class="sector">{{ data().sectorLabel }}</p>
+          }
+        </div>
         <p class="desc">{{ data().description }}</p>
 
         <div class="city">
@@ -64,7 +73,17 @@ export interface CompanyCardData {
               <span class="badge badge-premium">Premium</span>
             }
           </div>
-          <p class="sector inline">{{ data().sectorLabel }} — {{ data().city }}</p>
+          <div class="sectors inline">
+            @if (data().sectors && data().sectors!.length > 0) {
+              @for (s of data().sectors; track $index) {
+                <span class="sector-badge">{{ s.name }}</span>
+              }
+            } @else {
+              <span class="sector">{{ data().sectorLabel }}</span>
+            }
+            <span class="sep">·</span>
+            <span class="city-text">{{ data().city }}</span>
+          </div>
           <p class="desc clamp">{{ data().description }}</p>
         </div>
         <span class="material-symbols-outlined chevron" aria-hidden="true">chevron_right</span>
@@ -129,7 +148,11 @@ export interface CompanyCardData {
       letter-spacing: 0.12em;
       margin: 0 0 16px;
     }
-    .sector.inline { letter-spacing: 0.06em; margin: 4px 0 6px; color: var(--color-on-secondary-container); font-weight: 600; }
+    .sectors { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+    .sectors.inline { align-items: center; gap: 6px; margin: 4px 0 6px; }
+    .sector-badge { font-size: 10px; font-weight: 700; color: var(--color-primary); background: var(--color-primary-container); padding: 2px 8px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sep { color: var(--color-outline-variant); }
+    .city-text { font-size: 11px; font-weight: 600; color: var(--color-on-secondary-container); }
     .desc {
       color: var(--color-on-secondary-container);
       font-size: 14px;

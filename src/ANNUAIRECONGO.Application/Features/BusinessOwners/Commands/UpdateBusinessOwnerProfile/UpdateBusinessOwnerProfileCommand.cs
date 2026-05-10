@@ -8,5 +8,5 @@ public sealed record UpdateBusinessOwnerProfileCommand(
     string FirstName,
     string LastName,
     string PhoneNumber,
-    string CompanyPosition
+    string? CompanyPosition
 ) : IRequest<Result<Updated>>;

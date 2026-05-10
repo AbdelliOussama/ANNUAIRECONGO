@@ -4,7 +4,6 @@ using ANNUAIRECONGO.Domain.Geography;
 using ANNUAIRECONGO.Domain.Identity;
 using ANNUAIRECONGO.Domain.Sectors;
 using ANNUAIRECONGO.Infrastructure.Data.Seeding;
-using ANNUAIRECONGO.Infrastructure.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

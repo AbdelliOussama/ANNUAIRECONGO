@@ -89,6 +89,8 @@ export interface Company {
   niu?: string;
   yearFounded?: number;
   ownerId: string;
+  ownerName?: string;
+  ownerPhone?: string;
   cityId: string;
   cityName?: string;
   regionName?: string;

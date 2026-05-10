@@ -13,6 +13,7 @@ import { ToastService } from '@shared/services/toast.service';
 import { Sector, City, CreateCompanyRequest, UpdateCompanyProfileRequest, Company, CompanyImage, CompanyDocument } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'ac-fiche-form',
@@ -20,9 +21,9 @@ import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    ReactiveFormsModule,
     ButtonComponent,
     InputComponent,
+    ReactiveFormsModule
   ],
   template: `
     <div class="page">
@@ -81,16 +82,18 @@ import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
           <legend>Secteur & localisation</legend>
 
           <div class="form-group">
-            <label class="form-label" for="fiche-sector">Secteur principal *</label>
-            <select id="fiche-sector" formControlName="sectorId" class="form-input"
-                    [attr.aria-invalid]="form.get('sectorId')?.invalid && form.get('sectorId')?.touched ? true : null">
-              <option value="">Sélectionnez un secteur</option>
+            <label class="form-label">Secteurs stratégiques *</label>
+            <p class="text-xs text-outline mb-2">Sélectionnez tous les secteurs dans lesquels vous opérez.</p>
+            <div class="sectors-grid">
               @for (s of sectors(); track s.id) {
-                <option [value]="s.id">{{ s.name }}</option>
+                <label class="sector-checkbox">
+                  <input type="checkbox" [checked]="isSectorSelected(s.id)" (change)="toggleSector(s.id)" />
+                  <span class="sector-name">{{ s.name }}</span>
+                </label>
               }
-            </select>
-            @if (errorFor('sectorId')) {
-              <p class="form-error" role="alert">{{ errorFor('sectorId') }}</p>
+            </div>
+            @if (errorFor('sectorIds')) {
+              <p class="form-error" role="alert">{{ errorFor('sectorIds') }}</p>
             }
           </div>
 
@@ -146,6 +149,60 @@ import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
             placeholder="https://exemple.cg"
             [error]="errorFor('websiteUrl')"
           />
+
+          <hr class="my-4 border-outline-variant" />
+          
+          <p class="text-sm font-bold mb-2">Réseaux sociaux & Autres</p>
+          <div formArrayName="contacts" class="flex flex-col gap-3">
+            @for (c of contactsFormArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="flex items-end gap-3 bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+                <div class="flex-1">
+                  <label class="form-label text-xs">Type</label>
+                  <select formControlName="type" class="form-input text-sm">
+                    @for (t of contactTypes; track t.value) {
+                      <option [value]="t.value">{{ t.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex-grow-2">
+                  <ac-input formControlName="value" label="Lien ou numéro" placeholder="Ex: @username ou lien..." />
+                </div>
+                <button type="button" class="btn-icon text-error mb-1" (click)="removeContact(i)" aria-label="Supprimer">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <button type="button" class="btn btn-ghost btn-sm w-fit mt-2" (click)="addContact()">
+            <span class="material-symbols-outlined">add</span>
+            Ajouter un lien social
+          </button>
+        </fieldset>
+
+        <!-- Section: Services -->
+        <fieldset class="card">
+          <legend>Nos Services & Produits</legend>
+          <p class="text-sm text-outline mb-4">Listez les services ou produits spécifiques que vous proposez pour améliorer votre visibilité.</p>
+          
+          <div formArrayName="services" class="services-list">
+            @for (s of servicesFormArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="service-item card-sub">
+                <div class="service-row">
+                  <ac-input formControlName="title" label="Nom du service" placeholder="Ex: Transit Maritime" class="flex-1" />
+                  <button type="button" class="btn-icon text-error" (click)="removeService(i)" aria-label="Supprimer">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+                <ac-input formControlName="description" label="Description courte" placeholder="Détails du service..." />
+              </div>
+            }
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm w-fit" (click)="addService()">
+            <span class="material-symbols-outlined">add</span>
+            Ajouter un service
+          </button>
         </fieldset>
 
         <!-- Section: Médias -->
@@ -257,6 +314,32 @@ import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
 
     .preview-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--color-outline-variant); }
 
+    .sectors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .sector-checkbox { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--color-surface-container-low); border-radius: var(--radius-md); border: 1px solid var(--color-outline-variant); cursor: pointer; transition: 0.2s; }
+    .sector-checkbox:hover { background: var(--color-surface-container-high); }
+    .sector-checkbox input { width: 18px; height: 18px; cursor: pointer; }
+    .sector-name { font-size: 13px; font-weight: 600; color: var(--color-on-surface); }
+
+    .services-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .service-item { padding: 16px; background: var(--color-surface-container-low); border-radius: var(--radius-lg); border: 1px solid var(--color-outline-variant); }
+    .service-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+    .card-sub { position: relative; }
+    .btn-icon { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: var(--radius-full); transition: background 0.2s; }
+    .btn-icon:hover { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .w-fit { width: fit-content; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-2 { margin-top: 8px; }
+    .my-4 { margin-top: 16px; margin-bottom: 16px; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .flex-1 { flex: 1; }
+    .flex-grow-2 { flex: 2; }
+    .items-end { align-items: flex-end; }
+    .gap-3 { gap: 12px; }
+    .p-3 { padding: 12px; }
+    .rounded-lg { border-radius: var(--radius-lg); }
+
     .actions-bar {
       display: flex;
       justify-content: flex-end;
@@ -276,6 +359,7 @@ export class FicheFormComponent {
   private readonly geoService     = inject(GeographyService);
   private readonly uploadService  = inject(UploadService);
   private readonly boService      = inject(BusinessOwnerService);
+  private readonly authService    = inject(AuthService);
   private readonly toast     = inject(ToastService);
   private readonly router    = inject(Router);
 
@@ -283,6 +367,19 @@ export class FicheFormComponent {
   protected readonly logoUrl    = signal<string | null>(null);
   protected readonly gallery    = signal<string[]>([]);
   protected readonly documents  = signal<string[]>([]);
+  
+  protected readonly contactTypes = [
+    { value: 2, label: 'WhatsApp' },
+    { value: 3, label: 'Facebook' },
+    { value: 4, label: 'LinkedIn' },
+    { value: 5, label: 'Instagram' },
+    { value: 6, label: 'Twitter' },
+  ];
+
+  protected readonly originalContacts = signal<any[]>([]);
+  protected readonly originalServices = signal<any[]>([]);
+  protected readonly originalImages = signal<any[]>([]);
+  protected readonly originalDocs = signal<any[]>([]);
 
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
   protected readonly cities  = toSignal(this.geoService.getRegions().pipe(
@@ -300,13 +397,61 @@ export class FicheFormComponent {
     description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(300)]],
     rccm:        ['', [Validators.required, Validators.pattern(/^[A-Z]{2,3}-[A-Z]{2,4}-\d{4}-[A-Z]-\d{3,5}$/)]],
     niu:         ['', [Validators.required, Validators.minLength(8)]],
-    sectorId:    ['', Validators.required],
+    sectorIds:   [[] as string[], [Validators.required, Validators.minLength(1)]],
     cityId:      ['', Validators.required],
     address:     ['', [Validators.required, Validators.minLength(4)]],
     phoneNumber: ['', [Validators.required, Validators.pattern(/^\+?242\s?0?[567]\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/)]],
     email:       ['', [Validators.required, Validators.email]],
     websiteUrl:  ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
+    services:    this.fb.array([]),
+    contacts:    this.fb.array([]),
   });
+
+  get servicesFormArray() {
+    return this.form.get('services') as any;
+  }
+
+  get contactsFormArray() {
+    return this.form.get('contacts') as any;
+  }
+
+  protected isSectorSelected(id: string): boolean {
+    return this.form.controls.sectorIds.value.includes(id);
+  }
+
+  protected toggleSector(id: string): void {
+    const current = this.form.controls.sectorIds.value;
+    if (current.includes(id)) {
+      this.form.controls.sectorIds.setValue(current.filter(x => x !== id));
+    } else {
+      this.form.controls.sectorIds.setValue([...current, id]);
+    }
+    this.form.controls.sectorIds.markAsTouched();
+  }
+
+  addContact(type = 2, value = '') {
+    this.contactsFormArray.push(this.fb.group({
+      type: [type, Validators.required],
+      value: [value, [Validators.required, Validators.minLength(2)]],
+    }));
+  }
+
+  removeContact(index: number) {
+    this.contactsFormArray.removeAt(index);
+  }
+
+
+
+  addService(title = '', description = '') {
+    this.servicesFormArray.push(this.fb.group({
+      title: [title, [Validators.required, Validators.minLength(3)]],
+      description: [description, [Validators.maxLength(200)]],
+    }));
+  }
+
+  removeService(index: number) {
+    this.servicesFormArray.removeAt(index);
+  }
 
   private readonly companyToEdit = toSignal(
     this.boService.getMyCompanies().pipe(
@@ -324,7 +469,7 @@ export class FicheFormComponent {
         description: c.description || '',
         rccm: c.rccm || '',
         niu: c.niu || '',
-        sectorId: c.sectors?.[0]?.id || c.sectors?.[0]?.sectorId || '',
+        sectorIds: c.sectors?.map((s: any) => s.id || s.sectorId) || [],
         cityId: c.cityId || '',
         address: c.address || '',
         phoneNumber: c.phoneNumber || '',
@@ -334,6 +479,19 @@ export class FicheFormComponent {
       this.logoUrl.set(c.logoUrl || null);
       this.gallery.set(c.images?.map((i: CompanyImage) => i.imageUrl) || []);
       this.documents.set(c.documents?.map((d: CompanyDocument) => d.documentUrl || d.fileUrl) || []);
+      
+      this.originalServices.set(c.services || []);
+      this.originalContacts.set(c.contacts || []);
+      this.originalImages.set(c.images || []);
+      this.originalDocs.set(c.documents || []);
+
+      // Populate services FormArray
+      this.servicesFormArray.clear();
+      (c.services || []).forEach((s: any) => this.addService(s.title, s.description));
+
+      // Populate extra contacts FormArray
+      this.contactsFormArray.clear();
+      (c.contacts || []).filter((con: any) => con.type > 1).forEach((con: any) => this.addContact(con.type, con.value));
     }
     return null;
   });
@@ -349,7 +507,10 @@ export class FicheFormComponent {
     if (!c || !c.touched || !c.errors) return null;
     if (c.errors['required'])  return FR.errors.required;
     if (c.errors['email'])     return FR.errors.email;
-    if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
+    if (c.errors['minlength']) {
+      if (name === 'sectorIds') return 'Veuillez sélectionner au moins un secteur.';
+      return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
+    }
     if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} caractères.`;
     if (c.errors['pattern'])   {
       if (name === 'phoneNumber') return FR.errors.phoneCG;
@@ -403,8 +564,8 @@ export class FicheFormComponent {
     const value = this.form.getRawValue();
     
     const obs$ = this.mode() === 'create' 
-      ? this.companyService.createCompany({ ...value, sectorIds: [value.sectorId] })
-      : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, { ...value, sectorIds: [value.sectorId] });
+      ? this.companyService.createCompany({ ...value })
+      : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, { ...value });
 
     obs$.pipe(
       switchMap((company) => {
@@ -425,10 +586,44 @@ export class FicheFormComponent {
            }
         });
 
-        // 3. Sync Documents
         this.documents().forEach(url => {
           if (!company.documents?.some(d => (d.documentUrl || d.fileUrl) === url)) {
              tasks.push(this.companyService.addDocument(companyId, url, 'Other')); // Default type
+          }
+        });
+
+        // 4. Sync Services
+        const formValue = this.form.getRawValue();
+        const currentServices = formValue.services;
+        const oldServices = this.originalServices();
+
+        // Remove services that are no longer in the form
+        oldServices.forEach(old => {
+          if (!currentServices.some((curr: any) => curr.title === old.title)) {
+            tasks.push(this.companyService.removeService(companyId, old.id));
+          }
+        });
+
+        // Add new services
+        currentServices.forEach((curr: any) => {
+          if (!oldServices.some(old => old.title === curr.title)) {
+            tasks.push(this.companyService.addService(companyId, curr.title, curr.description));
+          }
+        });
+
+        // 5. Sync Extra Contacts
+        const currentContacts = formValue.contacts;
+        const oldContacts = this.originalContacts().filter(c => c.type > 1);
+
+        oldContacts.forEach(old => {
+          if (!currentContacts.some((curr: any) => curr.type == old.type && curr.value === old.value)) {
+            tasks.push(this.companyService.removeContact(companyId, old.id));
+          }
+        });
+
+        currentContacts.forEach((curr: any) => {
+          if (!oldContacts.some(old => old.type == curr.type && old.value === curr.value)) {
+            tasks.push(this.companyService.addContact(companyId, Number(curr.type), curr.value, false));
           }
         });
 

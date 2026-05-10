@@ -180,7 +180,7 @@ export class AdminValidationListComponent {
       rccm: c.rccm || 'N/A',
       sectorLabel: c.sectors?.[0]?.name || 'N/A',
       city: c.cityName || 'N/A',
-      ownerName: c.ownerId, // We only have ownerId here
+      ownerName: c.ownerName || 'N/A',
       submittedAt: c.createdAt,
       status: this.mapStatus(c.status)
     }));

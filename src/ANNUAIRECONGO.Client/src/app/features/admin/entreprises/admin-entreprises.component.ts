@@ -54,7 +54,7 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                     <p class="title">{{ c.name }}</p>
                     <p class="email">{{ c.slug }}</p>
                   </td>
-                  <td>{{ c.sectors?.[0]?.name || 'N/A' }}</td>
+                  <td>{{ c.sectors[0].name || 'N/A' }}</td>
                   <td>{{ c.cityName }}</td>
                   <td class="mono">{{ c.rccm || '-' }}</td>
                   <td>

@@ -22,7 +22,6 @@ import { FR } from '@core/i18n/fr.constants';
     RouterLink,
     EmptyStateComponent,
     SkeletonComponent,
-    XafPipe,
     DatePipe
   ],
   template: `
@@ -104,7 +103,7 @@ import { FR } from '@core/i18n/fr.constants';
               <span [class]="statusClass(company()!.status)">{{ statusLabel(company()!.status) }}</span>
             </header>
             <dl class="kv">
-              <div><dt>Secteur</dt><dd>{{ company()!.sectors?.[0]?.name || 'N/A' }}</dd></div>
+              <div><dt>Secteur</dt><dd>{{ company()!.sectors[0].name || 'N/A' }}</dd></div>
               <div><dt>Ville</dt><dd>{{ company()!.cityName || 'N/A' }}</dd></div>
               <div><dt>RCCM</dt><dd>{{ company()!.rccm || 'N/A' }}</dd></div>
               <div><dt>NIU</dt><dd>{{ company()!.niu || 'N/A' }}</dd></div>
@@ -126,10 +125,10 @@ import { FR } from '@core/i18n/fr.constants';
             <header class="panel-head">
               <div>
                 <p class="panel-eyebrow">Mon abonnement</p>
-                <h2>Forfait {{ getPlanLabel(subscription()?.planName) }}</h2>
+                <h2>Forfait {{ getPlanLabel(subscription()!.planName) }}</h2>
               </div>
               @if (subscription()) {
-                <span class="badge badge-verified">{{ subscription()?.isActive ? 'Actif' : 'Inactif' }}</span>
+                <span class="badge badge-verified">{{ subscription()!.isActive ? 'Actif' : 'Inactif' }}</span>
               } @else {
                 <span class="badge badge-pending">Aucun</span>
               }

@@ -76,7 +76,7 @@ import { Company, PlatformStats, RegionStats, SectorStats, PaginatedResponse } f
                 <li class="pending-row">
                   <div>
                     <p class="pending-title">{{ p.name }}</p>
-                    <p class="pending-meta">{{ p.sectors[0]?.name || 'N/A' }} · {{ p.cityName }} · soumise le {{ p.createdAt | date:'dd/MM/yyyy' }}</p>
+                    <p class="pending-meta">{{ p.sectors[0].name || 'N/A' }} · {{ p.cityName }} · soumise le {{ p.createdAt | date:'dd/MM/yyyy' }}</p>
                   </div>
                   <a [routerLink]="['/admin/validation', p.id]" class="btn btn-outline btn-sm">Examiner</a>
                 </li>

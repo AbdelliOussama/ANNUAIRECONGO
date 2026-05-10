@@ -22,6 +22,8 @@ public static class CompanyMapper
         {
             Id = company.Id,
             OwnerId = company.OwnerId,
+            OwnerName = company.Owner?.FullName,
+            OwnerPhone = company.Owner?.Phone,
             Name = company.Name,
             Slug = company.Slug,
             Description = company.Description,

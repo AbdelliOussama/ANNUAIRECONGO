@@ -9,7 +9,7 @@ public sealed record UpdateCompanyProfileCommand(
         string? description,
         string? website,
         Guid cityId,
-        string? address,
+        string address,
         decimal? latitude,
         decimal? longitude,
         IEnumerable<Guid> sectorIds,

@@ -379,11 +379,12 @@ export class AnnuaireListComponent {
       slug: c.slug,
       name: c.name,
       sectorLabel: c.sectors?.[0]?.name || 'N/A',
-      sectorIcon:  'business',
+      sectorIcon:  c.sectors?.[0]?.iconUrl || 'business',
+      sectors: c.sectors || [],
       description: c.description || '',
       city: c.cityName || '',
       isVerified: c.status === 2,
-      isPremium:  false, // TODO: Map from subscription
+      isPremium:  c.isPremium,
     }))
   );
 

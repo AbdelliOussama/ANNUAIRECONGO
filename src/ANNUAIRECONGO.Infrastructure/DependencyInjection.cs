@@ -14,8 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using ANNUAIRECONGO.Application.Common.Interfaces;
-using ANNUAIRECONGO.Infrastructure.Identity;
 using ANNUAIRECONGO.Infrastructure;
 using ANNUAIRECONGO.Infrastructure.BackgroundServices;
 
