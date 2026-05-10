@@ -39,6 +39,7 @@ export interface CompanyImage {
 export interface CompanyDocument {
   id: string;
   fileUrl: string;
+  documentUrl?: string; // mapping for legacy code
   docType: number;
   description?: string;
   isPublic?: boolean;
@@ -46,6 +47,7 @@ export interface CompanyDocument {
 }
 
 export interface Sector {
+  id: string;      // added for compatibility
   sectorId: string;
   name: string;
   slug?: string;
@@ -63,18 +65,22 @@ export interface City {
 export interface Region {
   id: string;
   name: string;
+  cities?: City[];
 }
 
 export interface Company {
   id: string;
   name: string;
-  slug?: string;
+  slug: string;
   description?: string;
   address?: string;
   latitude?: number;
   longitude?: number;
   logoUrl?: string;
   coverUrl?: string;
+  phoneNumber?: string; // added
+  email?: string;       // added
+  websiteUrl?: string;  // added
   status: CompanyStatus;
   isFeatured: boolean;
   isVerified: boolean;
@@ -110,10 +116,11 @@ export interface Subscription {
   id: string;
   companyId: string;
   planId: string;
-  planName: number;
+  planName: string; // updated to string for UI labels
   status: number;
-  startedAt: string;  // was startDate
-  expiresAt: string;  // was endDate
+  paymentMethod: number; // added
+  startedAt: string;
+  expiresAt: string;
   isActive: boolean;
 }
 
@@ -136,12 +143,12 @@ export interface Payment {
   subscriptionId: string;
   amount: number;
   currency: string;
-  method: number;        // was paymentMethod
+  method: number;
   status: number;
-  gatewayRef?: string;   // was paymentGatewayReference
+  gatewayRef?: string;
   invoiceUrl?: string;
-  paidAt?: string;     // was createdAt
-  LastModifiedAt: string; //
+  paidAt?: string;
+  LastModifiedAt: string;
 }
 
 export enum PaymentStatus {
@@ -156,7 +163,9 @@ export enum PaymentStatus {
 export interface Notification {
   id: string;
   userId: string;
+  title: string;   // added
   message: string;
+  body?: string;   // alias for message if needed
   type: string;
   isRead: boolean;
   createdAt: string;
@@ -172,10 +181,10 @@ export enum NotificationType {
 
 export interface PlatformStats {
   totalCompanies: number;
-  totalValidatedCompanies: number;
-  totalBusinessOwners: number;
-  totalRegions: number;
-  totalSectors: number;
+  activeCompanies: number;
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  totalRevenue: number;
 }
 
 export interface RegionStats {
@@ -190,12 +199,26 @@ export interface SectorStats {
   companyCount: number;
 }
 
+export interface CompanyStats {
+  companyId: string;
+  views: number;
+  uniqueVisitors: number;
+  contactClicks: number;
+  searchAppearances: number;
+  monthly: MonthlyViewBucket[];
+}
+
+export interface MonthlyViewBucket {
+  month: string;
+  views: number;
+}
+
 export interface BusinessOwner {
-  businessOwnerId: string;  // was "id"
+  businessOwnerId: string;
   firstName: string;
   lastName: string;
   fullName: string;
-  phone: string;            // was "phoneNumber"
+  phone: string;
   companyPosition: string;
   Role: string;
   IsVerified: boolean;
@@ -204,7 +227,7 @@ export interface BusinessOwner {
 
 export interface Plan {
   id: string;
-  name: PlanName;
+  name: string;
   price: number;
   durationDays: number;
   maxImages: number;
@@ -244,6 +267,7 @@ export interface CreateCompanyRequest {
   address?: string;
   latitude?: number;
   longitude?: number;
+  logoUrl?: string; // added
   rccm?: string;
   niu?: string;
   yearFounded?: number;
@@ -259,6 +283,7 @@ export interface UpdateCompanyProfileRequest {
   address?: string;
   latitude?: number;
   longitude?: number;
+  logoUrl?: string; // added
   sectorIds?: string[];
   rccm?: string;
   niu?: string;

@@ -1,15 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockEspaceService } from '@core/services/mock/mock-espace.service';
+import { StatsService } from '@core/services/stats.service';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { FR } from '@core/i18n/fr.constants';
+import { switchMap, of, catchError } from 'rxjs';
+import { BusinessOwner, CompanyStats } from '@core/models/company.model';
 
-/**
- * /espace/statistiques — KPI dashboard for the owner's fiche.
- * Audit P2 — page absente du livrable initial.
- *
- * Visualisation: 4 KPI tiles + a small pure-SVG bar chart for monthly views.
- */
 @Component({
   selector: 'ac-espace-statistiques',
   standalone: true,
@@ -32,28 +29,28 @@ import { FR } from '@core/i18n/fr.constants';
           <article class="kpi">
             <span class="kpi-icon"><span class="material-symbols-outlined" aria-hidden="true">visibility</span></span>
             <div>
-              <p class="kpi-value">{{ format(stats()!.views) }}</p>
+              <p class="kpi-value">{{ format(stats()?.views || 0) }}</p>
               <p class="kpi-label">Vues totales</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon"><span class="material-symbols-outlined" aria-hidden="true">person</span></span>
             <div>
-              <p class="kpi-value">{{ format(stats()!.uniqueVisitors) }}</p>
+              <p class="kpi-value">{{ format(stats()?.uniqueVisitors || 0) }}</p>
               <p class="kpi-label">Visiteurs uniques</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon"><span class="material-symbols-outlined" aria-hidden="true">touch_app</span></span>
             <div>
-              <p class="kpi-value">{{ format(stats()!.contactClicks) }}</p>
+              <p class="kpi-value">{{ format(stats()?.contactClicks || 0) }}</p>
               <p class="kpi-label">Clics sur contact</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon"><span class="material-symbols-outlined" aria-hidden="true">search</span></span>
             <div>
-              <p class="kpi-value">{{ format(stats()!.searchAppearances) }}</p>
+              <p class="kpi-value">{{ format(stats()?.searchAppearances || 0) }}</p>
               <p class="kpi-label">Apparitions en recherche</p>
             </div>
           </article>
@@ -171,9 +168,20 @@ import { FR } from '@core/i18n/fr.constants';
 })
 export class EspaceStatistiquesComponent {
   protected readonly FR = FR;
-  private readonly espace = inject(MockEspaceService);
+  private readonly statsService = inject(StatsService);
+  private readonly ownerService = inject(BusinessOwnerService);
 
-  protected readonly stats = toSignal(this.espace.ficheStats$(), { initialValue: null });
+  protected readonly stats = toSignal(
+    this.ownerService.getCurrentOwner().pipe(
+      switchMap((owner: BusinessOwner) => {
+        if (!owner || !owner.Companies?.length) return of(null);
+        return this.statsService.getCompanyStats(owner.Companies[0].id);
+      }),
+      catchError(() => of(null))
+    ),
+    { initialValue: null as CompanyStats | null }
+  );
+
   protected readonly loading = computed(() => this.stats() === null);
 
   protected readonly barWidth = 60;
@@ -182,7 +190,7 @@ export class EspaceStatistiquesComponent {
   protected readonly bars = computed(() => {
     const m = this.stats()?.monthly ?? [];
     if (!m.length) return [];
-    const max = Math.max(...m.map((x) => x.views));
+    const max = Math.max(...m.map((x) => x.views), 1);
     const chartHeight = 180;
     const startY = 40;
     const startX = 80;

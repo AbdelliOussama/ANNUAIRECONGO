@@ -1,16 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminUser } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ToastService } from '@shared/services/toast.service';
 import { ModalService } from '@shared/services/modal.service';
+import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
 
-type RoleFilter = 'all' | 'super-admin' | 'admin' | 'entreprise';
+type RoleFilter = 'all' | 'SuperAdmin' | 'Admin' | 'BusinessOwner';
 
-/**
- * /admin/utilisateurs — gestion des comptes (Super-Admin scope).
- * Audit P1 — page absente du livrable initial.
- */
 @Component({
   selector: 'ac-admin-utilisateurs',
   standalone: true,
@@ -41,7 +38,7 @@ type RoleFilter = 'all' | 'super-admin' | 'admin' | 'entreprise';
               role="tab"
               [attr.aria-selected]="role() === f.value"
               [class.is-active]="role() === f.value"
-              (click)="role.set(f.value)"
+              (click)="onRoleChange(f.value)"
             >{{ f.label }}</button>
           }
         </div>
@@ -56,8 +53,6 @@ type RoleFilter = 'all' | 'super-admin' | 'admin' | 'entreprise';
               <tr>
                 <th>Utilisateur</th>
                 <th>Rôle</th>
-                <th>Entreprise</th>
-                <th>Dernière connexion</th>
                 <th>Statut</th>
                 <th class="sr-only">Actions</th>
               </tr>
@@ -66,31 +61,30 @@ type RoleFilter = 'all' | 'super-admin' | 'admin' | 'entreprise';
               @for (u of rows(); track u.id) {
                 <tr>
                   <td class="name">
-                    <p class="title">{{ u.fullName }}</p>
+                    <p class="title">{{ u.firstName }} {{ u.lastName }}</p>
                     <p class="email">{{ u.email }}</p>
                   </td>
-                  <td><span [class]="roleClass(u.role)">{{ roleLabel(u.role) }}</span></td>
-                  <td>{{ u.companyName || '—' }}</td>
-                  <td class="mono">{{ u.lastLogin }}</td>
-                  <td><span [class]="statusClass(u.status)">{{ statusLabel(u.status) }}</span></td>
-                  <td class="actions-col">
-                    @if (u.status !== 'invite') {
-                      <button
-                        type="button"
-                        class="link"
-                        (click)="toggle(u)"
-                        [attr.aria-label]="(u.status === 'actif' ? 'Suspendre ' : 'Réactiver ') + u.fullName"
-                      >
-                        {{ u.status === 'actif' ? 'Suspendre' : 'Réactiver' }}
-                      </button>
+                  <td><span [class]="roleClass(u.role)">{{ u.role }}</span></td>
+                  <td>
+                    @if (u.emailConfirmed) {
+                      <span class="badge badge-verified">Actif</span>
                     } @else {
-                      <span class="muted">Invitation envoyée</span>
+                      <span class="badge badge-pending">Non vérifié</span>
                     }
+                  </td>
+                  <td class="actions-col">
+                    <button
+                      type="button"
+                      class="link"
+                      (click)="toggle(u)"
+                    >
+                      Gérer
+                    </button>
                   </td>
                 </tr>
               }
               @if (rows().length === 0) {
-                <tr><td colspan="6" class="empty">Aucun utilisateur ne correspond à ces critères.</td></tr>
+                <tr><td colspan="4" class="empty">Aucun utilisateur ne correspond à ces critères.</td></tr>
               }
             </tbody>
           </table>
@@ -133,21 +127,15 @@ type RoleFilter = 'all' | 'super-admin' | 'admin' | 'entreprise';
     .actions-col { text-align: right; }
     .link { background: none; border: none; cursor: pointer; color: var(--color-primary); font-weight: 700; padding: 0; font: inherit; }
     .link:hover { text-decoration: underline; }
-    .muted { color: var(--color-outline); font-size: 12px; }
 
     .role { display: inline-flex; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-    .role-super-admin { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
-    .role-admin       { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); }
-    .role-entreprise  { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
-
-    .status { display: inline-flex; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-    .status-actif    { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
-    .status-suspendu { background: var(--color-error-container); color: var(--color-on-error-container); }
-    .status-invite   { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
+    .role-SuperAdmin { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
+    .role-Admin      { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); }
+    .role-BusinessOwner { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
   `],
 })
 export class AdminUtilisateursComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
   private readonly toast = inject(ToastService);
   private readonly modal = inject(ModalService);
 
@@ -155,66 +143,48 @@ export class AdminUtilisateursComponent {
   protected readonly role  = signal<RoleFilter>('all');
 
   protected readonly roleFilters: ReadonlyArray<{ value: RoleFilter; label: string }> = [
-    { value: 'all',         label: 'Tous'        },
-    { value: 'super-admin', label: 'Super-Admin' },
-    { value: 'admin',       label: 'Admin'       },
-    { value: 'entreprise',  label: 'Entreprise'  },
+    { value: 'all',           label: 'Tous'        },
+    { value: 'SuperAdmin',    label: 'Super-Admin' },
+    { value: 'Admin',         label: 'Admin'       },
+    { value: 'BusinessOwner', label: 'Entreprise'  },
   ];
 
-  private readonly initial = toSignal(this.admin.users$(), { initialValue: [] as AdminUser[] });
-  protected readonly users = signal<AdminUser[]>([]);
-  // Hydrate once
-  private readonly _ = computed(() => {
-    const v = this.initial();
-    if (v.length && this.users().length === 0) this.users.set([...v]);
-    return null;
-  });
-  constructor() { this._(); }
-
-  protected readonly loading = computed(() => this.users().length === 0 && this.firstLoad());
-  private readonly firstLoad = signal(true);
-  // (firstLoad clears once users hydrated)
-  private readonly __ = computed(() => { if (this.users().length) this.firstLoad.set(false); return null; });
+  private readonly trigger = new BehaviorSubject<void>(undefined);
+  
+  private readonly result = toSignal(
+    this.trigger.pipe(
+      debounceTime(300),
+      switchMap(() => this.adminService.getUsers(1, 50)),
+      catchError(() => of({ items: [] as any[] }))
+    ),
+    { initialValue: { items: [] as any[] } }
+  );
 
   protected readonly rows = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    const role = this.role();
-    return this.users().filter((u) =>
-      (role === 'all' || u.role === role) &&
-      (!q || [u.fullName, u.email, u.companyName ?? ''].some((v) => v.toLowerCase().includes(q)))
+    const q = this.query().toLowerCase();
+    const r = this.role();
+    return this.result().items.filter(u => 
+      (r === 'all' || u.role === r) &&
+      (u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
     );
   });
 
-  protected onQuery(e: Event): void { this.query.set((e.target as HTMLInputElement).value); }
+  protected readonly loading = computed(() => this.result().items.length === 0 && this.query() === '');
 
-  protected async toggle(u: AdminUser): Promise<void> {
-    const next = u.status === 'actif' ? 'suspendu' : 'actif';
-    const { confirmed } = await this.modal.confirm({
-      title: next === 'suspendu' ? `Suspendre ${u.fullName} ?` : `Réactiver ${u.fullName} ?`,
-      body: next === 'suspendu'
-        ? 'L\'utilisateur ne pourra plus se connecter jusqu\'à réactivation.'
-        : 'L\'utilisateur pourra de nouveau se connecter immédiatement.',
-      tone: next === 'suspendu' ? 'danger' : 'confirm',
-      confirmLabel: next === 'suspendu' ? 'Suspendre' : 'Réactiver',
-    });
-    if (!confirmed) return;
-
-    this.admin.toggleUser(u.id).subscribe(() => {
-      this.users.update((list) =>
-        list.map((x) => x.id === u.id ? { ...x, status: next as AdminUser['status'] } : x)
-      );
-      this.toast.success(next === 'suspendu'
-        ? `${u.fullName} a été suspendu(e).`
-        : `${u.fullName} est de nouveau actif(ve).`);
-    });
+  protected onQuery(e: Event): void {
+    this.query.set((e.target as HTMLInputElement).value);
+    this.trigger.next();
   }
 
-  protected roleLabel(r: AdminUser['role']): string {
-    return ({ 'super-admin': 'Super-Admin', admin: 'Admin', entreprise: 'Entreprise' } as const)[r];
+  protected onRoleChange(r: RoleFilter): void {
+    this.role.set(r);
+    this.trigger.next();
   }
-  protected roleClass(r: AdminUser['role']): string { return `role role-${r}`; }
-  protected statusLabel(s: AdminUser['status']): string {
-    return ({ actif: 'Actif', suspendu: 'Suspendu', invite: 'Invité' } as const)[s];
+
+  protected async toggle(u: any): Promise<void> {
+    // Implement user management actions (e.g. suspend)
+    this.toast.info('Fonctionnalité en cours de déploiement sur le backend Identity.');
   }
-  protected statusClass(s: AdminUser['status']): string { return `status status-${s}`; }
+
+  protected roleClass(r: string): string { return `role role-${r}`; }
 }

@@ -1,23 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, of } from 'rxjs';
+import { switchMap, of, catchError, map, tap } from 'rxjs';
+import { Params } from '@angular/router';
 import { TabsComponent, TabDescriptor } from '@shared/ui/tabs/tabs.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
-import { MockCompanyService } from '@core/services/mock/mock-company.service';
+import { CompanyService } from '@core/services/company.service';
+import { Company, CompanyContact, CompanyDocument, ContactType, DocumentType as DocTypeEnum } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 
 type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
 
-/**
- * /annuaire/:slug — fiche entreprise.
- *
- * Audit fixes baked in:
- *  - M6 : the tabs are functional (not inert buttons)
- *  - P13: phone numbers and emails use tel: / mailto:
- *  - C1 : every label is in French, no RDC mention.
- */
 @Component({
   selector: 'ac-fiche-entreprise',
   standalone: true,
@@ -38,7 +32,7 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
           <div style="margin-top:12px;"><ac-skeleton shape="text" /></div>
         </div>
       </div>
-    } @else if (!company()) {
+    } @else if (!fiche()) {
       <div class="container">
         <ac-empty-state
           icon="business_off"
@@ -56,35 +50,43 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
           <span aria-hidden="true">›</span>
           <a routerLink="/annuaire">Annuaire</a>
           <span aria-hidden="true">›</span>
-          <span class="current" aria-current="page">{{ company()!.name }}</span>
+          <span class="current" aria-current="page">{{ fiche()!.name }}</span>
         </nav>
 
         <!-- Header -->
         <header class="head">
           <div class="logo" aria-hidden="true">
-            <span class="material-symbols-outlined">{{ company()!.sectorIcon }}</span>
+            @if (fiche()!.logoUrl) {
+              <img [src]="fiche()!.logoUrl" [alt]="fiche()!.name" class="logo-img" />
+            } @else {
+              <span class="material-symbols-outlined">{{ fiche()!.sectorIcon }}</span>
+            }
           </div>
           <div class="head-info">
             <div class="badges">
-              @if (company()!.isVerified) { <span class="badge badge-verified">Vérifiée RCCM</span> }
-              @if (company()!.isPremium)  { <span class="badge badge-premium">Premium</span> }
-              <span class="badge badge-free">{{ company()!.sectorLabel }}</span>
+              @if (fiche()!.isVerified) { <span class="badge badge-verified">Vérifiée RCCM</span> }
+              @if (fiche()!.isPremium)  { <span class="badge badge-premium">Premium</span> }
+              <span class="badge badge-free">{{ fiche()!.sectorLabel }}</span>
             </div>
-            <h1 class="title">{{ company()!.name }}</h1>
+            <h1 class="title">{{ fiche()!.name }}</h1>
             <p class="city">
               <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
-              {{ company()!.city }}, {{ company()!.region }}
+              {{ fiche()!.city }}{{ fiche()!.region ? ', ' + fiche()!.region : '' }}
             </p>
           </div>
           <div class="actions">
-            <a [href]="'tel:' + company()!.phone" class="btn btn-outline">
-              <span class="material-symbols-outlined" aria-hidden="true">call</span>
-              Appeler
-            </a>
-            <a [href]="'mailto:' + company()!.email" class="btn btn-primary">
-              <span class="material-symbols-outlined" aria-hidden="true">mail</span>
-              Contacter
-            </a>
+            @if (fiche()!.phone) {
+              <a [href]="'tel:' + fiche()!.phone" class="btn btn-outline" (click)="trackClick(0)">
+                <span class="material-symbols-outlined" aria-hidden="true">call</span>
+                Appeler
+              </a>
+            }
+            @if (fiche()!.email) {
+              <a [href]="'mailto:' + fiche()!.email" class="btn btn-primary" (click)="trackClick(1)">
+                <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+                Contacter
+              </a>
+            }
           </div>
         </header>
 
@@ -101,48 +103,72 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
                  [attr.aria-labelledby]="'tab-' + activeTab()" class="panel">
           @switch (activeTab()) {
             @case ('apropos') {
-              <h2 class="panel-title">À propos de {{ company()!.name }}</h2>
-              <p class="lead">{{ company()!.longDescription }}</p>
+              <h2 class="panel-title">À propos de {{ fiche()!.name }}</h2>
+              <p class="lead">{{ fiche()!.description }}</p>
               <dl class="kv">
-                <div><dt>Année de création</dt><dd>{{ company()!.yearFounded }}</dd></div>
-                <div><dt>Numéro RCCM</dt><dd>{{ company()!.rccm }}</dd></div>
-                <div><dt>NIU</dt><dd>{{ company()!.niu }}</dd></div>
-                <div><dt>Secteur</dt><dd>{{ company()!.sectorLabel }}</dd></div>
+                <div><dt>Année de création</dt><dd>{{ fiche()!.yearFounded || 'N/A' }}</dd></div>
+                <div><dt>Numéro RCCM</dt><dd>{{ fiche()!.rccm || 'N/A' }}</dd></div>
+                <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
+                <div><dt>Secteur</dt><dd>{{ fiche()!.sectorLabel }}</dd></div>
               </dl>
             }
             @case ('contacts') {
               <h2 class="panel-title">Contacts</h2>
               <ul class="contact-list">
-                <li>
-                  <span class="material-symbols-outlined text-primary" aria-hidden="true">call</span>
-                  <a [href]="'tel:' + company()!.phone">{{ company()!.phone }}</a>
-                </li>
-                <li>
-                  <span class="material-symbols-outlined text-primary" aria-hidden="true">mail</span>
-                  <a [href]="'mailto:' + company()!.email">{{ company()!.email }}</a>
-                </li>
-                <li>
-                  <span class="material-symbols-outlined text-primary" aria-hidden="true">language</span>
-                  <a [href]="company()!.website" target="_blank" rel="noopener">{{ company()!.website }}</a>
-                </li>
+                @for (c of fiche()!.allContacts; track c.id) {
+                  <li>
+                    <span class="material-symbols-outlined text-primary" aria-hidden="true">{{ getContactIcon(c.type) }}</span>
+                    @if (c.type === 0) {
+                      <a [href]="'tel:' + c.value" (click)="trackClick(0)">{{ c.value }}</a>
+                    } @else if (c.type === 1) {
+                      <a [href]="'mailto:' + c.value" (click)="trackClick(1)">{{ c.value }}</a>
+                    } @else {
+                      <a [href]="c.value" target="_blank" rel="noopener" (click)="trackClick(c.type)">{{ c.value }}</a>
+                    }
+                  </li>
+                } @empty {
+                  <p class="muted">Aucun contact public renseigné.</p>
+                }
                 <li>
                   <span class="material-symbols-outlined text-primary" aria-hidden="true">location_on</span>
-                  {{ company()!.address }}, {{ company()!.city }}
+                  {{ fiche()!.address }}, {{ fiche()!.city }}
                 </li>
               </ul>
             }
             @case ('galerie') {
               <h2 class="panel-title">Galerie</h2>
-              <p class="muted">Aucune photo n'a encore été déposée par cette entreprise.</p>
+              <div class="gallery-grid">
+                @for (img of fiche()!.gallery; track img.id) {
+                  <div class="gallery-item">
+                    <img [src]="img.imageUrl" [alt]="img.caption || fiche()!.name" loading="lazy" />
+                    @if (img.caption) { <p class="caption">{{ img.caption }}</p> }
+                  </div>
+                } @empty {
+                  <p class="muted">Aucune photo n'a encore été déposée par cette entreprise.</p>
+                }
+              </div>
             }
             @case ('localisation') {
               <h2 class="panel-title">Localisation</h2>
-              <p class="muted">{{ company()!.address }}, {{ company()!.city }}, {{ company()!.region }}.</p>
-              <p class="muted">La carte interactive sera disponible une fois la couche cartographique branchée sur ce profil.</p>
+              <p class="muted">{{ fiche()!.address }}, {{ fiche()!.city }}, {{ fiche()!.region }}.</p>
+              <p class="muted">La carte interactive sera bientôt disponible.</p>
             }
             @case ('documents') {
               <h2 class="panel-title">Documents légaux</h2>
-              <p class="muted">Cette fiche n'a pas encore publié de documents téléchargeables.</p>
+              <ul class="doc-list">
+                @for (doc of fiche()!.publicDocuments; track doc.id) {
+                  <li>
+                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                    <div class="doc-info">
+                      <strong>{{ getDocLabel(doc.docType) }}</strong>
+                      <p>{{ doc.description || 'Document sans description' }}</p>
+                    </div>
+                    <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
+                  </li>
+                } @empty {
+                  <p class="muted">Cette fiche n'a pas encore publié de documents téléchargeables.</p>
+                }
+              </ul>
             }
             @case ('dirigeants') {
               <h2 class="panel-title">Dirigeants</h2>
@@ -186,8 +212,10 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
       border-radius: var(--radius-xl);
       display: inline-flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
     }
     .logo .material-symbols-outlined { color: var(--color-primary); font-size: 40px; }
+    .logo-img { width: 100%; height: 100%; object-fit: cover; }
 
     .head-info { flex: 1; min-width: 0; }
     .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -251,6 +279,21 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
     .contact-list a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
     .contact-list a:hover { text-decoration: underline; }
 
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .gallery-item img { width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-lg); }
+    .gallery-item .caption { font-size: 12px; color: var(--color-outline); margin-top: 4px; }
+
+    .doc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+    .doc-list li {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--color-surface-container-low);
+      padding: 12px 16px;
+      border-radius: var(--radius-lg);
+    }
+    .doc-info { flex: 1; }
+    .doc-info strong { font-size: 14px; display: block; color: var(--color-on-surface); }
+    .doc-info p { font-size: 12px; color: var(--color-on-surface-variant); margin: 2px 0 0; }
+
     .muted { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.6; }
 
     @keyframes ac-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
@@ -258,7 +301,7 @@ type FicheTab = 'apropos' | 'contacts' | 'galerie' | 'localisation' | 'documents
 })
 export class FicheEntrepriseComponent {
   protected readonly FR = FR;
-  private readonly companyService = inject(MockCompanyService);
+  private readonly companyService = inject(CompanyService);
   private readonly route          = inject(ActivatedRoute);
 
   protected readonly tabs: TabDescriptor[] = [
@@ -270,17 +313,73 @@ export class FicheEntrepriseComponent {
     { id: 'dirigeants',  label: 'Dirigeants',  icon: 'badge' },
   ];
   protected readonly activeTab = signal<FicheTab>('apropos');
-
-  protected readonly company = toSignal(
+  protected readonly loading = signal(true);
+  private readonly companyData = toSignal<Company | null>(
     this.route.params.pipe(
-      switchMap((p) => this.companyService.getBySlug(p['id'] ?? p['slug'] ?? ''))
+      tap(() => this.loading.set(true)),
+      switchMap((p: Params) => this.companyService.getCompanyBySlug(p['id'] ?? p['slug'] ?? '').pipe(
+        map((res: Company) => { this.loading.set(false); return res; }),
+        catchError(() => { this.loading.set(false); return of(null); })
+      ))
     ),
-    { initialValue: undefined }
+    { initialValue: null }
   );
 
-  protected readonly loading = computed(() => this.company() === undefined);
+  protected readonly fiche = computed(() => {
+    const c = this.companyData();
+    if (!c) return null;
+
+    return {
+      id: c.id,
+      name: c.name,
+      description: c.description || 'Aucune description.',
+      logoUrl: c.logoUrl,
+      isVerified: c.isVerified,
+      isPremium: c.isPremium,
+      sectorLabel: c.sectors?.[0]?.name || 'N/A',
+      sectorIcon: c.sectors?.[0]?.iconUrl || 'business',
+      city: c.cityName || 'N/A',
+      region: c.regionName || '',
+      phone: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Phone)?.value,
+      email: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Email)?.value,
+      website: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Website)?.value,
+      allContacts: c.contacts || [],
+      address: c.address || 'N/A',
+      yearFounded: c.yearFounded,
+      rccm: c.rccm,
+      niu: c.niu,
+      gallery: c.images || [],
+      publicDocuments: c.documents?.filter((d: CompanyDocument) => d.isPublic) || [],
+    };
+  });
 
   protected setTab(id: string): void {
     this.activeTab.set(id as FicheTab);
+  }
+
+  protected getContactIcon(type: number): string {
+    switch(type) {
+      case ContactType.Phone: return 'call';
+      case ContactType.Email: return 'mail';
+      case ContactType.Website: return 'language';
+      case ContactType.WhatsApp: return 'chat';
+      default: return 'link';
+    }
+  }
+
+  protected getDocLabel(type: number): string {
+    switch(type) {
+      case DocTypeEnum.RCCM: return 'RCCM';
+      case DocTypeEnum.NIF: return 'NIU / NIF';
+      case DocTypeEnum.Patent: return 'Brevet';
+      default: return 'Document';
+    }
+  }
+
+  protected trackClick(type: number): void {
+    const id = this.fiche()?.id;
+    if (id) {
+      this.companyService.trackContactClick(id, type).subscribe();
+    }
   }
 }

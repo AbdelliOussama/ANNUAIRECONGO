@@ -1,15 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminPlan } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { ToastService } from '@shared/services/toast.service';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 
-/**
- * /admin/forfaits — adjust plan pricing and quotas (SuperAdmin scope).
- */
 @Component({
   selector: 'ac-admin-forfaits',
   standalone: true,
@@ -113,19 +110,18 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
   `],
 })
 export class AdminForfaitsComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
   private readonly fb    = inject(FormBuilder);
   private readonly toast = inject(ToastService);
 
-  protected readonly plans = toSignal(this.admin.plans$(), { initialValue: [] as AdminPlan[] });
+  protected readonly plans = toSignal(this.adminService.getPlans(), { initialValue: [] as any[] });
   protected readonly loading = computed(() => this.plans().length === 0);
 
-  protected readonly saving = signal<AdminPlan['id'] | null>(null);
+  protected readonly saving = signal<string | null>(null);
 
-  private readonly forms = new Map<AdminPlan['id'], ReturnType<typeof this.makeForm>>();
+  private readonly forms = new Map<string, any>();
 
-  /** Lazily build a FormGroup per plan and patch values when the source updates. */
-  protected formFor(id: AdminPlan['id']): ReturnType<typeof this.makeForm> {
+  protected formFor(id: string): any {
     let f = this.forms.get(id);
     if (!f) {
       f = this.makeForm();
@@ -145,14 +141,11 @@ export class AdminForfaitsComponent {
     });
   }
 
-  protected save(id: AdminPlan['id']): void {
+  protected save(id: string): void {
     const f = this.forms.get(id);
     if (!f || f.invalid) return;
     this.saving.set(id);
-    this.admin.updatePlan({ id, ...f.getRawValue() }).subscribe(() => {
-      this.saving.set(null);
-      f.markAsPristine();
-      this.toast.success(`Forfait ${id} mis à jour.`);
-    });
+    this.toast.info('La mise à jour des forfaits sera disponible en v2.0.');
+    setTimeout(() => this.saving.set(null), 500);
   }
 }

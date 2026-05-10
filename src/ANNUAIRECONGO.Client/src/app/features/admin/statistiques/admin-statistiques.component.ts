@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
+import { PlatformStats } from '@core/models/company.model';
 
 @Component({
   selector: 'ac-admin-statistiques',
@@ -21,34 +22,37 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
         <ac-skeleton shape="card" height="240px" />
       } @else {
         <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <article class="kpi"><span class="kpi-icon"><span class="material-symbols-outlined">apartment</span></span><div><p class="kpi-value">{{ stats()!.totalCompanies }}</p><p class="kpi-label">Entreprises</p></div></article>
-          <article class="kpi"><span class="kpi-icon"><span class="material-symbols-outlined">person</span></span><div><p class="kpi-value">{{ stats()!.activeOwners }}</p><p class="kpi-label">Dirigeants actifs</p></div></article>
-          <article class="kpi"><span class="kpi-icon"><span class="material-symbols-outlined">trending_up</span></span><div><p class="kpi-value">{{ stats()!.newSignupsThisWeek }}</p><p class="kpi-label">Inscriptions / semaine</p></div></article>
-          <article class="kpi"><span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span><div><p class="kpi-value">{{ stats()!.monthlyRevenueXAF | xaf }}</p><p class="kpi-label">Revenu mensuel</p></div></article>
+          <article class="kpi">
+            <span class="kpi-icon"><span class="material-symbols-outlined">apartment</span></span>
+            <div><p class="kpi-value">{{ stats()?.totalCompanies }}</p><p class="kpi-label">Entreprises</p></div>
+          </article>
+          <article class="kpi">
+            <span class="kpi-icon"><span class="material-symbols-outlined">verified</span></span>
+            <div><p class="kpi-value">{{ stats()?.activeCompanies }}</p><p class="kpi-label">Vérifiées</p></div>
+          </article>
+          <article class="kpi">
+            <span class="kpi-icon"><span class="material-symbols-outlined">subscriptions</span></span>
+            <div><p class="kpi-value">{{ stats()?.activeSubscriptions }}</p><p class="kpi-label">Abonnements actifs</p></div>
+          </article>
+          <article class="kpi">
+            <span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span>
+            <div><p class="kpi-value">{{ stats()?.totalRevenue | xaf }}</p><p class="kpi-label">Revenu total</p></div>
+          </article>
         </section>
 
         <section class="panel">
-          <h2>Répartition par forfait</h2>
-          <ul class="bars">
-            @for (p of stats()!.byPlan; track p.label) {
-              <li>
-                <div class="bar-head"><span>{{ p.label }}</span><span class="bar-value">{{ p.value }}</span></div>
-                <div class="bar-track"><div class="bar-fill" [style.width.%]="(p.value / maxBy(stats()!.byPlan)) * 100"></div></div>
-              </li>
-            }
-          </ul>
-        </section>
-
-        <section class="panel">
-          <h2>Répartition par statut</h2>
-          <ul class="bars">
-            @for (s of stats()!.byStatus; track s.label) {
-              <li>
-                <div class="bar-head"><span>{{ s.label }}</span><span class="bar-value">{{ s.value }}</span></div>
-                <div class="bar-track"><div class="bar-fill" [style.width.%]="(s.value / maxBy(stats()!.byStatus)) * 100"></div></div>
-              </li>
-            }
-          </ul>
+          <h2>Résumé financier</h2>
+          <p class="muted">Le chiffre d'affaires cumulé reflète l'ensemble des souscriptions validées.</p>
+          <div class="revenue-grid">
+            <div class="rev-item">
+              <p class="rev-label">Total Revenu</p>
+              <p class="rev-value">{{ stats()?.totalRevenue | xaf }}</p>
+            </div>
+            <div class="rev-item">
+              <p class="rev-label">Abonnements Totaux</p>
+              <p class="rev-value">{{ stats()?.totalSubscriptions }}</p>
+            </div>
+          </div>
         </section>
       }
     </div>
@@ -66,18 +70,16 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
 
     .panel { background: var(--color-surface-container-lowest); border: 1px solid var(--color-outline-variant); border-radius: var(--radius-2xl); padding: 24px; }
     .panel h2 { font-family: var(--font-headline); font-size: 20px; font-weight: 700; margin: 0 0 18px; }
-    .bars { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .bar-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-on-surface); }
-    .bar-value { color: var(--color-primary); font-weight: 700; }
-    .bar-track { height: 10px; background: var(--color-surface-container); border-radius: var(--radius-full); overflow: hidden; margin-top: 4px; }
-    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-primary-container)); border-radius: var(--radius-full); }
+    .muted { color: var(--color-on-surface-variant); font-size: 13px; margin: -12px 0 24px; }
+    
+    .revenue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .rev-item { padding: 20px; background: var(--color-surface-container-low); border-radius: var(--radius-lg); }
+    .rev-label { font-size: 12px; color: var(--color-outline); margin: 0 0 8px; text-transform: uppercase; }
+    .rev-value { font-size: 24px; font-weight: 800; margin: 0; color: var(--color-primary); }
   `],
 })
 export class AdminStatistiquesComponent {
-  private readonly admin = inject(MockAdminService);
-  protected readonly stats = toSignal(this.admin.stats(), { initialValue: null });
+  private readonly adminService = inject(AdminService);
+  protected readonly stats = toSignal(this.adminService.getAdminStats(), { initialValue: null });
   protected readonly loading = computed(() => this.stats() === null);
-  protected maxBy(items: { value: number }[]): number {
-    return Math.max(1, ...items.map((x) => x.value));
-  }
 }

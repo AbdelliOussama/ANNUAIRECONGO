@@ -9,16 +9,24 @@ import { Notification } from '../models/company.model';
 export class NotificationService {
   private readonly api = inject(ApiService);
 
-  getMyNotifications(): Observable<Notification[]> {
+  getNotifications(): Observable<Notification[]> {
     return this.api.get<Notification[]>('/api/v1/notifications');
+  }
+
+  getMyNotifications(): Observable<Notification[]> {
+    return this.getNotifications();
   }
 
   markAsRead(id: string): Observable<void> {
     return this.api.put<void>(`/api/v1/notifications/${id}/read`, {});
   }
 
-  markAllRead(): Observable<void> {
+  markAllAsRead(): Observable<void> {
     return this.api.put<void>('/api/v1/notifications/read-all', {});
+  }
+
+  markAllRead(): Observable<void> {
+    return this.markAllAsRead();
   }
 
   deleteNotification(id: string): Observable<void> {

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PlatformStats, RegionStats, SectorStats } from '../models/company.model';
+import { PlatformStats, RegionStats, SectorStats, CompanyStats } from '../models/company.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,5 +19,9 @@ export class StatsService {
 
   getSectorStats(): Observable<SectorStats[]> {
     return this.api.get<SectorStats[]>('/api/v1/stats/sectors');
+  }
+
+  getCompanyStats(companyId: string): Observable<CompanyStats> {
+    return this.api.get<CompanyStats>(`/api/v1/stats/companies/${companyId}`);
   }
 }

@@ -1,12 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminRegion } from '@core/services/mock/mock-admin.service';
+import { CompanyService } from '@core/services/company.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { Region } from '@core/models/company.model';
 
-/**
- * /admin/geographie — read-only view of regions / cities.
- * CRUD wiring is deferred to the real API integration.
- */
 @Component({
   selector: 'ac-admin-geographie',
   standalone: true,
@@ -30,7 +27,7 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
                 <span class="icon" aria-hidden="true">
                   <span class="material-symbols-outlined">public</span>
                 </span>
-                <span class="count">{{ r.cities.length }} ville(s)</span>
+                <span class="count">{{ r.cities?.length || 0 }} ville(s)</span>
               </header>
               <h3>{{ r.name }}</h3>
               <ul class="cities">
@@ -64,7 +61,7 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
   `],
 })
 export class AdminGeographieComponent {
-  private readonly admin = inject(MockAdminService);
-  protected readonly regions = toSignal(this.admin.regions$(), { initialValue: [] as AdminRegion[] });
+  private readonly companyService = inject(CompanyService);
+  protected readonly regions = toSignal(this.companyService.getRegions(), { initialValue: [] as Region[] });
   protected readonly loading = computed(() => this.regions().length === 0);
 }

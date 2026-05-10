@@ -24,6 +24,10 @@ export class BusinessOwnerService {
     return this.api.get<BusinessOwner>(`/api/v1/business-owners/${id}`);
   }
 
+  getCurrentOwner(): Observable<BusinessOwner> {
+    return this.api.get<BusinessOwner>('/api/v1/business-owners/me');
+  }
+
   getMyCompanies(): Observable<Company[]> {
     return this.api.get<Company[]>('/api/v1/business-owners/my-companies');
   }

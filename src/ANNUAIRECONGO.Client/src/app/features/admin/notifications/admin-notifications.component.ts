@@ -1,15 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminNotification } from '@core/services/mock/mock-admin.service';
+import { NotificationService } from '@core/services/notification.service';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { DatePipe } from '@angular/common';
+import { Notification } from '@core/models/company.model';
 
-/** /admin/notifications — admin inbox (read-only for now). */
 @Component({
   selector: 'ac-admin-notifications',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyStateComponent, SkeletonComponent],
+  imports: [EmptyStateComponent, SkeletonComponent, DatePipe],
   template: `
     <div class="page">
       <header class="page-head">
@@ -25,16 +26,16 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
       } @else {
         <ul class="list">
           @for (n of items(); track n.id) {
-            <li [class]="'item tone-' + n.tone" [class.is-unread]="!n.isRead">
+            <li class="item" [class.is-unread]="!n.isRead">
               <div class="dot" aria-hidden="true">
-                <span class="material-symbols-outlined icon-filled">{{ icon(n.tone) }}</span>
+                <span class="material-symbols-outlined icon-filled">notifications</span>
               </div>
               <div class="body">
                 <div class="head-row">
                   <p class="title">{{ n.title }}</p>
-                  <span class="date">{{ n.createdAt }}</span>
+                  <span class="date">{{ n.createdAt | date:'short' }}</span>
                 </div>
-                <p class="text">{{ n.body }}</p>
+                <p class="text">{{ n.message }}</p>
               </div>
             </li>
           }
@@ -59,11 +60,7 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
       border-radius: var(--radius-xl);
     }
     .item.is-unread { background: rgba(0, 78, 52, 0.04); border-color: rgba(0, 78, 52, 0.18); }
-    .dot { width: 40px; height: 40px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .tone-success .dot { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
-    .tone-info    .dot { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); }
-    .tone-warning .dot { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
-    .tone-error   .dot { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .dot { width: 40px; height: 40px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
 
     .head-row { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; }
     .title { font-size: 15px; font-weight: 700; color: var(--color-on-surface); margin: 0; }
@@ -72,11 +69,10 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
   `],
 })
 export class AdminNotificationsComponent {
-  private readonly admin = inject(MockAdminService);
-  protected readonly items = toSignal(this.admin.notifications$(), { initialValue: [] as AdminNotification[] });
-  protected readonly loading = computed(() => this.items().length === 0);
-
-  protected icon(tone: AdminNotification['tone']): string {
-    return ({ success: 'check_circle', info: 'info', warning: 'warning', error: 'error' } as const)[tone];
-  }
+  private readonly notificationService = inject(NotificationService);
+  protected readonly items = toSignal(this.notificationService.getNotifications(), { initialValue: [] as Notification[] });
+  protected readonly loading = computed(() => this.items().length === 0 && this.firstLoad());
+  private readonly firstLoad = signal(true);
+  constructor() { setTimeout(() => this.firstLoad.set(false), 500); }
 }
+

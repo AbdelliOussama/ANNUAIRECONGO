@@ -1,23 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest } from 'rxjs';
-import { MockEspaceService } from '@core/services/mock/mock-espace.service';
+import { combineLatest, of, switchMap, catchError, map } from 'rxjs';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { SubscriptionService } from '@core/services/subscription.service';
+import { NotificationService } from '@core/services/notification.service';
+import { StatsService } from '@core/services/stats.service';
+import { AuthService } from '@core/services/auth.service';
+import { Company, Subscription, Notification, PlanName, CompanyStats } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
+import { DatePipe } from '@angular/common';
 import { FR } from '@core/i18n/fr.constants';
 
-/**
- * /espace — owner console.
- *
- * Audit C9: when the connected user has no fiche yet, render the empty
- * state with the prominent CTA "Créer ma fiche" pointing to /espace/fiche/creer.
- * The previous flow had this page orphaned, leaving every newly registered
- * owner with no way to publish their first profile.
- *
- * Otherwise: KPIs, abonnement summary, derniers paiements, notifications.
- */
 @Component({
   selector: 'ac-espace-console',
   standalone: true,
@@ -27,17 +23,18 @@ import { FR } from '@core/i18n/fr.constants';
     EmptyStateComponent,
     SkeletonComponent,
     XafPipe,
+    DatePipe
   ],
   template: `
     <div class="page">
       <header class="page-head">
         <div>
           <p class="eyebrow">Mon espace</p>
-          <h1>Bonjour, {{ identity().name }}</h1>
+          <h1>Bonjour, {{ identity()?.firstName || identity()?.email || 'Utilisateur' }}</h1>
           <p class="sub">Gérez la présence de votre entreprise sur l'annuaire national.</p>
         </div>
 
-        @if (data() && data()!.company) {
+        @if (company()) {
           <a routerLink="/espace/fiche/editer" class="btn btn-outline">
             <span class="material-symbols-outlined" aria-hidden="true">edit</span>
             Modifier ma fiche
@@ -51,7 +48,7 @@ import { FR } from '@core/i18n/fr.constants';
             <ac-skeleton shape="card" height="120px" />
           }
         </div>
-      } @else if (!data()!.company) {
+      } @else if (!company()) {
         <ac-empty-state
           icon="business_center"
           title="Vous n'avez pas encore de fiche entreprise"
@@ -68,28 +65,28 @@ import { FR } from '@core/i18n/fr.constants';
           <article class="kpi">
             <span class="kpi-icon" aria-hidden="true"><span class="material-symbols-outlined">visibility</span></span>
             <div>
-              <p class="kpi-value">{{ formatInt(data()!.stats.views) }}</p>
-              <p class="kpi-label">Vues du profil ce mois</p>
+              <p class="kpi-value">{{ formatInt(stats()?.views || 0) }}</p>
+              <p class="kpi-label">Vues du profil</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon" aria-hidden="true"><span class="material-symbols-outlined">person</span></span>
             <div>
-              <p class="kpi-value">{{ formatInt(data()!.stats.uniqueVisitors) }}</p>
+              <p class="kpi-value">{{ formatInt(stats()?.uniqueVisitors || 0) }}</p>
               <p class="kpi-label">Visiteurs uniques</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon" aria-hidden="true"><span class="material-symbols-outlined">touch_app</span></span>
             <div>
-              <p class="kpi-value">{{ formatInt(data()!.stats.contactClicks) }}</p>
+              <p class="kpi-value">{{ formatInt(stats()?.contactClicks || 0) }}</p>
               <p class="kpi-label">Clics sur contact</p>
             </div>
           </article>
           <article class="kpi">
             <span class="kpi-icon" aria-hidden="true"><span class="material-symbols-outlined">search</span></span>
             <div>
-              <p class="kpi-value">{{ formatInt(data()!.stats.searchAppearances) }}</p>
+              <p class="kpi-value">{{ formatInt(stats()?.searchAppearances || 0) }}</p>
               <p class="kpi-label">Apparitions en recherche</p>
             </div>
           </article>
@@ -102,18 +99,18 @@ import { FR } from '@core/i18n/fr.constants';
             <header class="panel-head">
               <div>
                 <p class="panel-eyebrow">Ma fiche</p>
-                <h2>{{ data()!.company!.name }}</h2>
+                <h2>{{ company()!.name }}</h2>
               </div>
-              <span [class]="statusClass(data()!.company!.status)">{{ statusLabel(data()!.company!.status) }}</span>
+              <span [class]="statusClass(company()!.status)">{{ statusLabel(company()!.status) }}</span>
             </header>
             <dl class="kv">
-              <div><dt>Secteur</dt><dd>{{ sectorLabel(data()!.company!.sector) }}</dd></div>
-              <div><dt>Ville</dt><dd>{{ data()!.company!.city }}</dd></div>
-              <div><dt>RCCM</dt><dd>{{ data()!.company!.rccm }}</dd></div>
-              <div><dt>NIU</dt><dd>{{ data()!.company!.niu }}</dd></div>
+              <div><dt>Secteur</dt><dd>{{ company()!.sectors?.[0]?.name || 'N/A' }}</dd></div>
+              <div><dt>Ville</dt><dd>{{ company()!.cityName || 'N/A' }}</dd></div>
+              <div><dt>RCCM</dt><dd>{{ company()!.rccm || 'N/A' }}</dd></div>
+              <div><dt>NIU</dt><dd>{{ company()!.niu || 'N/A' }}</dd></div>
             </dl>
             <div class="panel-actions">
-              <a [routerLink]="['/annuaire', data()!.company!.slug]" class="btn btn-ghost btn-sm">
+              <a [routerLink]="['/annuaire', company()!.slug]" class="btn btn-ghost btn-sm">
                 <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
                 Voir publiquement
               </a>
@@ -129,14 +126,18 @@ import { FR } from '@core/i18n/fr.constants';
             <header class="panel-head">
               <div>
                 <p class="panel-eyebrow">Mon abonnement</p>
-                <h2>Forfait {{ data()!.subscription?.planName }}</h2>
+                <h2>Forfait {{ getPlanLabel(subscription()?.planName) }}</h2>
               </div>
-              <span class="badge badge-verified">{{ data()!.subscription?.isActive ? 'Actif' : 'Inactif' }}</span>
+              @if (subscription()) {
+                <span class="badge badge-verified">{{ subscription()?.isActive ? 'Actif' : 'Inactif' }}</span>
+              } @else {
+                <span class="badge badge-pending">Aucun</span>
+              }
             </header>
             <dl class="kv">
-              <div><dt>Tarif mensuel</dt><dd>{{ data()!.subscription?.monthlyPrice | xaf }}</dd></div>
-              <div><dt>Renouvellement</dt><dd>{{ data()!.subscription?.expiresAt }}</dd></div>
-              <div><dt>Auto-renouvellement</dt><dd>{{ data()!.subscription?.autoRenew ? 'Activé' : 'Désactivé' }}</dd></div>
+              <div><dt>Statut</dt><dd>{{ subscription()?.isActive ? 'Actif' : 'Non payé' }}</dd></div>
+              <div><dt>Expiration</dt><dd>{{ (subscription()?.expiresAt | date:'dd/MM/yyyy') || 'N/A' }}</dd></div>
+              <div><dt>Mode</dt><dd>{{ getMethodLabel(subscription()?.paymentMethod) }}</dd></div>
             </dl>
             <div class="panel-actions">
               <a routerLink="/espace/abonnement/historique" class="btn btn-ghost btn-sm">Historique</a>
@@ -154,18 +155,22 @@ import { FR } from '@core/i18n/fr.constants';
             </div>
             <a routerLink="/espace/notifications" class="link">{{ FR.actions.viewAll }}</a>
           </header>
-          <ul class="notif-list">
-            @for (n of data()!.notifications; track n.id) {
-              <li [class]="'notif-item tone-' + n.tone">
-                <span class="notif-dot" aria-hidden="true"></span>
-                <div class="notif-body">
-                  <p class="notif-title">{{ n.title }}</p>
-                  <p class="notif-text">{{ n.body }}</p>
-                </div>
-                <span class="notif-date">{{ n.createdAt }}</span>
-              </li>
-            }
-          </ul>
+          @if (notifications().length === 0) {
+            <p class="muted">Aucune notification pour le moment.</p>
+          } @else {
+            <ul class="notif-list">
+              @for (n of notifications(); track n.id) {
+                <li [class]="'notif-item tone-info'">
+                  <span class="notif-dot" aria-hidden="true"></span>
+                  <div class="notif-body">
+                    <p class="notif-title">{{ n.title }}</p>
+                    <p class="notif-text">{{ n.body }}</p>
+                  </div>
+                  <span class="notif-date">{{ n.createdAt | date:'dd/MM/yyyy' }}</span>
+                </li>
+              }
+            </ul>
+          }
         </section>
       }
     </div>
@@ -190,7 +195,6 @@ import { FR } from '@core/i18n/fr.constants';
     }
     .page-head .sub { color: var(--color-on-secondary-container); font-size: 14px; margin: 0; max-width: 560px; }
 
-    /* KPIs */
     .kpi {
       display: flex;
       align-items: center;
@@ -224,7 +228,6 @@ import { FR } from '@core/i18n/fr.constants';
       margin: 6px 0 0;
     }
 
-    /* Two columns */
     .two-col { display: grid; grid-template-columns: 1fr; gap: 24px; }
     @media (min-width: 1024px) { .two-col { grid-template-columns: 1fr 1fr; } }
 
@@ -277,7 +280,6 @@ import { FR } from '@core/i18n/fr.constants';
     }
     .panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    /* Notifications */
     .notif-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
     .notif-item {
       display: grid;
@@ -293,11 +295,8 @@ import { FR } from '@core/i18n/fr.constants';
       width: 10px; height: 10px;
       border-radius: var(--radius-full);
       margin-top: 6px;
+      background: var(--color-primary);
     }
-    .tone-success .notif-dot { background: var(--color-primary); }
-    .tone-info    .notif-dot { background: var(--color-secondary); }
-    .tone-warning .notif-dot { background: var(--color-tertiary-container); }
-    .tone-error   .notif-dot { background: var(--color-error); }
 
     .notif-title { font-size: 14px; font-weight: 700; margin: 0 0 2px; color: var(--color-on-surface); }
     .notif-text  { font-size: 13px; color: var(--color-on-surface-variant); margin: 0; line-height: 1.5; }
@@ -306,7 +305,6 @@ import { FR } from '@core/i18n/fr.constants';
     .link { color: var(--color-primary); font-weight: 600; font-size: 13px; }
     .link:hover { text-decoration: underline; }
 
-    /* Status pills */
     .status { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
     .status-validee   { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
     .status-en-attente{ background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
@@ -316,49 +314,97 @@ import { FR } from '@core/i18n/fr.constants';
 })
 export class EspaceConsoleComponent {
   protected readonly FR = FR;
-  private readonly espace = inject(MockEspaceService);
+  private readonly boService   = inject(BusinessOwnerService);
+  private readonly subService  = inject(SubscriptionService);
+  private readonly notifService= inject(NotificationService);
+  private readonly statsService= inject(StatsService);
+  private readonly authService = inject(AuthService);
 
-  protected readonly identity = computed(() => this.espace.userIdentity());
+  protected readonly identity = this.authService.currentUser;
 
-  protected readonly data = toSignal(
-    combineLatest({
-      company:       this.espace.myCompany(),
-      subscription:  this.espace.mySubscription(),
-      payments:      this.espace.payments$(),
-      notifications: this.espace.notifications$(),
-      stats:         this.espace.ficheStats$(),
-    }),
+  private readonly companyData = toSignal<Company | null>(
+    this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
     { initialValue: null }
   );
 
-  protected readonly loading = computed(() => this.data() === null);
+  protected readonly company = computed(() => this.companyData());
+
+  private readonly subData = toSignal(
+    this.boService.getMyCompanies().pipe(
+      switchMap(list => {
+        if (!list[0]) return of([] as Subscription[]);
+        return this.subService.getCompanySubscriptions(list[0].id);
+      }),
+      catchError(() => of([] as Subscription[]))
+    ),
+    { initialValue: [] as Subscription[] }
+  );
+
+  protected readonly subscription = computed(() => {
+    return this.subData().find(s => s.isActive) || this.subData()[0] || null;
+  });
+
+  private readonly notifsData = toSignal(
+    this.notifService.getMyNotifications().pipe(catchError(() => of([] as Notification[]))),
+    { initialValue: [] as Notification[] }
+  );
+  protected readonly notifications = computed(() => this.notifsData().slice(0, 5));
+
+  private readonly statsData = toSignal<CompanyStats | null>(
+    this.boService.getMyCompanies().pipe(
+      switchMap(list => {
+        if (!list[0]) return of(null);
+        return this.statsService.getCompanyStats(list[0].id);
+      }),
+      catchError(() => of(null))
+    ),
+    { initialValue: null }
+  );
+  protected readonly stats = computed(() => this.statsData());
+
+  protected readonly loading = computed(() => this.companyData() === null && this.identity() !== null);
 
   protected formatInt(n: number): string {
     return new Intl.NumberFormat('fr-FR').format(n);
   }
 
-  protected sectorLabel(slug: string): string {
-    const map: Record<string, string> = {
-      [FR.sectors.maritime.slug]:    FR.sectors.maritime.name,
-      [FR.sectors.logistique.slug]:  FR.sectors.logistique.name,
-      [FR.sectors.douane.slug]:      FR.sectors.douane.name,
-      [FR.sectors.industrie.slug]:   FR.sectors.industrie.name,
-      [FR.sectors.securite.slug]:    FR.sectors.securite.name,
-      [FR.sectors.manutention.slug]: FR.sectors.manutention.name,
-    };
-    return map[slug] ?? slug;
+  protected getPlanLabel(name: number | string | undefined): string {
+    if (typeof name === 'string') return name;
+    if (name === undefined) return 'N/A';
+    switch (name) {
+      case PlanName.Free: return 'Gratuit';
+      case PlanName.Basic: return 'Basique';
+      case PlanName.Premium: return 'Premium';
+      case PlanName.Enterprise: return 'Entreprise';
+      default: return 'Standard';
+    }
   }
 
-  protected statusLabel(status: string): string {
-    return ({
-      validee:    'Vérifiée',
-      'en-attente': 'En attente',
-      rejetee:    'Refusée',
-      brouillon:  'Brouillon',
-    } as Record<string, string>)[status] ?? status;
+  protected getMethodLabel(method: number | undefined): string {
+    if (method === undefined) return 'N/A';
+    switch (method) {
+      case 0: return 'Stripe';
+      case 1: return 'MTN MoMo';
+      case 2: return 'Airtel Money';
+      default: return 'Autre';
+    }
   }
 
-  protected statusClass(status: string): string {
-    return `status status-${status}`;
+  protected statusLabel(status: number): string {
+    switch (status) {
+      case 2: return 'Vérifiée';
+      case 1: return 'En attente';
+      case 3: return 'Refusée';
+      default: return 'Brouillon';
+    }
+  }
+
+  protected statusClass(status: number): string {
+    switch (status) {
+      case 2: return 'status status-validee';
+      case 1: return 'status status-en-attente';
+      case 3: return 'status status-rejetee';
+      default: return 'status status-brouillon';
+    }
   }
 }

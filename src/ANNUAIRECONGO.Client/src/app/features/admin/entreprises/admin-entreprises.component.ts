@@ -1,14 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService } from '@core/services/mock/mock-admin.service';
-import { MockCompany } from '@core/services/mock/mock-companies.data';
+import { CompanyService } from '@core/services/company.service';
+import { Company, PaginatedResponse } from '@core/models/company.model';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
 
-/**
- * /admin/entreprises — directory of all registered companies.
- * Sortable / searchable table for back-office investigation.
- */
 @Component({
   selector: 'ac-admin-entreprises',
   standalone: true,
@@ -44,7 +41,6 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
                 <th>Secteur</th>
                 <th>Ville</th>
                 <th>RCCM</th>
-                <th>Forfait</th>
                 <th>Statut</th>
                 <th class="sr-only">Actions</th>
               </tr>
@@ -54,17 +50,20 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
                 <tr>
                   <td class="name">
                     <p class="title">{{ c.name }}</p>
-                    <p class="email">{{ c.email }}</p>
+                    <p class="email">{{ c.slug }}</p>
                   </td>
-                  <td>{{ c.sectorLabel }}</td>
-                  <td>{{ c.city }}</td>
-                  <td class="mono">{{ c.rccm }}</td>
-                  <td><span [class]="planClass(c.plan)">{{ planLabel(c.plan) }}</span></td>
+                  <td>{{ c.sectors?.[0]?.name || 'N/A' }}</td>
+                  <td>{{ c.cityName }}</td>
+                  <td class="mono">{{ c.rccm || '-' }}</td>
                   <td>
-                    @if (c.isVerified) {
-                      <span class="badge badge-verified">Vérifiée</span>
+                    @if (c.status === 2) {
+                      <span class="badge badge-verified">Active</span>
+                    } @else if (c.status === 1) {
+                      <span class="badge badge-pending">En attente</span>
+                    } @else if (c.status === 3) {
+                      <span class="badge badge-rejected">Rejetée</span>
                     } @else {
-                      <span class="badge badge-pending">Non vérifiée</span>
+                      <span class="badge badge-draft">Brouillon</span>
                     }
                   </td>
                   <td class="actions-col">
@@ -73,7 +72,7 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
                 </tr>
               }
               @if (rows().length === 0) {
-                <tr><td colspan="7" class="empty">Aucune entreprise ne correspond à votre recherche.</td></tr>
+                <tr><td colspan="6" class="empty">Aucune entreprise ne correspond à votre recherche.</td></tr>
               }
             </tbody>
           </table>
@@ -103,43 +102,31 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
     .link { color: var(--color-primary); font-weight: 700; }
     .link:hover { text-decoration: underline; }
 
-    .badge-free, .badge-pro, .badge-premium {
-      display: inline-flex;
-      padding: 3px 10px;
-      border-radius: var(--radius-full);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .badge-free    { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
-    .badge-pro     { background: var(--color-secondary-container);       color: var(--color-on-secondary-fixed); }
-    .badge-premium { background: var(--color-tertiary-fixed);            color: var(--color-on-tertiary-fixed); }
+    .badge-draft { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
+    .badge-rejected { background: var(--color-error-container); color: var(--color-on-error-container); }
   `],
 })
 export class AdminEntreprisesComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly companyService = inject(CompanyService);
   protected readonly query = signal('');
+  
+  private readonly trigger = new BehaviorSubject<string>('');
+  
+  private readonly result = toSignal<PaginatedResponse<Company> | null>(
+    this.trigger.pipe(
+      debounceTime(300),
+      switchMap(q => this.companyService.getCompanies({ searchTerm: q || undefined, pageSize: 50 })),
+      catchError(() => of({ items: [] as Company[], totalCount: 0, pageNumber: 1, pageSize: 50, totalPages: 0 } as PaginatedResponse<Company>))
+    ),
+    { initialValue: null }
+  );
 
-  private readonly companies = toSignal(this.admin.companies$(), { initialValue: [] as readonly MockCompany[] });
-  protected readonly loading = computed(() => this.companies().length === 0 && this.firstLoad());
-  private readonly firstLoad = signal(true);
-  constructor() { setTimeout(() => this.firstLoad.set(false), 200); }
+  protected readonly rows = computed(() => this.result()?.items ?? []);
+  protected readonly loading = computed(() => this.result() === null && this.query() === '');
 
-  protected readonly rows = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    if (!q) return this.companies();
-    return this.companies().filter((c) =>
-      [c.name, c.rccm, c.niu, c.city].some((v) => v.toLowerCase().includes(q))
-    );
-  });
-
-  protected onQuery(e: Event): void { this.query.set((e.target as HTMLInputElement).value); }
-
-  protected planLabel(p: 'free' | 'pro' | 'premium'): string {
-    return ({ free: 'Free', pro: 'Pro', premium: 'Premium' } as const)[p];
-  }
-  protected planClass(p: 'free' | 'pro' | 'premium'): string {
-    return `badge-${p}`;
+  protected onQuery(e: Event): void {
+    const val = (e.target as HTMLInputElement).value;
+    this.query.set(val);
+    this.trigger.next(val);
   }
 }

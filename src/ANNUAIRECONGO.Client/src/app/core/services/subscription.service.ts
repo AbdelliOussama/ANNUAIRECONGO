@@ -32,11 +32,11 @@ export class SubscriptionService {
   }
 
   refundPayment(paymentId: string): Observable<Payment> {
-    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/Refund`, {});
+    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/refund`, {});
   }
 
   rejectPayment(paymentId: string, reason: string): Observable<Payment> {
-    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/Reject`, reason);
+    return this.api.put<Payment>(`/api/v1/subscriptions/payments/${paymentId}/reject`, { reason });
   }
 
   getCompanyPayments(companyId: string): Observable<Payment[]> {

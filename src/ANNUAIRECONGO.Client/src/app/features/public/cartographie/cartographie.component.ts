@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, AfterViewInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MockCompanyService } from '@core/services/mock/mock-company.service';
-import { MOCK_COMPANIES } from '@core/services/mock/mock-companies.data';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CompanyService } from '@core/services/company.service';
+import { Company, CompanyStatus } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import * as L from 'leaflet';
+import { catchError, map, of } from 'rxjs';
 
 interface CityPin {
-  city: string;
-  region: string;
+  cityId: string;
+  cityName: string;
+  regionName: string;
   count: number;
   lat: number;
   lng: number;
@@ -20,19 +23,11 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'Dolisie':      { lat: -4.1990,  lng: 12.6702 },
   'Oyo':          { lat: -1.2500,  lng: 15.7167 },
   'Ouesso':       { lat:  1.6136,  lng: 16.0517 },
+  'Owando':       { lat: -0.4819,  lng: 15.8999 },
+  'Impfondo':     { lat:  1.6373,  lng: 18.0667 },
+  'Madingou':     { lat: -4.1536,  lng: 13.5500 },
 };
 
-/**
- * /cartographie — interactive map of the directory.
- *
- * Uses Leaflet with OpenStreetMap tiles. Each city with at least one
- * registered company is shown as a circular marker whose radius scales
- * with the number of companies. Clicking a marker navigates to
- * /annuaire?region=<region>&city=<city>.
- *
- * Audit M3 — restored Leaflet map (the previous implementation already
- * existed in regions.component but was rendered with the orange theme).
- */
 @Component({
   selector: 'ac-cartographie',
   standalone: true,
@@ -57,7 +52,7 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
       <div class="map-card">
         <div class="map-toolbar">
           <div class="map-meta">
-            <span class="badge badge-verified">{{ totalCompanies }} entreprises</span>
+            <span class="badge badge-verified">{{ totalCompanies() }} entreprises</span>
             <span class="text-secondary text-sm">{{ pins().length }} villes représentées</span>
           </div>
           <a routerLink="/annuaire" class="btn btn-outline btn-sm">
@@ -132,19 +127,52 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
 })
 export class CartographieComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
-  protected readonly totalCompanies = MOCK_COMPANIES.length;
+  private readonly companyService = inject(CompanyService);
 
   @ViewChild('map') private mapEl?: ElementRef<HTMLElement>;
   private map?: L.Map;
   private layer?: L.LayerGroup;
 
-  protected readonly pins = signal<CityPin[]>(this.aggregatePins());
+  private readonly companies = toSignal(
+    this.companyService.getCompanies({ status: 2, pageSize: 1000 }).pipe(
+      map(res => res.items),
+      catchError(() => of([] as Company[]))
+    ),
+    { initialValue: [] as Company[] }
+  );
+
+  protected readonly totalCompanies = computed(() => this.companies().length);
+
+  protected readonly pins = computed<CityPin[]>(() => {
+    const data = this.companies();
+    const pinMap = new Map<string, CityPin>();
+
+    for (const c of data) {
+      if (!c.cityName) continue;
+      const coords = CITY_COORDS[c.cityName];
+      if (!coords) continue;
+
+      const existing = pinMap.get(c.cityName);
+      if (existing) {
+        existing.count++;
+      } else {
+        pinMap.set(c.cityName, {
+          cityId: c.cityId,
+          cityName: c.cityName,
+          regionName: c.regionName || 'Congo',
+          count: 1,
+          ...coords
+        });
+      }
+    }
+    return Array.from(pinMap.values());
+  });
 
   ngAfterViewInit(): void {
     if (!this.mapEl) return;
 
     this.map = L.map(this.mapEl.nativeElement, {
-      center: [-1.5, 15.0],   // visual center of Congo-Brazzaville
+      center: [-1.5, 15.0],
       zoom: 5,
       zoomControl: true,
       attributionControl: true,
@@ -156,33 +184,23 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
 
     this.layer = L.layerGroup().addTo(this.map);
-    this.renderPins();
+
+    // Watch pins signal and render markers
+    computed(() => {
+      this.renderPins(this.pins());
+      return null;
+    });
   }
 
   ngOnDestroy(): void {
     this.map?.remove();
   }
 
-  private aggregatePins(): CityPin[] {
-    const map = new Map<string, CityPin>();
-    for (const c of MOCK_COMPANIES) {
-      const coords = CITY_COORDS[c.city];
-      if (!coords) continue;
-      const existing = map.get(c.city);
-      if (existing) {
-        existing.count++;
-      } else {
-        map.set(c.city, { city: c.city, region: c.region, count: 1, ...coords });
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  private renderPins(): void {
+  private renderPins(pins: CityPin[]): void {
     if (!this.map || !this.layer) return;
     this.layer.clearLayers();
 
-    for (const p of this.pins()) {
+    for (const p of pins) {
       const radius = p.count <= 2 ? 8 : p.count <= 5 ? 12 : 18;
       const marker = L.circleMarker([p.lat, p.lng], {
         radius,
@@ -198,11 +216,11 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
   }
 
   private popupHtml(p: CityPin): string {
-    const queryParams = new URLSearchParams({ region: p.region, city: p.city }).toString();
+    const queryParams = new URLSearchParams({ region: p.regionName, city: p.cityName }).toString();
     return `
       <div style="font-family: 'DM Sans', sans-serif; min-width: 180px;">
-        <strong style="font-family:'DM Serif Display', serif; font-size:16px;">${p.city}</strong>
-        <div style="font-size:12px; color:#515f74; margin-top:4px;">Département : ${p.region}</div>
+        <strong style="font-family:'DM Serif Display', serif; font-size:16px;">${p.cityName}</strong>
+        <div style="font-size:12px; color:#515f74; margin-top:4px;">Département : ${p.regionName}</div>
         <div style="font-size:13px; margin:8px 0;">${p.count} entreprise${p.count > 1 ? 's' : ''} inscrite${p.count > 1 ? 's' : ''}</div>
         <a href="/annuaire?${queryParams}"
            style="display:inline-block; padding:6px 12px; background:#004e34; color:#fff; border-radius:8px; font-size:12px; text-decoration:none; font-weight:600;">

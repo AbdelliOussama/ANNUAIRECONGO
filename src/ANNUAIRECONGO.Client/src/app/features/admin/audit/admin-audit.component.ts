@@ -1,17 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminAuditEntry } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { DatePipe } from '@angular/common';
 
-/**
- * /admin/audit — append-only log of sensitive actions.
- * Audit P1 — page absente du livrable initial.
- */
 @Component({
   selector: 'ac-admin-audit',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SkeletonComponent],
+  imports: [SkeletonComponent, DatePipe],
   template: `
     <div class="page">
       <header class="page-head">
@@ -42,24 +39,22 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
                 <th>Acteur</th>
                 <th>Action</th>
                 <th>Cible</th>
-                <th>IP</th>
               </tr>
             </thead>
             <tbody>
               @for (e of rows(); track e.id) {
                 <tr>
-                  <td class="mono">{{ e.date }}</td>
+                  <td class="mono">{{ e.timestamp | date:'short' }}</td>
                   <td>
-                    <p class="actor">{{ e.actor }}</p>
-                    <p class="role">{{ roleLabel(e.role) }}</p>
+                    <p class="actor">{{ e.actorName }}</p>
+                    <p class="role">{{ e.actorId }}</p>
                   </td>
                   <td>{{ e.action }}</td>
-                  <td class="target">{{ e.target }}</td>
-                  <td class="mono ip">{{ e.ip }}</td>
+                  <td class="target">{{ e.entityName }} ({{ e.entityId }})</td>
                 </tr>
               }
               @if (rows().length === 0) {
-                <tr><td colspan="5" class="empty">Aucune entrée ne correspond à ce filtre.</td></tr>
+                <tr><td colspan="4" class="empty">Aucune entrée ne correspond à ce filtre.</td></tr>
               }
             </tbody>
           </table>
@@ -85,27 +80,24 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
     .actor { font-weight: 700; color: var(--color-on-surface); margin: 0; }
     .role  { font-size: 11px; color: var(--color-outline); margin: 4px 0 0; text-transform: uppercase; letter-spacing: 0.06em; }
     .target { color: var(--color-on-surface); }
-    .ip { color: var(--color-on-secondary-container); font-size: 12px; }
     .empty { text-align: center; color: var(--color-outline); padding: 32px; }
   `],
 })
 export class AdminAuditComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
   protected readonly query = signal('');
 
-  private readonly entries = toSignal(this.admin.audit$(), { initialValue: [] as AdminAuditEntry[] });
-  protected readonly loading = computed(() => this.entries().length === 0);
+  private readonly entries = toSignal(this.adminService.getAuditLogs(1, 100), { initialValue: { items: [] as any[] } });
+  protected readonly loading = computed(() => this.entries().items.length === 0 && this.query() === '');
 
   protected readonly rows = computed(() => {
     const q = this.query().trim().toLowerCase();
-    if (!q) return this.entries();
-    return this.entries().filter((e) =>
-      [e.actor, e.action, e.target, e.ip].some((v) => v.toLowerCase().includes(q))
+    const items = this.entries().items;
+    if (!q) return items;
+    return items.filter((e: any) =>
+      [e.actorName, e.action, e.entityName].some((v) => v?.toLowerCase().includes(q))
     );
   });
 
   protected onQuery(e: Event): void { this.query.set((e.target as HTMLInputElement).value); }
-  protected roleLabel(r: AdminAuditEntry['role']): string {
-    return ({ 'super-admin': 'Super-Admin', admin: 'Admin', system: 'Système' } as const)[r];
-  }
 }

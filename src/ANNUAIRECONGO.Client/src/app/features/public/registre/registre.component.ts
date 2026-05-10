@@ -1,14 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { MOCK_COMPANIES } from '@core/services/mock/mock-companies.data';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CompanyService } from '@core/services/company.service';
+import { Company } from '@core/models/company.model';
 
-/**
- * /registre — Registre national consultable.
- * Same data source as /annuaire but presented as a denser table view
- * focused on legal identity (RCCM, NIU, raison sociale, statut).
- *
- * Audit C1: explicit Congo-Brazzaville (RoC) framing.
- */
 @Component({
   selector: 'ac-registre',
   standalone: true,
@@ -129,13 +124,31 @@ import { MOCK_COMPANIES } from '@core/services/mock/mock-companies.data';
 })
 export class RegistreComponent {
   protected readonly query = signal('');
-  private readonly companies = MOCK_COMPANIES;
+  private readonly companyService = inject(CompanyService);
+
+  private readonly companiesPage = toSignal(
+    this.companyService.getCompanies({ pageSize: 1000 }), 
+    { initialValue: { items: [], totalCount: 0, pageNumber: 1, pageSize: 1000, totalPages: 1 } }
+  );
 
   protected readonly rows = computed(() => {
     const q = this.query().toLowerCase().trim();
-    if (!q) return this.companies;
-    return this.companies.filter((c) =>
-      [c.name, c.rccm, c.niu].some((v) => v.toLowerCase().includes(q))
+    const items = this.companiesPage()?.items || [];
+    
+    const mapped = items.map(c => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      rccm: c.rccm || 'N/A',
+      niu: c.niu || 'N/A',
+      sectorLabel: c.sectors?.[0]?.name || 'N/A',
+      city: c.cityName || 'N/A',
+      isVerified: c.isVerified
+    }));
+
+    if (!q) return mapped;
+    return mapped.filter((c) =>
+      [c.name, c.rccm, c.niu].some((v) => v && v.toLowerCase().includes(q))
     );
   });
 

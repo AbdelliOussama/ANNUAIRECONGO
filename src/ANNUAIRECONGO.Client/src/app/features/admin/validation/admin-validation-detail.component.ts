@@ -1,26 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
-import { MockAdminService } from '@core/services/mock/mock-admin.service';
+import { CompanyService } from '@core/services/company.service';
+import { Company, CompanyStatus } from '@core/models/company.model';
+import { switchMap, catchError, of, map, tap } from 'rxjs';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { ToastService } from '@shared/services/toast.service';
 import { ModalService } from '@shared/services/modal.service';
 
-/**
- * /admin/validation/:id — detail page for a pending fiche.
- *
- * Audit M9: rejection requires a motif via <ac-confirm-modal> with the
- * `reasonRequired` flag. The motif is stored on the fiche and visible to
- * the entreprise from their espace, so they know what to fix.
- */
+import { DatePipe } from '@angular/common';
+
 @Component({
   selector: 'ac-admin-validation-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ButtonComponent, SkeletonComponent, EmptyStateComponent],
+  imports: [RouterLink, ButtonComponent, SkeletonComponent, EmptyStateComponent, DatePipe],
   template: `
     <div class="page">
       <nav class="breadcrumbs" aria-label="Fil d'ariane">
@@ -43,7 +39,7 @@ import { ModalService } from '@shared/services/modal.service';
             <div>
               <span [class]="'status status-' + fiche()!.status">{{ statusLabel(fiche()!.status) }}</span>
               <h1>{{ fiche()!.name }}</h1>
-              <p class="meta">{{ fiche()!.sectorLabel }} · {{ fiche()!.city }} · soumise le {{ fiche()!.submittedAt }}</p>
+              <p class="meta">{{ fiche()!.sectorLabel }} · {{ fiche()!.city }} · soumise le {{ fiche()!.submittedAt | date:'dd/MM/yyyy' }}</p>
             </div>
             @if (fiche()!.status === 'en-attente') {
               <div class="actions">
@@ -56,14 +52,25 @@ import { ModalService } from '@shared/services/modal.service';
           <dl class="kv">
             <div><dt>RCCM</dt><dd>{{ fiche()!.rccm }}</dd></div>
             <div><dt>NIU</dt><dd>{{ fiche()!.niu }}</dd></div>
-            <div><dt>Soumise par</dt><dd>{{ fiche()!.ownerName }}</dd></div>
-            <div><dt>E-mail</dt><dd>{{ fiche()!.ownerEmail }}</dd></div>
+            <div><dt>ID Propriétaire</dt><dd>{{ fiche()!.ownerId }}</dd></div>
           </dl>
 
           <section>
             <h2>Description</h2>
             <p class="lead">{{ fiche()!.description }}</p>
           </section>
+
+          <!-- Gallery Preview -->
+          @if (fiche()!.images.length > 0) {
+            <section>
+              <h2>Images</h2>
+              <div class="gallery">
+                @for (img of fiche()!.images; track img.id) {
+                  <img [src]="img.imageUrl" alt="Aperçu" class="preview-img" />
+                }
+              </div>
+            </section>
+          }
 
           @if (fiche()!.status === 'rejetee' && fiche()!.rejectionReason) {
             <section class="reason-box">
@@ -119,6 +126,9 @@ import { ModalService } from '@shared/services/modal.service';
     section h2 { font-family: var(--font-headline); font-size: 18px; font-weight: 700; margin: 0 0 12px; color: var(--color-on-surface); display: flex; align-items: center; gap: 6px; }
     .lead { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.7; margin: 0; }
 
+    .gallery { display: flex; gap: 12px; flex-wrap: wrap; }
+    .preview-img { width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--color-outline-variant); }
+
     .reason-box {
       background: var(--color-error-container);
       color: var(--color-on-error-container);
@@ -129,7 +139,7 @@ import { ModalService } from '@shared/services/modal.service';
   `],
 })
 export class AdminValidationDetailComponent {
-  private readonly admin  = inject(MockAdminService);
+  private readonly companyService = inject(CompanyService);
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast  = inject(ToastService);
@@ -138,11 +148,46 @@ export class AdminValidationDetailComponent {
   protected readonly validating = signal(false);
   protected readonly rejecting  = signal(false);
 
-  protected readonly fiche = toSignal(
-    this.route.params.pipe(switchMap((p) => this.admin.pendingById(p['id']))),
-    { initialValue: undefined }
+  protected readonly loading = signal(true);
+  private readonly rawFiche = toSignal<Company | null>(
+    this.route.params.pipe(
+      tap(() => this.loading.set(true)),
+      switchMap((p) => this.companyService.getCompanyById(p['id']).pipe(
+        tap(() => this.loading.set(false)),
+        catchError(() => { this.loading.set(false); return of(null); })
+      ))
+    ),
+    { initialValue: null }
   );
-  protected readonly loading = computed(() => this.fiche() === undefined);
+
+  protected readonly fiche = computed(() => {
+    const c = this.rawFiche();
+    if (!c) return null;
+
+    return {
+      id: c.id,
+      name: c.name,
+      description: c.description || 'Aucune description.',
+      status: this.mapStatus(c.status),
+      sectorLabel: c.sectors?.[0]?.name || 'N/A',
+      city: c.cityName || 'N/A',
+      submittedAt: c.createdAt,
+      rccm: c.rccm || 'N/A',
+      niu: c.niu || 'N/A',
+      ownerId: c.ownerId,
+      rejectionReason: '', 
+      images: c.images || []
+    };
+  });
+
+  private mapStatus(status: number): string {
+    switch (status) {
+      case 1: return 'en-attente';
+      case 2: return 'validee';
+      case 3: return 'rejetee';
+      default: return 'en-attente';
+    }
+  }
 
   protected statusLabel(s: string): string {
     return ({
@@ -164,10 +209,13 @@ export class AdminValidationDetailComponent {
     if (!confirmed) return;
 
     this.validating.set(true);
-    this.admin.validateFiche(f.id).subscribe(() => {
-      this.validating.set(false);
-      this.toast.success('Fiche validée. L\'entreprise a été notifiée.');
-      this.router.navigateByUrl('/admin/validation');
+    this.companyService.validateCompany(f.id).subscribe({
+      next: () => {
+        this.validating.set(false);
+        this.toast.success('Fiche validée. L\'entreprise a été notifiée.');
+        this.router.navigateByUrl('/admin/validation');
+      },
+      error: () => this.validating.set(false)
     });
   }
 
@@ -185,10 +233,13 @@ export class AdminValidationDetailComponent {
     if (!confirmed || !reason) return;
 
     this.rejecting.set(true);
-    this.admin.rejectFiche(f.id, reason).subscribe(() => {
-      this.rejecting.set(false);
-      this.toast.success('Fiche rejetée. Le motif a été communiqué à l\'entreprise.');
-      this.router.navigateByUrl('/admin/validation');
+    this.companyService.rejectCompany(f.id, reason).subscribe({
+      next: () => {
+        this.rejecting.set(false);
+        this.toast.success('Fiche rejetée. Le motif a été communiqué à l\'entreprise.');
+        this.router.navigateByUrl('/admin/validation');
+      },
+      error: () => this.rejecting.set(false)
     });
   }
 }

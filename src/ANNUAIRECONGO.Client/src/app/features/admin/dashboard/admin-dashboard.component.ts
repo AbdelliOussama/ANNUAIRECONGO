@@ -1,21 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest } from 'rxjs';
-import { MockAdminService } from '@core/services/mock/mock-admin.service';
+import { combineLatest, of, catchError, map } from 'rxjs';
+import { AdminService } from '@core/services/admin.service';
+import { CompanyService } from '@core/services/company.service';
+import { StatsService } from '@core/services/stats.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
+import { DatePipe } from '@angular/common';
+import { Company, PlatformStats, RegionStats, SectorStats, PaginatedResponse } from '@core/models/company.model';
 
-/**
- * /admin — admin dashboard.
- * KPI tiles + pending validations widget + sector / region distribution
- * + recent audit entries.
- */
 @Component({
   selector: 'ac-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SkeletonComponent, XafPipe],
+  imports: [RouterLink, SkeletonComponent, XafPipe, DatePipe],
   template: `
     <div class="page">
       <header class="page-head">
@@ -31,29 +30,29 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
         <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <article class="kpi">
             <div>
-              <p class="kpi-value">{{ format(stats()!.totalCompanies) }}</p>
+              <p class="kpi-value">{{ format(stats()?.totalCompanies || 0) }}</p>
               <p class="kpi-label">Entreprises totales</p>
             </div>
             <span class="kpi-icon"><span class="material-symbols-outlined">apartment</span></span>
           </article>
           <article class="kpi">
             <div>
-              <p class="kpi-value">{{ format(stats()!.validatedCompanies) }}</p>
+              <p class="kpi-value">{{ format(stats()?.activeCompanies || 0) }}</p>
               <p class="kpi-label">Vérifiées</p>
             </div>
             <span class="kpi-icon ok"><span class="material-symbols-outlined">verified</span></span>
           </article>
           <article class="kpi">
             <div>
-              <p class="kpi-value">{{ format(stats()!.pendingCompanies) }}</p>
+              <p class="kpi-value">{{ format(pendingCount()) }}</p>
               <p class="kpi-label">En attente</p>
             </div>
             <span class="kpi-icon warn"><span class="material-symbols-outlined">schedule</span></span>
           </article>
           <article class="kpi">
             <div>
-              <p class="kpi-value">{{ stats()!.monthlyRevenueXAF | xaf }}</p>
-              <p class="kpi-label">Revenus du mois</p>
+              <p class="kpi-value">{{ (stats()?.totalRevenue || 0) | xaf }}</p>
+              <p class="kpi-label">Revenus globaux</p>
             </div>
             <span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span>
           </article>
@@ -77,7 +76,7 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
                 <li class="pending-row">
                   <div>
                     <p class="pending-title">{{ p.name }}</p>
-                    <p class="pending-meta">{{ p.sectorLabel }} · {{ p.city }} · soumise le {{ p.submittedAt }}</p>
+                    <p class="pending-meta">{{ p.sectors?.[0]?.name || 'N/A' }} · {{ p.cityName }} · soumise le {{ p.createdAt | date:'dd/MM/yyyy' }}</p>
                   </div>
                   <a [routerLink]="['/admin/validation', p.id]" class="btn btn-outline btn-sm">Examiner</a>
                 </li>
@@ -91,10 +90,10 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
           <article class="panel">
             <header class="section-head"><h2>Répartition par secteur</h2></header>
             <ul class="bars">
-              @for (s of stats()!.bySector; track s.label) {
+              @for (s of sectorStats(); track s.sectorId) {
                 <li>
-                  <div class="bar-head"><span>{{ s.label }}</span><span class="bar-value">{{ s.value }}</span></div>
-                  <div class="bar-track"><div class="bar-fill" [style.width.%]="(s.value / maxBy(stats()!.bySector)) * 100"></div></div>
+                  <div class="bar-head"><span>{{ s.sectorName }}</span><span class="bar-value">{{ s.companyCount }}</span></div>
+                  <div class="bar-track"><div class="bar-fill" [style.width.%]="(s.companyCount / maxBy(sectorStats())) * 100"></div></div>
                 </li>
               }
             </ul>
@@ -103,10 +102,10 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
           <article class="panel">
             <header class="section-head"><h2>Répartition géographique</h2></header>
             <ul class="bars">
-              @for (r of stats()!.byRegion; track r.label) {
+              @for (r of regionStats(); track r.regionId) {
                 <li>
-                  <div class="bar-head"><span>{{ r.label }}</span><span class="bar-value">{{ r.value }}</span></div>
-                  <div class="bar-track"><div class="bar-fill bar-fill-tertiary" [style.width.%]="(r.value / maxBy(stats()!.byRegion)) * 100"></div></div>
+                  <div class="bar-head"><span>{{ r.regionName }}</span><span class="bar-value">{{ r.companyCount }}</span></div>
+                  <div class="bar-track"><div class="bar-fill bar-fill-tertiary" [style.width.%]="(r.companyCount / maxBy(regionStats())) * 100"></div></div>
                 </li>
               }
             </ul>
@@ -179,20 +178,31 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
   `],
 })
 export class AdminDashboardComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
+  private readonly companyService = inject(CompanyService);
+  private readonly statsService = inject(StatsService);
 
-  protected readonly data = toSignal(
-    combineLatest({ stats: this.admin.stats(), pending: this.admin.pendingList$() }),
+  protected readonly stats = toSignal<PlatformStats | null>(this.adminService.getAdminStats(), { initialValue: null });
+  
+  protected readonly pendingData = toSignal<PaginatedResponse<Company> | null>(
+    this.companyService.getCompanies({ status: 1, pageSize: 5 }).pipe(
+      catchError(() => of({ items: [] as Company[], totalCount: 0, pageNumber: 1, pageSize: 5, totalPages: 0 } as PaginatedResponse<Company>))
+    ),
     { initialValue: null }
   );
-  protected readonly loading = computed(() => this.data() === null);
-  protected readonly stats   = computed(() => this.data()?.stats ?? null);
-  protected readonly pending = computed(() => this.data()?.pending ?? []);
+
+  protected readonly pending = computed(() => this.pendingData()?.items ?? []);
+  protected readonly pendingCount = computed(() => this.pendingData()?.totalCount ?? 0);
+
+  protected readonly sectorStats = toSignal(this.statsService.getSectorStats(), { initialValue: [] as SectorStats[] });
+  protected readonly regionStats = toSignal(this.statsService.getRegionStats(), { initialValue: [] as RegionStats[] });
+
+  protected readonly loading = computed(() => this.stats() === null && (this.pendingData()?.items?.length ?? 0) === 0);
 
   protected format(n: number): string {
     return new Intl.NumberFormat('fr-FR').format(n);
   }
-  protected maxBy(items: { value: number }[]): number {
-    return Math.max(1, ...items.map((x) => x.value));
+  protected maxBy(items: { companyCount: number }[]): number {
+    return Math.max(1, ...items.map((x) => x.companyCount));
   }
 }

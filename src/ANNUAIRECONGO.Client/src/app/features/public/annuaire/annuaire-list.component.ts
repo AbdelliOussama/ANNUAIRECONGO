@@ -5,29 +5,18 @@ import { CompanyCardComponent, CompanyCardData } from '@shared/components/compan
 import { PaginationComponent } from '@shared/ui/pagination/pagination.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
-import { MockCompanyService } from '@core/services/mock/mock-company.service';
+import { CompanyService } from '@core/services/company.service';
+import { Sector, Region, Company, PaginatedResponse } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
-import { switchMap, BehaviorSubject } from 'rxjs';
+import { switchMap, BehaviorSubject, map, catchError, of } from 'rxjs';
 
 interface Filters {
   query: string;
-  sector: string;
-  region: string;
+  sectorId: string;
+  regionId: string;
   verifiedOnly: boolean;
 }
 
-interface SectorOption { value: string; label: string; }
-
-/**
- * /annuaire — directory listing.
- *
- * Reads filters from the URL query string (audit P4 — hero search must
- * actually navigate here with ?q=...&secteur=...). State is mirrored back
- * into the URL on change so users can bookmark and share filtered views.
- *
- * Sidebar filters on >=md, full-screen drawer on mobile (audit M11).
- * Grid / list toggle (audit P8).
- */
 @Component({
   selector: 'ac-annuaire-list',
   standalone: true,
@@ -78,12 +67,12 @@ interface SectorOption { value: string; label: string; }
           <select
             id="filter-sector"
             class="form-input"
-            [value]="filters().sector"
+            [value]="filters().sectorId"
             (change)="onSector($event)"
           >
             <option value="">Tous les secteurs</option>
-            @for (s of sectors; track s.value) {
-              <option [value]="s.value">{{ s.label }}</option>
+            @for (s of sectors(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
             }
           </select>
         </div>
@@ -93,12 +82,12 @@ interface SectorOption { value: string; label: string; }
           <select
             id="filter-region"
             class="form-input"
-            [value]="filters().region"
+            [value]="filters().regionId"
             (change)="onRegion($event)"
           >
             <option value="">Toutes les régions</option>
-            @for (r of regions(); track r) {
-              <option [value]="r">{{ r }}</option>
+            @for (r of regions(); track r.id) {
+              <option [value]="r.id">{{ r.name }}</option>
             }
           </select>
         </div>
@@ -339,50 +328,45 @@ interface SectorOption { value: string; label: string; }
 })
 export class AnnuaireListComponent {
   protected readonly FR = FR;
-  private readonly companyService = inject(MockCompanyService);
+  private readonly companyService = inject(CompanyService);
   private readonly route          = inject(ActivatedRoute);
   private readonly router         = inject(Router);
 
   protected readonly filters = signal<Filters>({
     query: '',
-    sector: '',
-    region: '',
+    sectorId: '',
+    regionId: '',
     verifiedOnly: false,
   });
   protected readonly page    = signal(1);
   protected readonly view    = signal<'grid' | 'list'>('grid');
   protected readonly filtersOpen = signal(false);
 
-  protected readonly sectors: ReadonlyArray<SectorOption> = [
-    { value: FR.sectors.maritime.slug,    label: FR.sectors.maritime.name },
-    { value: FR.sectors.logistique.slug,  label: FR.sectors.logistique.name },
-    { value: FR.sectors.douane.slug,      label: FR.sectors.douane.name },
-    { value: FR.sectors.industrie.slug,   label: FR.sectors.industrie.name },
-    { value: FR.sectors.securite.slug,    label: FR.sectors.securite.name },
-    { value: FR.sectors.manutention.slug, label: FR.sectors.manutention.name },
-  ];
+  protected readonly sectors = toSignal(this.companyService.getSectors(), { initialValue: [] as Sector[] });
+  protected readonly regions = toSignal(this.companyService.getRegions(), { initialValue: [] as Region[] });
 
-  protected readonly regions = toSignal(this.companyService.regions(), { initialValue: [] as string[] });
-
-  // Reactive query stream — refetches whenever filters/page change.
   private readonly trigger = new BehaviorSubject<void>(undefined);
-  private readonly result = toSignal(
+  private readonly result = toSignal<PaginatedResponse<Company> | null>(
     this.trigger.pipe(
+      map(() => this.loading.set(true)),
       switchMap(() =>
-        this.companyService.list({
-          query: this.filters().query || undefined,
-          sector: this.filters().sector || undefined,
-          region: this.filters().region || undefined,
-          verifiedOnly: this.filters().verifiedOnly || undefined,
+        this.companyService.getCompanies({
+          searchTerm: this.filters().query || undefined,
+          sectorId: this.filters().sectorId || undefined,
+          regionId: this.filters().regionId || undefined,
+          status: this.filters().verifiedOnly ? 2 : undefined,
           pageNumber: this.page(),
           pageSize: 9,
-        })
+        }).pipe(
+          map(res => { this.loading.set(false); return res; }),
+          catchError(() => { this.loading.set(false); return of(null); })
+        )
       )
     ),
     { initialValue: null }
   );
 
-  protected readonly loading    = computed(() => this.result() === null);
+  protected readonly loading    = signal(true);
   protected readonly totalCount = computed(() => this.result()?.totalCount ?? 0);
   protected readonly totalPages = computed(() => this.result()?.totalPages ?? 1);
   protected readonly cards      = computed<CompanyCardData[]>(() =>
@@ -390,22 +374,21 @@ export class AnnuaireListComponent {
       id: c.id,
       slug: c.slug,
       name: c.name,
-      sectorLabel: c.sectorLabel,
-      sectorIcon:  c.sectorIcon,
-      description: c.description,
-      city: c.city,
-      isVerified: c.isVerified,
-      isPremium:  c.isPremium,
+      sectorLabel: c.sectors?.[0]?.name || 'N/A',
+      sectorIcon:  'business',
+      description: c.description || '',
+      city: c.cityName || '',
+      isVerified: c.status === 2,
+      isPremium:  false, // TODO: Map from subscription
     }))
   );
 
   constructor() {
-    // Hydrate from query params on first activation.
     this.route.queryParams.subscribe((qp) => {
       this.filters.set({
         query:        qp['q']        ?? '',
-        sector:       qp['secteur']  ?? '',
-        region:       qp['region']   ?? '',
+        sectorId:     qp['secteur']  ?? '',
+        regionId:     qp['region']   ?? '',
         verifiedOnly: qp['verifiees'] === '1',
       });
       this.page.set(qp['page'] ? Math.max(1, Number(qp['page'])) : 1);
@@ -413,7 +396,6 @@ export class AnnuaireListComponent {
     });
   }
 
-  /* ── Filter handlers (debounced/synchronized via syncToUrl) ── */
   protected onQuery(e: Event): void {
     const v = (e.target as HTMLInputElement).value;
     this.filters.update((f) => ({ ...f, query: v }));
@@ -421,11 +403,11 @@ export class AnnuaireListComponent {
     this.syncToUrl();
   }
   protected onSector(e: Event): void {
-    this.filters.update((f) => ({ ...f, sector: (e.target as HTMLSelectElement).value }));
+    this.filters.update((f) => ({ ...f, sectorId: (e.target as HTMLSelectElement).value }));
     this.page.set(1); this.syncToUrl();
   }
   protected onRegion(e: Event): void {
-    this.filters.update((f) => ({ ...f, region: (e.target as HTMLSelectElement).value }));
+    this.filters.update((f) => ({ ...f, regionId: (e.target as HTMLSelectElement).value }));
     this.page.set(1); this.syncToUrl();
   }
   protected onVerifiedOnly(e: Event): void {
@@ -435,7 +417,7 @@ export class AnnuaireListComponent {
   protected onPage(p: number): void { this.page.set(p); this.syncToUrl(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   protected reset(): void {
-    this.filters.set({ query: '', sector: '', region: '', verifiedOnly: false });
+    this.filters.set({ query: '', sectorId: '', regionId: '', verifiedOnly: false });
     this.page.set(1);
     this.syncToUrl();
   }
@@ -447,8 +429,8 @@ export class AnnuaireListComponent {
     const f = this.filters();
     const queryParams: Record<string, string | undefined> = {
       q:         f.query  || undefined,
-      secteur:   f.sector || undefined,
-      region:    f.region || undefined,
+      secteur:   f.sectorId || undefined,
+      region:    f.regionId || undefined,
       verifiees: f.verifiedOnly ? '1' : undefined,
       page:      this.page() > 1 ? String(this.page()) : undefined,
     };

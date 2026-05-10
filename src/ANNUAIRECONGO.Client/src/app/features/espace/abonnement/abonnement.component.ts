@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest } from 'rxjs';
-import { MockEspaceService, MOCK_PLANS, MockPlan } from '@core/services/mock/mock-espace.service';
+import { combineLatest, of, switchMap, catchError, map, Observable } from 'rxjs';
+import { SubscriptionService } from '@core/services/subscription.service';
+import { PlanService } from '@core/services/plan.service';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { Plan, PlanName, Subscription, Company } from '@core/models/company.model';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { PaymentMethodStripComponent } from '@shared/components/payment-method-strip/payment-method-strip.component';
@@ -11,14 +14,8 @@ import { ModalService } from '@shared/services/modal.service';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 import { FR } from '@core/i18n/fr.constants';
 
-/**
- * /espace/abonnement — current subscription summary + plan switcher.
- *
- * Audit fixes:
- *  - M7  : Stripe is exposed alongside MTN MoMo and Airtel Money
- *  - M15 : XAF currency display via the XafPipe
- *  - C4  : real Reactive interactions (no decorative buttons)
- */
+import { DatePipe } from '@angular/common';
+
 @Component({
   selector: 'ac-espace-abonnement',
   standalone: true,
@@ -28,6 +25,7 @@ import { FR } from '@core/i18n/fr.constants';
     SkeletonComponent,
     PaymentMethodStripComponent,
     XafPipe,
+    DatePipe,
   ],
   template: `
     <div class="page">
@@ -46,24 +44,28 @@ import { FR } from '@core/i18n/fr.constants';
         <div style="margin-top: 24px;">
           <ac-skeleton shape="card" height="280px" />
         </div>
+      } @else if (!subscription()) {
+        <div class="panel">
+          <p>Vous n'avez pas encore d'abonnement actif pour votre entreprise.</p>
+          <p class="muted">Choisissez un forfait ci-dessous pour commencer.</p>
+        </div>
       } @else {
         <!-- Current subscription -->
         <section class="current">
           <div class="current-meta">
             <span class="eyebrow">Forfait actuel</span>
-            <h2>{{ subscription()!.planName }}</h2>
+            <h2>{{ getPlanLabel(subscription()!.planName) }}</h2>
             <p class="muted">
-              {{ subscription()!.monthlyPrice | xaf }} <span>/mois</span>
+              Forfait actif
             </p>
             <ul class="meta-list">
               <li>
                 <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                Renouvellement le {{ subscription()!.expiresAt }}
+                Expire le {{ subscription()!.expiresAt | date:'dd/MM/yyyy' }}
               </li>
               <li>
-                <span class="material-symbols-outlined" aria-hidden="true">autorenew</span>
-                Auto-renouvellement
-                <strong>{{ subscription()!.autoRenew ? 'activé' : 'désactivé' }}</strong>
+                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                Statut: <strong>{{ subscription()!.isActive ? 'Actif' : 'Inactif' }}</strong>
               </li>
             </ul>
           </div>
@@ -71,43 +73,61 @@ import { FR } from '@core/i18n/fr.constants';
             <ac-button variant="outline" iconLeft="receipt_long" (click)="goHistorique()">
               Historique de paiement
             </ac-button>
-            <ac-button variant="ghost" [iconLeft]="subscription()!.autoRenew ? 'pause' : 'play_arrow'" (click)="toggleAutoRenew()">
-              {{ subscription()!.autoRenew ? 'Désactiver le renouvellement' : 'Réactiver le renouvellement' }}
-            </ac-button>
+            @if (subscription()!.isActive) {
+              <ac-button variant="ghost" iconLeft="cancel" (click)="cancel()">
+                Résilier l'abonnement
+              </ac-button>
+            }
           </div>
         </section>
+      }
 
-        <!-- Plans switcher -->
+      <!-- Plans switcher -->
+      @if (!loading()) {
         <section class="plans-section">
           <header class="section-head">
-            <h2>Changer de forfait</h2>
-            <p class="muted">Le différentiel est calculé au prorata. Activation immédiate après validation du paiement.</p>
+            <h2>{{ subscription() ? 'Changer de forfait' : 'Choisir un forfait' }}</h2>
+            <p class="muted">Activation immédiate après validation du paiement.</p>
           </header>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @for (plan of plans; track plan.id) {
-              <article class="plan" [class.is-current]="plan.id === subscription()!.planId">
-                <h3>{{ plan.name }}</h3>
+            @for (plan of allPlans(); track plan.id) {
+              <article class="plan" [class.is-current]="plan.id === subscription()?.planId">
+                <h3>{{ getPlanLabel(plan.name) }}</h3>
                 <p class="plan-price">
-                  @if (plan.monthlyPrice === 0) {
+                  @if (plan.price === 0) {
                     <span class="amount">0</span><span class="suffix">XAF</span>
                   } @else {
-                    <span class="amount">{{ plan.monthlyPrice | xaf }}</span><span class="suffix">/mois</span>
+                    <span class="amount">{{ plan.price | xaf }}</span><span class="suffix">/mois</span>
                   }
                 </p>
                 <ul class="features">
-                  @for (f of plan.features; track f) {
+                  <li>
+                    <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
+                    <span>{{ plan.maxImages }} images max.</span>
+                  </li>
+                  <li>
+                    <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
+                    <span>{{ plan.maxDocuments }} documents max.</span>
+                  </li>
+                  @if (plan.hasAnalytics) {
                     <li>
                       <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
-                      <span>{{ f }}</span>
+                      <span>Statistiques avancées</span>
+                    </li>
+                  }
+                  @if (plan.hasFeaturedBadge) {
+                    <li>
+                      <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
+                      <span>Badge "À la une"</span>
                     </li>
                   }
                 </ul>
-                @if (plan.id === subscription()!.planId) {
-                  <span class="badge badge-verified">Forfait actif</span>
+                @if (plan.id === subscription()?.planId) {
+                  <span class="badge badge-verified">Forfait actuel</span>
                 } @else {
-                  <ac-button [variant]="plan.id === 'premium' ? 'primary' : 'outline'" (click)="changePlan(plan)">
-                    Choisir {{ plan.name }}
+                  <ac-button [variant]="+plan.name >= 2 ? 'primary' : 'outline'" (click)="changePlan(plan)">
+                    Choisir {{ getPlanLabel(plan.name) }}
                   </ac-button>
                 }
               </article>
@@ -157,7 +177,6 @@ import { FR } from '@core/i18n/fr.constants';
     }
     .current-meta .eyebrow { color: var(--color-primary-fixed); }
     .current-meta .muted { color: var(--color-primary-fixed); margin: 0 0 16px; font-size: 18px; }
-    .current-meta .muted span { font-size: 14px; opacity: 0.8; }
     .meta-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
     .meta-list li { display: flex; align-items: center; gap: 8px; font-size: 14px; }
     .meta-list strong { font-weight: 700; }
@@ -207,55 +226,93 @@ import { FR } from '@core/i18n/fr.constants';
 })
 export class EspaceAbonnementComponent {
   protected readonly FR = FR;
-  protected readonly plans: ReadonlyArray<MockPlan> = MOCK_PLANS;
-
-  private readonly espace = inject(MockEspaceService);
+  
+  private readonly subService = inject(SubscriptionService);
+  private readonly planService = inject(PlanService);
+  private readonly boService   = inject(BusinessOwnerService);
   private readonly toast  = inject(ToastService);
   private readonly modal  = inject(ModalService);
   private readonly router = inject(Router);
 
-  protected readonly autoRenew = signal(true);
-
-  protected readonly data = toSignal(
-    combineLatest({ subscription: this.espace.mySubscription() }),
+  private readonly company = toSignal<Company | null>(
+    this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
     { initialValue: null }
   );
-  protected readonly loading       = computed(() => this.data() === null);
-  protected readonly subscription  = computed(() => {
-    const s = this.data()?.subscription ?? null;
-    if (s && s.autoRenew !== this.autoRenew()) {
-      // sync once with the seed so the toggle starts in the right state
-      this.autoRenew.set(s.autoRenew);
-    }
-    return s ? { ...s, autoRenew: this.autoRenew() } : null;
+
+  private readonly plansData = toSignal<Plan[] | null>(this.planService.getPlans(), { initialValue: null });
+  protected readonly allPlans = computed(() => (this.plansData() || []).filter(p => p.isActive));
+
+  private readonly subsData = toSignal<Subscription[] | null>(
+    this.boService.getMyCompanies().pipe(
+      switchMap((list: Company[]): Observable<Subscription[]> => {
+        if (!list[0]) return of([] as Subscription[]);
+        return this.subService.getCompanySubscriptions(list[0].id);
+      }),
+      catchError(() => of([] as Subscription[]))
+    ),
+    { initialValue: null }
+  );
+
+  protected readonly subscription = computed(() => {
+    return this.subsData()?.find(s => s.isActive) || null;
   });
+
+  protected readonly loading = computed(() => this.company() === null && this.subsData() === null && this.plansData() === null);
 
   protected goHistorique(): void {
     this.router.navigateByUrl('/espace/abonnement/historique');
   }
 
-  protected toggleAutoRenew(): void {
-    this.autoRenew.update((v) => !v);
-    this.toast.info(this.autoRenew()
-      ? 'Renouvellement automatique réactivé.'
-      : 'Renouvellement automatique désactivé. Pensez à renouveler manuellement avant échéance.');
+  protected cancel(): void {
+    const s = this.subscription();
+    if (!s) return;
+    this.subService.cancelSubscription(s.id).subscribe(() => {
+      this.toast.success('Votre abonnement a été résilié.');
+      window.location.reload();
+    });
   }
 
-  protected async changePlan(plan: MockPlan): Promise<void> {
+  protected async changePlan(plan: Plan): Promise<void> {
+    const c = this.company();
+    if (!c) {
+      this.toast.error('Aucune entreprise trouvée pour cet utilisateur.');
+      return;
+    }
+
     const { confirmed } = await this.modal.confirm({
-      title: `Passer au forfait ${plan.name} ?`,
-      body: plan.monthlyPrice === 0
-        ? `Votre fiche basculera au forfait gratuit dès la fin de votre période en cours.`
-        : `Vous serez facturé ${new Intl.NumberFormat('fr-FR').format(plan.monthlyPrice)} XAF par mois. Le différentiel est calculé au prorata.`,
-      confirmLabel: 'Continuer vers le paiement',
+      title: `Choisir le forfait ${this.getPlanLabel(plan.name)} ?`,
+      body: plan.price === 0
+        ? `Votre fiche basculera au forfait gratuit.`
+        : `Vous serez facturé ${new Intl.NumberFormat('fr-FR').format(plan.price)} XAF.`,
+      confirmLabel: 'Continuer',
       tone: 'confirm',
     });
     if (!confirmed) return;
 
-    this.espace.changePlan(plan.id).subscribe(() => {
-      // Mock payment outcome — flip a coin and route to succès / échec
-      const success = Math.random() > 0.15;
-      this.router.navigateByUrl(success ? '/espace/abonnement/succes' : '/espace/abonnement/echec');
+    // Use Stripe by default for now in this flow
+    this.subService.createSubscription({
+      companyId: c.id,
+      planId: plan.id,
+      method: 0 // Stripe
+    }).subscribe({
+      next: () => {
+        this.toast.success('Demande d\'abonnement créée.');
+        this.router.navigateByUrl('/espace/abonnement/succes');
+      },
+      error: (err) => {
+        this.toast.error('Erreur lors de la création de l\'abonnement.');
+      }
     });
+  }
+
+  protected getPlanLabel(name: number | string | undefined): string {
+    if (typeof name === 'string') return name;
+    switch (name) {
+      case PlanName.Free: return 'Gratuit';
+      case PlanName.Basic: return 'Basique';
+      case PlanName.Premium: return 'Premium';
+      case PlanName.Enterprise: return 'Entreprise';
+      default: return 'Standard';
+    }
   }
 }

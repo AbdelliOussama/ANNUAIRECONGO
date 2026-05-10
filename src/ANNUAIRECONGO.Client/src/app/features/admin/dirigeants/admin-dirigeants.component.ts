@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { PaginatedResponse } from '@core/models/company.model';
 
 interface DirigeantRow {
   fullName: string;
@@ -11,10 +12,6 @@ interface DirigeantRow {
   status: string;
 }
 
-/**
- * /admin/dirigeants — back-office view of registered business owners.
- * Reuses the users mock (filtered to role=entreprise).
- */
 @Component({
   selector: 'ac-admin-dirigeants',
   standalone: true,
@@ -48,7 +45,6 @@ interface DirigeantRow {
               <tr>
                 <th>Nom complet</th>
                 <th>E-mail</th>
-                <th>Entreprise</th>
                 <th>Statut</th>
               </tr>
             </thead>
@@ -57,9 +53,8 @@ interface DirigeantRow {
                 <tr>
                   <td class="name">{{ r.fullName }}</td>
                   <td class="email">{{ r.email }}</td>
-                  <td>{{ r.companyName || '—' }}</td>
                   <td>
-                    @if (r.status === 'actif') {
+                    @if (r.status === 'Active') {
                       <span class="badge badge-verified">Actif</span>
                     } @else {
                       <span class="badge badge-pending">{{ r.status }}</span>
@@ -68,7 +63,7 @@ interface DirigeantRow {
                 </tr>
               }
               @if (rows().length === 0) {
-                <tr><td colspan="4" class="empty">Aucun dirigeant ne correspond à votre recherche.</td></tr>
+                <tr><td colspan="3" class="empty">Aucun dirigeant ne correspond à votre recherche.</td></tr>
               }
             </tbody>
           </table>
@@ -94,21 +89,24 @@ interface DirigeantRow {
   `],
 })
 export class AdminDirigeantsComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
   protected readonly query = signal('');
 
-  private readonly users = toSignal(this.admin.users$(), { initialValue: [] });
-  protected readonly loading = computed(() => this.users().length === 0 && this.firstLoad());
-  private readonly firstLoad = signal(true);
-  constructor() { setTimeout(() => this.firstLoad.set(false), 200); }
+  private readonly users = toSignal(this.adminService.getUsers(1, 100), { 
+    initialValue: { items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 } as PaginatedResponse<any> 
+  });
+  
+  protected readonly loading = computed(() => this.users().items.length === 0 && this.query() === '');
 
   protected readonly rows = computed<DirigeantRow[]>(() => {
     const q = this.query().trim().toLowerCase();
-    return this.users()
-      .filter((u) => u.role === 'entreprise')
-      .map((u) => ({ fullName: u.fullName, email: u.email, position: 'Responsable', companyName: u.companyName, status: u.status }))
-      .filter((r) => !q || [r.fullName, r.email, r.companyName].some((v) => (v || '').toLowerCase().includes(q)));
+    const items = this.users().items;
+    return items
+      .filter((u: any) => u.roles?.includes('BusinessOwner') || u.roles?.includes('entreprise'))
+      .map((u: any) => ({ fullName: u.fullName, email: u.email, position: 'Responsable', status: u.status }))
+      .filter((r: any) => !q || [r.fullName, r.email].some((v) => (v || '').toLowerCase().includes(q)));
   });
 
   protected onQuery(e: Event): void { this.query.set((e.target as HTMLInputElement).value); }
 }
+

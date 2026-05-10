@@ -1,16 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, effect, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminSettings } from '@core/services/mock/mock-admin.service';
+import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
 
-/**
- * /admin/parametres — global platform settings.
- * Audit P1 — page absente du livrable initial.
- */
 @Component({
   selector: 'ac-admin-parametres',
   standalone: true,
@@ -52,31 +48,12 @@ import { ToastService } from '@shared/services/toast.service';
             </label>
 
             <label class="check">
-              <input type="checkbox" formControlName="autoRenewBilling" />
-              <span>
-                <strong>Auto-renouvellement par défaut</strong>
-                <em>Activer le renouvellement automatique pour toutes les nouvelles souscriptions.</em>
-              </span>
-            </label>
-
-            <label class="check">
               <input type="checkbox" formControlName="publicRegistration" />
               <span>
                 <strong>Inscriptions publiques ouvertes</strong>
                 <em>Désactiver pour mettre la plateforme en mode invitation seule.</em>
               </span>
             </label>
-          </fieldset>
-
-          <fieldset class="card">
-            <legend>Localisation</legend>
-            <div class="form-group">
-              <label class="form-label" for="default-locale">Langue par défaut</label>
-              <select id="default-locale" formControlName="defaultLocale" class="form-input">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-              </select>
-            </div>
           </fieldset>
 
           <div class="actions">
@@ -121,34 +98,30 @@ import { ToastService } from '@shared/services/toast.service';
   `],
 })
 export class AdminParametresComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly adminService = inject(AdminService);
   private readonly fb    = inject(FormBuilder);
   private readonly toast = inject(ToastService);
 
   protected readonly saving = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
-    siteName:           ['', [Validators.required, Validators.minLength(2)]],
-    contactEmail:       ['', [Validators.required, Validators.email]],
-    supportPhone:       [''],
+    siteName:           ['Annuaire Congo', [Validators.required, Validators.minLength(2)]],
+    contactEmail:       ['contact@annuairecongo.cg', [Validators.required, Validators.email]],
+    supportPhone:       ['+242 06 000 0000'],
     manualValidation:   [true],
-    autoRenewBilling:   [true],
     publicRegistration: [true],
-    defaultLocale:      ['fr' as 'fr' | 'en'],
   });
 
-  private readonly initial = toSignal(this.admin.settings$(), { initialValue: null });
-  // Patch the form once the initial settings arrive.
-  private readonly _ = (() => {
-    queueMicrotask(() => {
-      const sub = this.admin.settings$().subscribe((s) => this.form.patchValue(s));
-      // Auto-cleanup not strictly needed (in-memory mock), but we let RxJS GC it.
-      setTimeout(() => sub.unsubscribe(), 1000);
-    });
-    return null;
-  })();
+  private readonly initial = toSignal(this.adminService.getSettings(), { initialValue: null });
 
-  protected readonly loading = (() => this.initial() === null && false);
+  constructor() {
+    effect(() => {
+      const s = this.initial();
+      if (s) this.form.patchValue(s);
+    });
+  }
+
+  protected readonly loading = computed(() => this.initial() === null);
 
   protected save(): void {
     if (this.form.invalid) {
@@ -156,9 +129,15 @@ export class AdminParametresComponent {
       return;
     }
     this.saving.set(true);
-    this.admin.saveSettings(this.form.getRawValue() as AdminSettings).subscribe(() => {
-      this.saving.set(false);
-      this.toast.success('Paramètres enregistrés.');
+    this.adminService.updateSettings(this.form.getRawValue()).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.toast.success('Paramètres enregistrés.');
+      },
+      error: () => {
+        this.saving.set(false);
+        this.toast.error('Erreur lors de l\'enregistrement.');
+      }
     });
   }
 }

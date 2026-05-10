@@ -1,17 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, Signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockEspaceService } from '@core/services/mock/mock-espace.service';
+import { SubscriptionService } from '@core/services/subscription.service';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 import { FR } from '@core/i18n/fr.constants';
+import { switchMap, of, catchError, map, Observable } from 'rxjs';
+import { Payment, PaymentStatus, PaymentMethod, BusinessOwner, Company } from '@core/models/company.model';
+import { DatePipe } from '@angular/common';
 
-/**
- * /espace/abonnement/historique — payment history table.
- *
- * Audit M15: amounts displayed via the XafPipe (XAF).
- */
 @Component({
   selector: 'ac-historique-paiements',
   standalone: true,
@@ -21,6 +20,7 @@ import { FR } from '@core/i18n/fr.constants';
     EmptyStateComponent,
     SkeletonComponent,
     XafPipe,
+    DatePipe
   ],
   template: `
     <div class="page">
@@ -32,7 +32,7 @@ import { FR } from '@core/i18n/fr.constants';
 
       @if (loading()) {
         <ac-skeleton shape="card" height="220px" />
-      } @else if (rows().length === 0) {
+      } @else if ((rows()?.length ?? 0) === 0) {
         <ac-empty-state
           icon="receipt_long"
           title="Aucun paiement enregistré"
@@ -45,9 +45,8 @@ import { FR } from '@core/i18n/fr.constants';
           <table aria-label="Historique des paiements">
             <thead>
               <tr>
-                <th>Référence</th>
+                <th>ID Transaction</th>
                 <th>Date</th>
-                <th>Forfait</th>
                 <th>Montant</th>
                 <th>Moyen</th>
                 <th>Statut</th>
@@ -55,11 +54,10 @@ import { FR } from '@core/i18n/fr.constants';
               </tr>
             </thead>
             <tbody>
-              @for (p of rows(); track p.id) {
+              @for (p of rows() || []; track p.id) {
                 <tr>
-                  <td class="mono">{{ p.reference }}</td>
-                  <td>{{ p.date }}</td>
-                  <td>{{ p.planName }}</td>
+                  <td class="mono">{{ p.id.split('-')[0] }}</td>
+                  <td>{{ p.paidAt | date:'dd/MM/yyyy' }}</td>
                   <td class="amount">{{ p.amount | xaf }}</td>
                   <td>
                     <span class="method">
@@ -71,10 +69,14 @@ import { FR } from '@core/i18n/fr.constants';
                     <span [class]="'badge ' + statusClass(p.status)">{{ statusLabel(p.status) }}</span>
                   </td>
                   <td class="actions-col">
-                    <a [href]="p.invoiceUrl" target="_blank" rel="noopener" class="link" [attr.aria-label]="'Télécharger la facture ' + p.reference">
-                      <span class="material-symbols-outlined" aria-hidden="true">download</span>
-                      Facture
-                    </a>
+                    @if (p.invoiceUrl) {
+                      <a [href]="p.invoiceUrl" target="_blank" rel="noopener" class="link">
+                        <span class="material-symbols-outlined" aria-hidden="true">download</span>
+                        Facture
+                      </a>
+                    } @else {
+                      <span class="muted">N/A</span>
+                    }
                   </td>
                 </tr>
               }
@@ -127,45 +129,62 @@ import { FR } from '@core/i18n/fr.constants';
     .link:hover { text-decoration: underline; }
     .link .material-symbols-outlined { font-size: 18px; }
 
-    .badge-paye      { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
-    .badge-en-cours  { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); }
-    .badge-echoue    { background: var(--color-error-container); color: var(--color-on-error-container); }
-    .badge-rembourse { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
+    .badge-0 { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); } /* Pending */
+    .badge-2 { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); } /* Completed */
+    .badge-3 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Failed */
+    .badge-4 { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); } /* Refunded */
   `],
 })
 export class HistoriquePaiementsComponent {
   protected readonly FR = FR;
-  private readonly espace = inject(MockEspaceService);
+  private readonly subscriptionService = inject(SubscriptionService);
+  private readonly ownerService = inject(BusinessOwnerService);
 
-  protected readonly rows = toSignal(this.espace.payments$(), { initialValue: [] });
-  protected readonly loading = computed(() => this.rows().length === 0 && !this.loaded());
+  private readonly owner = toSignal<BusinessOwner | null>(
+    this.ownerService.getCurrentOwner().pipe(map(o => o as BusinessOwner | null)), 
+    { initialValue: null }
+  );
+  
+  protected readonly rows = toSignal<Payment[] | null>(
+    this.ownerService.getMyCompanies().pipe(
+      switchMap((list: Company[]) => {
+        if (!list[0]) return of([] as Payment[]);
+        return this.subscriptionService.getCompanyPayments(list[0].id);
+      }),
+      catchError(() => of([] as Payment[]))
+    ),
+    { initialValue: null }
+  );
 
-  // Track first emission so we don't show empty-state during the initial delay.
-  private readonly loaded = toSignal(this.espace.payments$(), { initialValue: undefined });
+  protected readonly loading = computed(() => this.owner() === null && this.rows() === null);
 
-  protected methodLabel(m: 'mtn' | 'airtel' | 'stripe'): string {
+  protected methodLabel(m: number): string {
     return ({
-      mtn:    'MTN Mobile Money',
-      airtel: 'Airtel Money',
-      stripe: 'Carte bancaire',
-    } as const)[m];
+      [PaymentMethod.MTNMoMo]:    'MTN MoMo',
+      [PaymentMethod.AirtelMoney]: 'Airtel Money',
+      [PaymentMethod.Stripe]:      'Carte bancaire',
+    } as any)[m] || 'Inconnu';
   }
-  protected methodColor(m: 'mtn' | 'airtel' | 'stripe'): string {
+
+  protected methodColor(m: number): string {
     return ({
-      mtn:    '#fcd34d',
-      airtel: '#fb7185',
-      stripe: '#3b82f6',
-    } as const)[m];
+      [PaymentMethod.MTNMoMo]:    '#fcd34d',
+      [PaymentMethod.AirtelMoney]: '#fb7185',
+      [PaymentMethod.Stripe]:      '#3b82f6',
+    } as any)[m] || '#94a3b8';
   }
-  protected statusLabel(s: string): string {
+
+  protected statusLabel(s: number): string {
     return ({
-      paye:      'Payé',
-      'en-cours':'En cours',
-      echoue:    'Échoué',
-      rembourse: 'Remboursé',
-    } as Record<string, string>)[s] ?? s;
+      [PaymentStatus.Pending]:   'En attente',
+      [PaymentStatus.Completed]: 'Payé',
+      [PaymentStatus.Failed]:    'Échoué',
+      [PaymentStatus.Refunded]:  'Remboursé',
+      [PaymentStatus.Rejected]:  'Rejeté',
+    } as any)[s] || 'Inconnu';
   }
-  protected statusClass(s: string): string {
+
+  protected statusClass(s: number): string {
     return `badge-${s}`;
   }
 }

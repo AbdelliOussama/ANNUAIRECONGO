@@ -7,7 +7,10 @@ import {
   PaginatedResponse,
   CompanyFilter,
   CreateCompanyRequest,
-  UpdateCompanyProfileRequest
+  UpdateCompanyProfileRequest,
+  Sector,
+  Region,
+  City
 } from '../models/company.model';
 
 @Injectable({
@@ -16,6 +19,18 @@ import {
 export class CompanyService {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
+
+  getSectors(): Observable<Sector[]> {
+    return this.api.get<Sector[]>('/api/v1/companies/sectors');
+  }
+
+  getRegions(): Observable<Region[]> {
+    return this.api.get<Region[]>('/api/v1/companies/regions');
+  }
+
+  getCities(): Observable<City[]> {
+    return this.api.get<City[]>('/api/v1/companies/cities');
+  }
 
 getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>> {
       const params: Record<string, string | number> = {};
@@ -35,83 +50,87 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
      return this.api.get<Company>(`/api/v1/companies/${id}`);
    }
 
+   getCompanyBySlug(slug: string): Observable<Company> {
+     return this.api.get<Company>(`/api/v1/companies/slug/${slug}`);
+   }
+
    createCompany(data: CreateCompanyRequest): Observable<Company> {
      return this.api.post<Company>('/api/v1/companies', data);
    }
 
-   updateCompanyProfile(id: string, data: UpdateCompanyProfileRequest): Observable<Company> {
-     return this.api.put<Company>(`/api/v1/companies/${id}/UpdateCompanyProfile`, data);
-   }
+    updateCompanyProfile(id: string, data: UpdateCompanyProfileRequest): Observable<Company> {
+      return this.api.put<Company>(`/api/v1/companies/${id}/update-company-profile`, data);
+    }
 
-   updateCompanyMedia(id: string, logoUrl?: string, coverUrl?: string): Observable<Company> {
-     return this.api.put<Company>(`/api/v1/companies/${id}/UpdateMedia`, { logoUrl, coverUrl });
-   }
+    updateCompanyMedia(id: string, logoUrl?: string, coverUrl?: string): Observable<Company> {
+      return this.api.put<Company>(`/api/v1/companies/${id}/update-media`, { logoUrl, coverUrl });
+    }
 
-   submitCompany(id: string): Observable<void> {
-     return this.api.put<void>(`/api/v1/companies/${id}/SubmitCompany`, {});
-   }
+    submitCompany(id: string): Observable<void> {
+      return this.api.post<void>(`/api/v1/companies/${id}/submit-company`, {});
+    }
 
-   validateCompany(id: string): Observable<void> {
-     return this.api.put<void>(`/api/v1/companies/${id}/ValidateCompany`, {});
-   }
+    validateCompany(id: string): Observable<void> {
+      return this.api.post<void>(`/api/v1/companies/${id}/validate-company`, {});
+    }
 
-   addContact(companyId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
-     return this.api.post(`/api/v1/companies/${companyId}/AddContact`, { type, value, isPrimary });
-   }
+    addContact(companyId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
+      return this.api.post(`/api/v1/companies/${companyId}/add-contact`, { type, value, isPrimary });
+    }
 
    removeContact(companyId: string, contactId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/RemoveContact`, { body: contactId });
+     return this.api.delete(`/api/v1/companies/${companyId}/remove-contact`, { body: contactId });
    }
 
-   updateContact(companyId: string, contactId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
-     return this.api.put(`/api/v1/companies/${companyId}/UpdateContact`, { contactId, type, value, isPrimary });
-   }
+    updateContact(companyId: string, contactId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
+      return this.api.put(`/api/v1/companies/${companyId}/update-contact`, { contactId, type, value, isPrimary });
+    }
 
-  addService(companyId: string, title: string, description?: string): Observable<any> {
-    return this.api.post(`/api/v1/companies/${companyId}/AddService`, { title, description });
-  }
+   addService(companyId: string, title: string, description?: string): Observable<any> {
+     return this.api.post(`/api/v1/companies/${companyId}/add-service`, { title, description });
+   }
 
    removeService(companyId: string, serviceId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/RemoveService`, { body: serviceId });
+     return this.api.delete(`/api/v1/companies/${companyId}/remove-service`, { body: serviceId });
    }
 
-  addImage(companyId: string, imageUrl: string, displayOrder?: number, caption?: string): Observable<any> {
-    return this.api.post(`/api/v1/companies/${companyId}/AddImage`, { imageUrl, displayOrder, caption });
-  }
+   addImage(companyId: string, imageUrl: string, displayOrder?: number, caption?: string): Observable<any> {
+     return this.api.post(`/api/v1/companies/${companyId}/add-image`, { imageUrl, displayOrder, caption });
+   }
 
    removeImage(companyId: string, imageId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/RemoveImage`, { body: imageId });
+     return this.api.delete(`/api/v1/companies/${companyId}/remove-image`, { body: imageId });
    }
 
-  addDocument(companyId: string, documentUrl: string, documentType: string, description?: string, isPublic?: boolean): Observable<any> {
-    return this.api.post(`/api/v1/companies/${companyId}/AddDocument`, { documentUrl, documentType, description, isPublic });
-  }
+   addDocument(companyId: string, documentUrl: string, documentType: string, description?: string, isPublic?: boolean): Observable<any> {
+     return this.api.post(`/api/v1/companies/${companyId}/add-document`, { documentUrl, documentType, description, isPublic });
+   }
 
    removeDocument(companyId: string, documentId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/RemoveDocument`, { body: documentId });
+     return this.api.delete(`/api/v1/companies/${companyId}/remove-document`, { body: documentId });
    }
 
-  reportCompany(companyId: string, reason: string): Observable<void> {
-    return this.api.post(`/api/v1/companies/${companyId}/AddReport`, { reason });
-  }
+   reportCompany(companyId: string, reason: string): Observable<void> {
+     return this.api.post(`/api/v1/companies/${companyId}/add-report`, { reason });
+   }
 
   trackContactClick(companyId: string, contactType: number): Observable<void> {
     return this.api.post(`/api/v1/companies/${companyId}/contact-click`, { contactType });
   }
 
-  suspendCompany(companyId: string): Observable<void> {
-    return this.api.put<void>(`/api/v1/companies/${companyId}/SuspendCompany`, {});
-  }
+   suspendCompany(companyId: string): Observable<void> {
+     return this.api.post<void>(`/api/v1/companies/${companyId}/suspend-company`, {});
+   }
 
-  reactivateCompany(companyId: string): Observable<void> {
-    return this.api.put<void>(`/api/v1/companies/${companyId}/ReactivateCompany`, {});
-  }
+   reactivateCompany(companyId: string): Observable<void> {
+     return this.api.post<void>(`/api/v1/companies/${companyId}/reactivate-company`, {});
+   }
 
-  rejectCompany(companyId: string, reason: string): Observable<void> {
-    return this.api.put<void>(`/api/v1/companies/${companyId}/RejectCompany`, { reason });
-  }
+   rejectCompany(companyId: string, reason: string): Observable<void> {
+     return this.api.post<void>(`/api/v1/companies/${companyId}/reject-company`, { reason });
+   }
 
-  setFeatured(companyId: string, isFeatured: boolean): Observable<void> {
-    return this.api.put<void>(`/api/v1/companies/${companyId}/setFeatured`, isFeatured);
-  }
+   setFeatured(companyId: string, isFeatured: boolean): Observable<void> {
+     return this.api.post<void>(`/api/v1/companies/${companyId}/set-featured`, isFeatured);
+   }
 }

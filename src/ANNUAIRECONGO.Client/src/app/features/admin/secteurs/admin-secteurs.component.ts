@@ -1,17 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, AdminSector } from '@core/services/mock/mock-admin.service';
+import { CompanyService } from '@core/services/company.service';
+import { StatsService } from '@core/services/stats.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { ToastService } from '@shared/services/toast.service';
+import { SectorStats } from '@core/models/company.model';
+import { combineLatest, map } from 'rxjs';
 
-/**
- * /admin/secteurs — manage the SFD sector taxonomy.
- *
- * Audit C2: the 6 SFD sectors are LOCKED — they can be activated /
- * deactivated but not deleted, and the page never proposes to add new ones
- * that would deviate from the cahier des charges.
- */
 @Component({
   selector: 'ac-admin-secteurs',
   standalone: true,
@@ -23,8 +19,7 @@ import { ToastService } from '@shared/services/toast.service';
         <p class="eyebrow">Référentiel</p>
         <h1>Secteurs stratégiques</h1>
         <p class="sub">
-          Les 6 secteurs alignés sur le cahier des charges officiel. Vous pouvez activer ou désactiver
-          temporairement un secteur, mais la liste est verrouillée pour garantir la cohérence avec le SFD.
+          Les secteurs alignés sur le cahier des charges officiel. Vous pouvez visualiser l'activité par secteur ici.
         </p>
       </header>
 
@@ -32,25 +27,19 @@ import { ToastService } from '@shared/services/toast.service';
         <ac-skeleton shape="card" height="240px" />
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (s of sectors(); track s.slug) {
-            <article class="card" [class.is-inactive]="!s.isActive">
+          @for (s of sectors(); track s.sectorId) {
+            <article class="card">
               <div class="head">
                 <span class="icon" aria-hidden="true">
-                  <span class="material-symbols-outlined">{{ s.icon }}</span>
+                  <span class="material-symbols-outlined">apartment</span>
                 </span>
-                @if (s.isLocked) {
-                  <span class="badge badge-pro">Verrouillé SFD</span>
-                }
+                <span class="badge badge-pro">Verrouillé SFD</span>
               </div>
-              <h3>{{ s.name }}</h3>
-              <p class="count">{{ s.count }} entreprise(s) inscrite(s)</p>
+              <h3>{{ s.sectorName }}</h3>
+              <p class="count">{{ s.companyCount }} entreprise(s) inscrite(s)</p>
               <div class="actions">
-                <ac-button
-                  [variant]="s.isActive ? 'outline' : 'primary'"
-                  [iconLeft]="s.isActive ? 'visibility_off' : 'visibility'"
-                  (click)="toggle(s)"
-                >
-                  {{ s.isActive ? 'Désactiver' : 'Activer' }}
+                <ac-button variant="outline" iconLeft="visibility">
+                  Voir entreprises
                 </ac-button>
               </div>
             </article>
@@ -75,7 +64,6 @@ import { ToastService } from '@shared/services/toast.service';
       gap: 12px;
       transition: border-color 0.2s, opacity 0.2s;
     }
-    .card.is-inactive { opacity: 0.6; }
 
     .head { display: flex; justify-content: space-between; align-items: flex-start; }
     .icon {
@@ -93,15 +81,13 @@ import { ToastService } from '@shared/services/toast.service';
   `],
 })
 export class AdminSecteursComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly statsService = inject(StatsService);
   private readonly toast = inject(ToastService);
 
-  protected readonly sectors = toSignal(this.admin.sectors$(), { initialValue: [] as AdminSector[] });
+  protected readonly sectors = toSignal(this.statsService.getSectorStats(), { initialValue: [] as SectorStats[] });
   protected readonly loading = computed(() => this.sectors().length === 0);
 
-  protected toggle(s: AdminSector): void {
-    this.admin.toggleSector(s.slug).subscribe(() => {
-      this.toast.success(s.isActive ? `${s.name} masqué de l'annuaire.` : `${s.name} de nouveau visible.`);
-    });
+  protected toggle(s: any): void {
+    this.toast.info('Gestion du statut des secteurs disponible en version 2.0.');
   }
 }

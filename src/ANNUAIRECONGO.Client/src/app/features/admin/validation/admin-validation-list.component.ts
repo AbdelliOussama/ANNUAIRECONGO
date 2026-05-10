@@ -1,21 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockAdminService, PendingFiche } from '@core/services/mock/mock-admin.service';
+import { CompanyService } from '@core/services/company.service';
+import { CompanyStatus, PaginatedResponse, Company } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { DatePipe } from '@angular/common';
 
 type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
 
-/**
- * /admin/validation — list of fiches awaiting / processed validation.
- * Audit M9: every fiche links to the detail page where Reject can collect a motif.
- */
 @Component({
   selector: 'ac-admin-validation-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, EmptyStateComponent, SkeletonComponent],
+  imports: [RouterLink, EmptyStateComponent, SkeletonComponent, DatePipe],
   template: `
     <div class="page">
       <header class="page-head">
@@ -57,7 +55,7 @@ type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
                 <th>Entreprise</th>
                 <th>Secteur</th>
                 <th>Ville</th>
-                <th>Soumise par</th>
+                <th>Propriétaire ID</th>
                 <th>Date</th>
                 <th>Statut</th>
                 <th class="sr-only">Actions</th>
@@ -74,9 +72,8 @@ type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
                   <td>{{ p.city }}</td>
                   <td>
                     <p class="owner">{{ p.ownerName }}</p>
-                    <p class="email">{{ p.ownerEmail }}</p>
                   </td>
-                  <td>{{ p.submittedAt }}</td>
+                  <td>{{ p.submittedAt | date:'dd/MM/yyyy' }}</td>
                   <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
                   <td class="actions-col">
                     <a [routerLink]="['/admin/validation', p.id]" class="link" [attr.aria-label]="'Examiner ' + p.name">
@@ -135,7 +132,6 @@ type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
     .title { font-weight: 700; color: var(--color-on-surface); margin: 0 0 4px; }
     .rccm { font-size: 11px; color: var(--color-outline); margin: 0; font-variant-numeric: tabular-nums; }
     .owner { font-weight: 600; color: var(--color-on-surface); margin: 0; }
-    .email { font-size: 11px; color: var(--color-outline); margin: 0; }
 
     .status { display: inline-flex; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
     .status-en-attente { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
@@ -148,7 +144,7 @@ type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
   `],
 })
 export class AdminValidationListComponent {
-  private readonly admin = inject(MockAdminService);
+  private readonly companyService = inject(CompanyService);
   protected readonly statusFilter = signal<StatusFilter>('en-attente');
 
   protected readonly filters: ReadonlyArray<{ value: StatusFilter; label: string }> = [
@@ -158,22 +154,50 @@ export class AdminValidationListComponent {
     { value: 'rejetee',     label: 'Refusées'    },
   ];
 
-  private readonly all = toSignal(this.admin.pendingList$(), { initialValue: [] as PendingFiche[] });
-  protected readonly loading = computed(() => this.all().length === 0 && this.firstLoad());
+  private readonly companiesPage = toSignal(
+    this.companyService.getCompanies({ pageSize: 1000 }), 
+    { initialValue: { items: [], pageNumber: 1, pageSize: 1000, totalCount: 0, totalPages: 0 } as PaginatedResponse<Company> }
+  );
+
+  protected readonly loading = computed(() => this.companiesPage().items.length === 0 && this.firstLoad());
   private readonly firstLoad = signal(true);
 
   constructor() {
-    // Once the first emission is in, mark loading as done.
-    setTimeout(() => this.firstLoad.set(false), 200);
+    setTimeout(() => this.firstLoad.set(false), 500);
   }
 
   protected readonly visible = computed(() => {
     const f = this.statusFilter();
-    return f === 'all' ? this.all() : this.all().filter((p) => p.status === f);
+    const all = this.allCompanies();
+    return f === 'all' ? all : all.filter((p) => p.status === f);
   });
 
+  private readonly allCompanies = computed(() => {
+    const items = this.companiesPage()?.items || [];
+    return items.map(c => ({
+      id: c.id,
+      name: c.name,
+      rccm: c.rccm || 'N/A',
+      sectorLabel: c.sectors?.[0]?.name || 'N/A',
+      city: c.cityName || 'N/A',
+      ownerName: c.ownerId, // We only have ownerId here
+      submittedAt: c.createdAt,
+      status: this.mapStatus(c.status)
+    }));
+  });
+
+  private mapStatus(status: number): string {
+    switch (status) {
+      case 1: return 'en-attente';
+      case 2: return 'validee';
+      case 3: return 'rejetee';
+      default: return 'en-attente';
+    }
+  }
+
   protected count(filter: StatusFilter): number {
-    return filter === 'all' ? this.all().length : this.all().filter((p) => p.status === filter).length;
+    const all = this.allCompanies();
+    return filter === 'all' ? all.length : all.filter((p) => p.status === filter).length;
   }
 
   protected statusLabel(s: string): string {

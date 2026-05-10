@@ -1,15 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MockEspaceService, MockNotification } from '@core/services/mock/mock-espace.service';
+import { NotificationService } from '@core/services/notification.service';
+import { Notification } from '@core/models/company.model';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { ToastService } from '@shared/services/toast.service';
 import { FR } from '@core/i18n/fr.constants';
+import { DatePipe } from '@angular/common';
 
-/**
- * /espace/notifications — notification center for the entreprise owner.
- */
 @Component({
   selector: 'ac-espace-notifications',
   standalone: true,
@@ -18,6 +17,7 @@ import { FR } from '@core/i18n/fr.constants';
     RouterLink,
     ButtonComponent,
     EmptyStateComponent,
+    DatePipe
   ],
   template: `
     <div class="page">
@@ -46,16 +46,16 @@ import { FR } from '@core/i18n/fr.constants';
       } @else {
         <ul class="list">
           @for (n of items(); track n.id) {
-            <li [class]="'item tone-' + n.tone" [class.is-unread]="!n.isRead">
+            <li [class]="'item tone-' + (n.type || 'info')" [class.is-unread]="!n.isRead">
               <div class="dot" aria-hidden="true">
-                <span class="material-symbols-outlined icon-filled">{{ icon(n.tone) }}</span>
+                <span class="material-symbols-outlined icon-filled">{{ icon(n.type) }}</span>
               </div>
               <div class="body">
                 <div class="head-row">
-                  <p class="title">{{ n.title }}</p>
-                  <span class="date">{{ n.createdAt }}</span>
+                  <p class="title">{{ n.message }}</p>
+                  <span class="date">{{ n.createdAt | date:'short' }}</span>
                 </div>
-                <p class="text">{{ n.body }}</p>
+                <p class="text">{{ n.message }}</p>
                 @if (n.link) {
                   <a [routerLink]="n.link" class="link">Voir le détail</a>
                 }
@@ -130,40 +130,39 @@ import { FR } from '@core/i18n/fr.constants';
 })
 export class EspaceNotificationsComponent {
   protected readonly FR = FR;
-  private readonly espace = inject(MockEspaceService);
+  private readonly notificationService = inject(NotificationService);
   private readonly toast  = inject(ToastService);
 
-  protected readonly items = signal<MockNotification[]>([]);
+  protected readonly items = signal<Notification[]>([]);
 
-  // Hydrate once on activation.
-  private readonly initial = toSignal(this.espace.notifications$(), { initialValue: undefined });
-  // Sync the initial result into our writable signal so we can mutate locally.
+  private readonly initial = toSignal(this.notificationService.getNotifications(), { initialValue: [] as Notification[] });
+  
   private readonly _ = computed(() => {
     const v = this.initial();
-    if (v && this.items().length === 0) this.items.set([...v]);
+    if (v.length && this.items().length === 0) this.items.set([...v]);
     return null;
   });
   constructor() { this._(); }
 
   protected readonly unreadCount = computed(() => this.items().filter((n) => !n.isRead).length);
 
-  protected icon(tone: 'success' | 'info' | 'warning' | 'error'): string {
+  protected icon(type?: string): string {
     return ({
-      success: 'check_circle',
-      info:    'info',
-      warning: 'warning',
-      error:   'error',
-    } as const)[tone];
+      Success: 'check_circle',
+      Info:    'info',
+      Warning: 'warning',
+      Error:   'error',
+    } as any)[type || 'Info'] || 'info';
   }
 
-  protected markRead(n: MockNotification): void {
-    this.espace.markRead(n.id).subscribe(() => {
+  protected markRead(n: Notification): void {
+    this.notificationService.markAsRead(n.id).subscribe(() => {
       this.items.update((list) => list.map((x) => x.id === n.id ? { ...x, isRead: true } : x));
     });
   }
 
   protected markAllRead(): void {
-    this.espace.markAllRead().subscribe(() => {
+    this.notificationService.markAllAsRead().subscribe(() => {
       this.items.update((list) => list.map((x) => ({ ...x, isRead: true })));
       this.toast.success('Toutes les notifications ont été marquées comme lues.');
     });
