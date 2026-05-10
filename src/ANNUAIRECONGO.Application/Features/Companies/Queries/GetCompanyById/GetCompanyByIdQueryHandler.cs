@@ -11,10 +11,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
 
-public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandler> logger,IAppDbContext context) : IRequestHandler<GetCompanyByIdQuery, Result<CompanyDto>>
+public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandler> logger,IAppDbContext context, IPublisher publisher) : IRequestHandler<GetCompanyByIdQuery, Result<CompanyDto>>
 {
     private readonly ILogger<GetCompanyByIdQueryHandler> _logger = logger;
     private readonly IAppDbContext _context = context;
+    private readonly IPublisher _publisher = publisher;
     public async Task<Result<CompanyDto>> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
     {
         var company = await _context.Companies.AsNoTracking()
@@ -36,16 +37,9 @@ public sealed record GetCompanyByIdQueryHandler(ILogger<GetCompanyByIdQueryHandl
             logger.LogWarning("Company with id {Id} not found", request.id);
             return CompanyErrors.CompanyNotFound(request.id);
         }
-        var profileViewResult = ProfileView.Create(company.Id, request.viewerIp);
-        if (!profileViewResult.IsError)
-        {
-            await _context.ProfileViews.AddAsync(profileViewResult.Value, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        else
-        {
-            _logger.LogWarning("ProfileView creation skipped: {Error}", profileViewResult.Errors.First().Description);
-        }
+        // Publish event to track view (handled out-of-process or by a separate handler)
+        await _publisher.Publish(new Domain.Companies.Events.CompanyViewedEvent(company.Id, request.viewerIp), cancellationToken);
+
         return company.ToDto();
     }
 }

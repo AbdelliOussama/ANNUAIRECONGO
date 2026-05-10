@@ -84,8 +84,8 @@ public class Subscription : AuditableEntity
         return Result.Updated;
     }
     public Result<Success> IsActive() {
-        var result = Status is SubscriptionStatus.Active
-        or SubscriptionStatus.ExpiringSoon;
+        var result = (Status is SubscriptionStatus.Active or SubscriptionStatus.ExpiringSoon) 
+                     && ExpiresAt > DateTime.UtcNow;
         if(result)
         {
             return Result.Success;

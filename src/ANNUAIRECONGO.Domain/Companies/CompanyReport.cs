@@ -15,7 +15,7 @@ public class CompanyReport : Entity
 
     private CompanyReport() { }
 
-    private CompanyReport(Guid companyId, string reporterIp, string reason)
+    private CompanyReport(Guid companyId, string reporterIp, string reason) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ReporterIp = reporterIp;

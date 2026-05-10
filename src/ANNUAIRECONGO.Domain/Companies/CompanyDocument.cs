@@ -15,7 +15,7 @@ public class CompanyDocument : Entity
 
     private CompanyDocument() { }
 
-    private CompanyDocument(Guid companyId, DocumentType docType, string fileUrl, bool? isPublic)
+    private CompanyDocument(Guid companyId, DocumentType docType, string fileUrl, bool? isPublic) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         DocType = docType;

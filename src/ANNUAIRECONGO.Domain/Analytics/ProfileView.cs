@@ -15,7 +15,7 @@ public sealed class ProfileView : Entity
 
     private ProfileView() { }
 
-    private ProfileView(Guid companyId, string viewerIp, DateTime viewedAt)
+    private ProfileView(Guid companyId, string viewerIp, DateTime viewedAt) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ViewerIp = viewerIp;
@@ -29,6 +29,6 @@ public sealed class ProfileView : Entity
         {
             return ProfileViewErrors.viewerIpRequired;
         }
-        return new ProfileView(companyId,viewerIp,DateTime.Now);
+        return new ProfileView(companyId,viewerIp,DateTime.UtcNow);
     }
 }

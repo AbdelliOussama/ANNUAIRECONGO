@@ -16,7 +16,7 @@ public class ContactClick : Entity
 
 
     private ContactClick() { }
-    private ContactClick(Guid companyId,ContactType contactType,DateTime clickedAt)
+    private ContactClick(Guid companyId,ContactType contactType,DateTime clickedAt) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ContactType = contactType;

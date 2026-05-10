@@ -14,7 +14,7 @@ public class CompanyContact : Entity
     public bool IsPrimary { get; private set; }
 
     private CompanyContact() { }
-    private CompanyContact(Guid companyId, ContactType type, string value, bool isPrimary)
+    private CompanyContact(Guid companyId, ContactType type, string value, bool isPrimary) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         Type = type;

@@ -114,7 +114,11 @@ public class Payment : AuditableEntity
     private static string GenerateReference(Guid id, DateTime utcNow)
     {
         const string Alphabet = "23456789ABCDEFGHJKLMNPQRSTVWXYZ"; // no 0/1/I/O/U
-        var bits = (uint)(id.GetHashCode() & 0x3FFF_FFFF);
+        
+        // Use the first 4 bytes of the GUID for a stable, unique-ish hash
+        var bytes = id.ToByteArray();
+        uint bits = BitConverter.ToUInt32(bytes, 0) & 0x3FFF_FFFF;
+        
         Span<char> buf = stackalloc char[6];
         for (int i = 5; i >= 0; i--)
         {

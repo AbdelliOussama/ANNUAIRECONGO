@@ -40,6 +40,6 @@ public sealed record GetMyCompaniesQueryHandler(IAppDbContext Context, ILogger<G
             _logger.LogInformation("No companies found for user with ID {UserId}", _currentUser.Id);
             return new List<CompanyDto>();
         }
-        return companies.ToDTos();
+        return companies.ToDtoList();
     }
 }

@@ -13,7 +13,7 @@ public class CompanyImage : Entity
     public DateTime UploadedAt { get; private set; }
 
     private CompanyImage() { }
-    private CompanyImage(Guid companyId, string imageUrl, int? displayOrder, string? caption)
+    private CompanyImage(Guid companyId, string imageUrl, int? displayOrder, string? caption) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         ImageUrl = imageUrl;

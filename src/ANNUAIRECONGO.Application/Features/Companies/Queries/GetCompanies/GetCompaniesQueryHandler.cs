@@ -92,7 +92,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             };
         }
 
-        var companiesDto = companies.ToDTos();
+        var companiesDto = companies.ToDtoList();
         var paginatedList = new PaginatedList<CompanyDto>
         {
             Items = companiesDto,

@@ -14,7 +14,7 @@ public class CompanySector : Entity
 
     private CompanySector() { }
 
-    private CompanySector(Guid companyId, Guid sectorId)
+    private CompanySector(Guid companyId, Guid sectorId) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         SectorId = sectorId;
@@ -22,10 +22,6 @@ public class CompanySector : Entity
 
     public static Result<CompanySector> Create(Guid companyId, Guid sectorId)
     {
-        return new CompanySector
-        {
-            CompanyId = companyId,
-            SectorId = sectorId
-        };
+        return new CompanySector(companyId, sectorId);
     }
 }

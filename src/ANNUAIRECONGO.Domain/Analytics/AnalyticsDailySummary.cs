@@ -14,7 +14,7 @@ public class AnalyticsDailySummary : Entity
     public Company Company { get; private set; } = null!;
 
     private AnalyticsDailySummary() { }
-    private AnalyticsDailySummary(Guid companyId,DateOnly summaryDate,int profileViews,int contactClicks,int searchAppearance)
+    private AnalyticsDailySummary(Guid companyId,DateOnly summaryDate,int profileViews,int contactClicks,int searchAppearance) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         SummaryDate = summaryDate;

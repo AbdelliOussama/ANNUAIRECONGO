@@ -60,7 +60,10 @@ public static class CompanyMapper
             // need a second round-trip to render the current plan.
             ActiveSubscription = activeSub?.ToDto(),
 
-            Sectors = company.CompanySectors.Select(cs => cs.Sector.ToDto()).ToList(),
+            Sectors = company.CompanySectors?
+                .Where(cs => cs.Sector != null)
+                .Select(cs => cs.Sector.ToDto())
+                .ToList() ?? [],
             Services = company.Services.Select(s => new ServiceDto
             {
                 Id = s.Id,
@@ -97,7 +100,7 @@ public static class CompanyMapper
         };
     }
 
-    public static List<CompanyDto> ToDTos(this IEnumerable<Company> companies)
+    public static List<CompanyDto> ToDtoList(this IEnumerable<Company> companies)
     {
         return [..companies.Select(c => c.ToDto())];
     }
