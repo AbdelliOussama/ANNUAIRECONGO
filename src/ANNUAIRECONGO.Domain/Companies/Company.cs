@@ -84,7 +84,6 @@ public class Company : AuditableEntity
         YearFounded = yearFounded;
         IsVerified = isVerified;
         IsPremium = isPremium;
-        CreatedAtUtc = DateTime.UtcNow;
     }
 
     // ── Factory ───────────────────────────────────────────────────
@@ -105,6 +104,12 @@ public class Company : AuditableEntity
         bool isVerified = false,
         bool isPremium = false)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Company name is required", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("Company description is required", nameof(description));
+
         var company = new Company(Id,ownerId,name,cityId,CompanyStatus.Draft,description,false,null,Address,Latitude,Longitude, rccm, niu, yearFounded, isVerified, isPremium);
 
 
