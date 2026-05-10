@@ -35,6 +35,6 @@ public class BusinessOwnerConfigurations : IEntityTypeConfiguration<BusinessOwne
         builder.HasMany(b => b.Companies)
             .WithOne(c => c.Owner)
             .HasForeignKey(c => c.OwnerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

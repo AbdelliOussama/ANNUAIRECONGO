@@ -24,6 +24,6 @@ public sealed class GetCitiesByRegionQueryHandler(ILogger<GetCitiesByRegionQuery
             return CityErrors.CitiesNotFoundForRegion(request.RegionId);
         }
 
-        return cities.ToDtos();
+        return cities.ToDtoList();
     }
 }

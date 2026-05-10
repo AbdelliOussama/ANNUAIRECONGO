@@ -38,7 +38,7 @@ public sealed record GetEntityAdminLogsQueryHandler(IAppDbContext Context, ILogg
             };
         }
 
-        var adminLogDtos = adminLogs.ToDtos();
+        var adminLogDtos = adminLogs.ToDtoList();
 
         return new PaginatedList<AdminLogDto>
         {

@@ -8,7 +8,7 @@ public static class SectorMapper
     public static SectorDto ToDto(this Sector sector)
     {
         ArgumentNullException.ThrowIfNull(sector);
-        return new  SectorDto
+        return new SectorDto
         {
             SectorId = sector.Id,
             Name = sector.Name,
@@ -18,7 +18,7 @@ public static class SectorMapper
             IsActive = sector.IsActive
         };
     }
-    public static List<SectorDto> ToDtos(this IEnumerable<Sector> sectors)
+    public static List<SectorDto> ToDtoList(this IEnumerable<Sector> sectors)
     {
         return [..sectors.Select(s => s.ToDto())];
     }

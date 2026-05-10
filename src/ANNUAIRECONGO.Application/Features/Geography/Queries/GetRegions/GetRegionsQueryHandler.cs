@@ -21,6 +21,6 @@ public sealed class GetRegionsQueryHandler(
         var regions = await _context.Regions
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-        return regions.ToDtos();
+        return regions.ToDtoList();
     }
 }

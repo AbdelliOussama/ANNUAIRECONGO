@@ -19,7 +19,7 @@ public static class SubscriptionMapper
             subscription.Status == SubscriptionStatus.Active || subscription.Status == SubscriptionStatus.ExpiringSoon
         );
     }
-    public static List<SubscriptionDto> ToDtos(this IEnumerable<Subscription> subscriptions)
+    public static List<SubscriptionDto> ToDtoList(this IEnumerable<Subscription> subscriptions)
     {
         return [..subscriptions.Select(s => s.ToDto())];
     }

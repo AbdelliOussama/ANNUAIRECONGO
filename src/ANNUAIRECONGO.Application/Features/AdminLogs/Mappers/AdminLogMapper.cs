@@ -19,7 +19,7 @@ public static class AdminLogMapper
         };
     }
 
-    public static List<AdminLogDto> ToDtos(this IEnumerable<AdminLog> adminLogs)
+    public static List<AdminLogDto> ToDtoList(this IEnumerable<AdminLog> adminLogs)
     {
         return [..adminLogs.Select(al => al.ToDto())];
     }

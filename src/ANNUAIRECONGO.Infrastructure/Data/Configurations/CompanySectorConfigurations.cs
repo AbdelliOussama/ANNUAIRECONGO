@@ -9,6 +9,15 @@ public class CompanySectorConfigurations : IEntityTypeConfiguration<CompanySecto
     public void Configure(EntityTypeBuilder<CompanySector> builder)
     {
         builder.HasKey(c => c.Id);
-        builder.HasOne(c => c.Sector).WithMany(c => c.CompanySectors).HasForeignKey(c => c.SectorId);
+        
+        builder.HasOne(c => c.Sector)
+            .WithMany(s => s.CompanySectors)
+            .HasForeignKey(c => c.SectorId);
+
+        builder.HasOne(c => c.Company)
+            .WithMany(cp => cp.CompanySectors)
+            .HasForeignKey(c => c.CompanyId);
+
+        builder.HasIndex(c => new { c.CompanyId, c.SectorId }).IsUnique();
     }
 }

@@ -18,6 +18,6 @@ public class GetBusinessOwnersQueryHandler : IRequestHandler<GetBusinessOwnersQu
     public async Task<Result<List<BusinessOwnerDto>>> Handle(GetBusinessOwnersQuery request, CancellationToken cancellationToken)
     {
         var businessOwners = await _context.BusinessOwners.AsNoTracking().ToListAsync();
-        return businessOwners.ToDtos();
+        return businessOwners.ToDtoList();
     }
 }

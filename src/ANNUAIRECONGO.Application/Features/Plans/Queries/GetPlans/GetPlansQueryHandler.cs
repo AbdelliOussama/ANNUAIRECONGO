@@ -24,6 +24,6 @@ public sealed class GetPlansQueryHandler(
             _logger.LogWarning("No plans found in the database.");
             return new List<PlanDto>();
         }
-        return plans.ToDtos();
+        return plans.ToDtoList();
     }
 }

@@ -35,6 +35,6 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
         if (subscriptions is null || !subscriptions.Any())
             return new List<SubscriptionDto>();
 
-        return subscriptions.ToDtos();
+        return subscriptions.ToDtoList();
     }
 }

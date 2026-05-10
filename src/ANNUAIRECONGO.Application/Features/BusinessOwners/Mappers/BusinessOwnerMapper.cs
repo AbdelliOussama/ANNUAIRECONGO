@@ -16,7 +16,7 @@ public static class BusinessOwnerMapper
             CompanyPosition = businessOwner.CompanyPosition
         };
     }
-    public static List<BusinessOwnerDto> ToDtos(this IEnumerable<BusinessOwner> businessOwners)
+    public static List<BusinessOwnerDto> ToDtoList(this IEnumerable<BusinessOwner> businessOwners)
     {
         return [.. businessOwners.Select(b=>b.ToDto())];
     }

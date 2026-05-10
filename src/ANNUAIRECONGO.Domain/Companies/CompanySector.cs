@@ -11,6 +11,7 @@ public class CompanySector : Entity
     public Guid SectorId { get; private set; }
 
     public Sector Sector { get; private set; } = null!;
+    public Company Company { get; private set; } = null!;
 
     private CompanySector() { }
 

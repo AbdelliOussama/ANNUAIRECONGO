@@ -24,5 +24,34 @@ public class CompanyConfigurations : IEntityTypeConfiguration<Company>
         builder.Property(x => x.YearFounded).IsRequired(false);
         builder.Property(x => x.IsVerified).HasDefaultValue(false);
         builder.Property(x => x.IsPremium).HasDefaultValue(false);
+
+        // ── Relationships ─────────────────────────────────────────────
+        
+        builder.HasOne(x => x.Owner)
+            .WithMany(o => o.Companies)
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.City)
+            .WithMany()
+            .HasForeignKey(x => x.CityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── Field Mappings for Encapsulated Collections ────────────────
+        
+        builder.Metadata.FindNavigation(nameof(Company.CompanySectors))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
+            
+        builder.Metadata.FindNavigation(nameof(Company.Contacts))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
+            
+        builder.Metadata.FindNavigation(nameof(Company.Services))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
+            
+        builder.Metadata.FindNavigation(nameof(Company.Documents))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
+            
+        builder.Metadata.FindNavigation(nameof(Company.Images))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

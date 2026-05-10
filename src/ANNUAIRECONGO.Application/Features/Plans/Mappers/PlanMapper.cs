@@ -20,7 +20,7 @@ public static class PlanMapper
             plan.IsActive
         );
     }
-    public static List<PlanDto> ToDtos(this IEnumerable<Plan> plans)
+    public static List<PlanDto> ToDtoList(this IEnumerable<Plan> plans)
     {
         return [..plans.Select(p => p.ToDto())];
     }

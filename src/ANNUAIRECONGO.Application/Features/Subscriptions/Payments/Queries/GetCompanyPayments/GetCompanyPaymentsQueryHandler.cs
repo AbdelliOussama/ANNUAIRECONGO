@@ -44,6 +44,6 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
             return new List<PaymentDto>();
         }
 
-        return payments.ToDtos();
+        return payments.ToDtoList();
     }
 }

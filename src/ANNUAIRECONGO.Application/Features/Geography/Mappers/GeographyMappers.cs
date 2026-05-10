@@ -14,7 +14,7 @@ public static class GeographyMappers
             RegionId = city.RegionId
         };
     }
-    public static List<CityDto> ToDtos(this IEnumerable<City> cities)
+    public static List<CityDto> ToDtoList(this IEnumerable<City> cities)
     {
         return [.. cities.Select(c=>c.ToDto())];
     }
@@ -26,7 +26,7 @@ public static class GeographyMappers
             Name = region.Name
         };
     }
-    public static List<RegionDto> ToDtos(this IEnumerable<Region> regions)
+    public static List<RegionDto> ToDtoList(this IEnumerable<Region> regions)
     {
         return [.. regions.Select(r=>r.ToDto())];
     }
