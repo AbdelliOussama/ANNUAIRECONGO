@@ -75,7 +75,7 @@ public class Company : AuditableEntity
         Latitude = latitude;
         Longitude = longitude;
         CityId = cityId;
-        Slug = GenerateSlug(name);
+        Slug = SlugHelper.GenerateSlug(name);
         Status = status;
         IsFeatured = isFeatured;
         RejectionReason = rejectionReason;
@@ -131,7 +131,7 @@ public class Company : AuditableEntity
         bool? isPremium = null)
     {
         Name = name;
-        Slug = GenerateSlug(name);
+        Slug = SlugHelper.GenerateSlug(name);
         Description = description;
         Website = website;
         CityId = cityId;
@@ -196,13 +196,13 @@ public class Company : AuditableEntity
         return Result.Updated;
     }
 
-    public Result<Success> Reactivate()
+    public Result<Updated> Reactivate()
     {
         if (Status != CompanyStatus.Suspended)
             return CompanyErrors.NotSuspended;
 
         Status = CompanyStatus.Active;
-        return Result.Success;
+        return Result.Updated;
     }
 
     // ── Plan Management ───────────────────────────────────────────
@@ -237,12 +237,5 @@ public class Company : AuditableEntity
         OwnerId = null;
     }
 
-    private static string GenerateSlug(string name) =>
-        System.Text.RegularExpressions.Regex.Replace(
-            name.ToLowerInvariant()
-                .Replace(" ", "-")
-                .Replace("'", "")
-                .Replace("&", "and"),
-            @"[^a-z0-9\-]", "")
-        .Trim('-');
+
 }

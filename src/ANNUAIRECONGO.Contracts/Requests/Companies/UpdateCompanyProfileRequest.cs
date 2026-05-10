@@ -13,6 +13,4 @@ public class UpdateCompanyProfileRequest
     public string? Rccm { get; set; }
     public string? Niu { get; set; }
     public int? YearFounded { get; set; }
-    public bool? IsVerified { get; set; }
-    public bool? IsPremium { get; set; }
 }

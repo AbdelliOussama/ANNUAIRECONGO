@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 
-namespace ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.SuspendCompnay;
+namespace ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.SuspendCompany;
 public sealed record SuspendCompanyCommandHandler(ILogger<SuspendCompanyCommandHandler> logger, IAppDbContext context, HybridCache cache, IUser CurrentUser) : IRequestHandler<SuspendCompanyCommand, Result<Updated>>
 {
     private readonly ILogger<SuspendCompanyCommandHandler> _logger = logger;

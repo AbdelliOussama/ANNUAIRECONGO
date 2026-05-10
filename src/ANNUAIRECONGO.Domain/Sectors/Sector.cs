@@ -20,7 +20,7 @@ public class Sector : AuditableEntity
     private Sector(Guid id,string name, string? description, string? iconUrl):base(id)
     {
         Name = name;
-        Slug = GenerateSlug(name);
+        Slug = SlugHelper.GenerateSlug(name);
         Description = description;
         IconUrl = iconUrl;
         IsActive = true;
@@ -37,14 +37,7 @@ public class Sector : AuditableEntity
         {
             return SectorErrors.NameIsRequired;
         }
-        return new Sector
-        {
-            Name = name,
-            Slug = GenerateSlug(name),
-            Description = description,
-            IconUrl = iconUrl,
-            IsActive = true
-        };
+        return new Sector(id, name, description, iconUrl);
     }
 
     public Result<Updated> Update(string name, string? description, string? iconUrl)
@@ -54,7 +47,7 @@ public class Sector : AuditableEntity
             return SectorErrors.NameIsRequired;
         }
         Name = name;
-        Slug = GenerateSlug(name);
+        Slug = SlugHelper.GenerateSlug(name);
         Description = description;
         IconUrl = iconUrl;
         return Result.Updated;
@@ -71,9 +64,5 @@ public class Sector : AuditableEntity
         return Result.Updated;
     }
 
-    private static string GenerateSlug(string name) =>
-        name.ToLowerInvariant()
-            .Replace(" ", "-")
-            .Replace("'", "")
-            .Trim('-');
+
 }

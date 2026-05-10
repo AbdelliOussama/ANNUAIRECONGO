@@ -43,10 +43,6 @@ public sealed class BusinessOwner : AuditableEntity
         {
             return BusinessOwnerErrors.LastNameRequired;
         }
-        if(role == null)
-        {
-            return BusinessOwnerErrors.RoleInvalid;
-        }
         return new BusinessOwner(id,firstName, lastName, phone, companyPosition, role);
     }
     public Result<Updated> UpdateProfile(string firstName, string lastName, string phone, string? companyPosition)

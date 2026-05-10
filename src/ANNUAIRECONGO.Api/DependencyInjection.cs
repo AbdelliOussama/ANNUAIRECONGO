@@ -6,12 +6,13 @@ using ANNUAIRECONGO.Api.Services;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Infrastructure.Settings;
 using Asp.Versioning;
-using MechanicShop.Api.OpenApi.Transformers;
+
 using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using FluentValidation;
 
 namespace ANNUAIRECONGO.Api;
 
@@ -158,6 +159,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddValidation(this IServiceCollection services)
     {
+        services.AddValidatorsFromAssembly(typeof(IAppDbContext).Assembly);
         return services;
     }
 

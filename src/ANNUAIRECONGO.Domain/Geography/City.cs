@@ -13,8 +13,8 @@ public class City : AuditableEntity
 
     public Region Region { get; private set; } = null!;
 
-    private readonly List<Company>_Companies = [];
-    public ICollection<Company> Companies =>_Companies.AsReadOnly();
+    private readonly List<Company> _companies = [];
+    public ICollection<Company> Companies => _companies.AsReadOnly();
 
     private City() { }
 
@@ -22,7 +22,7 @@ public class City : AuditableEntity
     {
         RegionId=regionId;
         Name=name;
-        Slug=GenerateSlug(name);
+        Slug=SlugHelper.GenerateSlug(name);
     }
 
     public static Result<City> Create(Guid id,Guid regionId, string name)
@@ -37,7 +37,7 @@ public class City : AuditableEntity
         }
         if (string.IsNullOrWhiteSpace(name))
         {
-            return CityErrors.SlugAlreadyExists;
+            return CityErrors.NameRequired;
         }
         return new City(id,regionId,name);
     }
@@ -49,18 +49,14 @@ public class City : AuditableEntity
             return CityErrors.NameRequired;
         }
         Name = name;
-        Slug = GenerateSlug(name);
+        Slug = SlugHelper.GenerateSlug(name);
         return Result.Updated;
     }
 
     public Result<Updated>AddCompany(Company company)
     {
-        _Companies.Add(company);
+        _companies.Add(company);
         return Result.Updated;
     }
-    private static string GenerateSlug(string name) =>
-        name.ToLowerInvariant()
-            .Replace(" ", "-")
-            .Replace("'", "")
-            .Trim('-');
+
 }

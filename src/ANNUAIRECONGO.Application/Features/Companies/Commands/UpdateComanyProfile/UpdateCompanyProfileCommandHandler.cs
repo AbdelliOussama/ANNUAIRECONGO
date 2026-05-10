@@ -26,7 +26,7 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.companyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
-        var companyUpdateProfileResult = company.UpdateProfile(request.name, request.description, request.website, request.cityId, request.address, request.latitude, request.longitude, request.sectorIds, request.rccm, request.niu, request.yearFounded, request.isVerified, request.isPremium);
+        var companyUpdateProfileResult = company.UpdateProfile(request.name, request.description, request.website, request.cityId, request.address, request.latitude, request.longitude, request.sectorIds, request.rccm, request.niu, request.yearFounded);
         if(companyUpdateProfileResult.IsError)
         {
             _logger.LogError("Error updating company profile: {Error}", companyUpdateProfileResult.Errors);

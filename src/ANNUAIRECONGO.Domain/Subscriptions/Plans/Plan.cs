@@ -66,6 +66,17 @@ public class Plan : AuditableEntity
         bool hasFeaturedBadge,
         int searchPriority)
     {
+        if (price < 0)
+        {
+            return PlanErrors.InvalidPrice;
+        }
+        if (durationDays <= 0)
+            return PlanErrors.InvalidDuration;
+        if (searchPriority < 1 || searchPriority > 3)
+        {
+            return PlanErrors.InvalidSearchPriority;
+        }
+
         Name = name;
         Price = price;
         DurationDays = durationDays;

@@ -12,6 +12,4 @@ public class CreateCompanyRequest
     public string? Rccm { get; set; }
     public string? Niu { get; set; }
     public int? YearFounded { get; set; }
-    public bool IsVerified { get; set; } = false;
-    public bool IsPremium { get; set; } = false;
 }

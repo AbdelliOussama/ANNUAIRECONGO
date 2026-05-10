@@ -269,34 +269,45 @@ public class IdentityService : IIdentityService
         var user = await _userManager.FindByIdAsync(userId);
         if (user is null) return IdentityErrors.UserNotFound;
 
-        // 1. Detach companies
-        var companies = await _context.Companies
-            .Where(c => c.OwnerId == Guid.Parse(userId))
-            .ToListAsync(cancellationToken);
-
-        foreach (var company in companies)
+        using var transaction = await ((DbContext)_context).Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            company.ClearOwner();
+            // 1. Detach companies
+            var companies = await _context.Companies
+                .Where(c => c.OwnerId == Guid.Parse(userId))
+                .ToListAsync(cancellationToken);
+
+            foreach (var company in companies)
+            {
+                company.ClearOwner();
+            }
+
+            // 2. Remove business owner profile
+            var businessOwner = await _context.BusinessOwners
+                .FirstOrDefaultAsync(b => b.Id == Guid.Parse(userId), cancellationToken);
+
+            if (businessOwner != null)
+            {
+                _context.BusinessOwners.Remove(businessOwner);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // 3. Delete user account
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return IdentityErrors.AccountDeletionFailed;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return Result.Success;
         }
-
-        // 2. Remove business owner profile
-        var businessOwner = await _context.BusinessOwners
-            .FirstOrDefaultAsync(b => b.Id == Guid.Parse(userId), cancellationToken);
-
-        if (businessOwner != null)
+        catch (Exception)
         {
-            _context.BusinessOwners.Remove(businessOwner);
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
-
-        // 3. Delete user account
-        var result = await _userManager.DeleteAsync(user);
-        if (!result.Succeeded)
-        {
-            return IdentityErrors.AccountDeletionFailed;
-        }
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return Result.Success;
     }
 }

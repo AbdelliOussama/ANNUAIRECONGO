@@ -8,7 +8,7 @@ using ANNUAIRECONGO.Application.Features.Companies.Commands.PlanManagment.SetFea
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.ReactivateCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.RejectCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.SubmitCompany;
-using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.SuspendCompnay;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.SuspendCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.ValidateCompany;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyById;
@@ -67,9 +67,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.Longitude,
             request.Rccm,
             request.Niu,
-            request.YearFounded,
-            request.IsVerified,
-            request.IsPremium
+            request.YearFounded
         ), ct);
         return result.Match(
             response => CreatedAtRoute(
@@ -152,7 +150,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
-    [HttpPost("{id:guid}/update-company-profile" , Name = "UpdateCompanyProfile")]
+    [HttpPut("{id:guid}/update-company-profile" , Name = "UpdateCompanyProfile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -176,9 +174,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.SectorIds,
             request.Rccm,
             request.Niu,
-            request.YearFounded,
-            request.IsVerified,
-            request.IsPremium
+            request.YearFounded
         ), ct);
         return result.Match(
             response => Ok(response),
@@ -187,7 +183,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     }
 
 
-    [HttpPost("{id:guid}/update-media" , Name = "UpdateMedia")]
+    [HttpPut("{id:guid}/update-media" , Name = "UpdateMedia")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -385,7 +381,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
     );
 }
 
-[HttpPost("{id:guid}/update-contact" , Name = "UpdateContact")]
+[HttpPut("{id:guid}/update-contact" , Name = "UpdateContact")]
 [ProducesResponseType(StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Update contact for a company by id.")]
