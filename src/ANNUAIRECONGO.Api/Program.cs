@@ -36,12 +36,13 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+
 
 app.UseStaticFiles(); // serves wwwroot/uploads/* (images & documents)
 
 app.UseCoreMiddlewares(builder.Configuration);
 
+app.MapPrometheusScrapingEndpoint();
 app.MapControllers();
 
 app.Run();

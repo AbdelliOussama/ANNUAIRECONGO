@@ -176,11 +176,22 @@ public static class DependencyInjection
 
         services.AddCors(options => options.AddPolicy(
             appSettings.CorsPolicyName,
-            policy => policy
-                .WithOrigins(appSettings.AllowedOrigins!)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()));
+            policy =>
+            {
+                if (appSettings.AllowedOrigins?.Contains("*") == true)
+                {
+                    // Browser security rules prohibit '*' with AllowCredentials
+                    policy.SetIsOriginAllowed(_ => true);
+                }
+                else
+                {
+                    policy.WithOrigins(appSettings.AllowedOrigins ?? []);
+                }
+
+                policy.AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            }));
 
         return services;
     }

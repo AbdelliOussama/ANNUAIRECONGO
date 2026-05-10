@@ -31,7 +31,7 @@ public class IdentityService : IIdentityService
         _claimsPrincipalFactory = claimsPrincipalFactory;
         _authorizationService = authorizationService;
         _roleManager = roleManager;
-        _context  = context;
+        _context = context;
         _configuration = configuration;
         _notificationService = notificationService;
     }
@@ -39,16 +39,8 @@ public class IdentityService : IIdentityService
 
     public async Task<Result<AppUserDto>> AuthenticateAsync(string email, string password)
     {
-        var user =await _userManager.FindByEmailAsync(email);
-        if(user is null)
-        {
-            return Error.NotFound("User_Not_Found", $"User with email {UtilityService.MaskEmail(email)} not found");
-        }
-        if (!user.EmailConfirmed)
-        {
-            return IdentityErrors.EmailNotConfirmed;
-        }
-        if(!await _userManager.CheckPasswordAsync(user, password))
+        var user = await _userManager.FindByEmailAsync(email);
+        if(user is null || !await _userManager.CheckPasswordAsync(user, password))
         {
             return IdentityErrors.InvalidCredentials;
         }
