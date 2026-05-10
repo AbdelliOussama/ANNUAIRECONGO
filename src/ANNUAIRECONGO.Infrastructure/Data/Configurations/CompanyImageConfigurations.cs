@@ -13,6 +13,9 @@ public class CompanyImageConfigurations : IEntityTypeConfiguration<CompanyImage>
         builder.Property(x => x.Caption).HasMaxLength(255).IsRequired(false);
         builder.Property(x => x.DisplayOrder).IsRequired();
         builder.Property(x => x.UploadedAt).IsRequired();
-        builder.HasOne<Company>().WithMany().HasForeignKey(x => x.CompanyId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Company>()
+            .WithMany(c => c.Images)
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

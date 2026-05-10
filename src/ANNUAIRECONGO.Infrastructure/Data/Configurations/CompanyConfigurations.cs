@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using ANNUAIRECONGO.Domain.BusinessOwners;
 using ANNUAIRECONGO.Domain.Companies;
 using ANNUAIRECONGO.Domain.Geography;
@@ -33,7 +32,7 @@ public class CompanyConfigurations : IEntityTypeConfiguration<Company>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(x => x.City)
-            .WithMany()
+            .WithMany(c => c.Companies)
             .HasForeignKey(x => x.CityId)
             .OnDelete(DeleteBehavior.Restrict);
 

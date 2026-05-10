@@ -21,7 +21,7 @@ public class SubscriptionConfigurations : IEntityTypeConfiguration<Subscription>
         builder.Property(x => x.ExpiresAt).IsRequired();
 
         builder.HasOne(x => x.Company)
-            .WithMany()
+            .WithMany(c => c.Subscriptions)
             .HasForeignKey(x => x.CompanyId)
             .OnDelete(DeleteBehavior.Cascade);
 
