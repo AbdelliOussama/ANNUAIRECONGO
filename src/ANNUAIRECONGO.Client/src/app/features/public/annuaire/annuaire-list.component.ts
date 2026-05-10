@@ -6,6 +6,8 @@ import { PaginationComponent } from '@shared/ui/pagination/pagination.component'
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { CompanyService } from '@core/services/company.service';
+import { SectorService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
 import { Sector, Region, Company, PaginatedResponse } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import { switchMap, BehaviorSubject, map, catchError, of } from 'rxjs';
@@ -329,6 +331,8 @@ interface Filters {
 export class AnnuaireListComponent {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
+  private readonly sectorService  = inject(SectorService);
+  private readonly geoService     = inject(GeographyService);
   private readonly route          = inject(ActivatedRoute);
   private readonly router         = inject(Router);
 
@@ -342,8 +346,8 @@ export class AnnuaireListComponent {
   protected readonly view    = signal<'grid' | 'list'>('grid');
   protected readonly filtersOpen = signal(false);
 
-  protected readonly sectors = toSignal(this.companyService.getSectors(), { initialValue: [] as Sector[] });
-  protected readonly regions = toSignal(this.companyService.getRegions(), { initialValue: [] as Region[] });
+  protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
+  protected readonly regions = toSignal(this.geoService.getRegions(), { initialValue: [] as Region[] });
 
   private readonly trigger = new BehaviorSubject<void>(undefined);
   private readonly result = toSignal<PaginatedResponse<Company> | null>(

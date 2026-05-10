@@ -4,6 +4,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { CompanyService } from '@core/services/company.service';
 import { Company, PaginatedResponse } from '@core/models/company.model';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { ToastService } from '@shared/services/toast.service';
+import { ModalService } from '@shared/services/modal.service';
 import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
 
 @Component({
@@ -62,12 +64,24 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                       <span class="badge badge-pending">En attente</span>
                     } @else if (c.status === 3) {
                       <span class="badge badge-rejected">Rejetée</span>
+                    } @else if (c.status === 4) {
+                      <span class="badge badge-error">Suspendue</span>
                     } @else {
                       <span class="badge badge-draft">Brouillon</span>
                     }
                   </td>
                   <td class="actions-col">
-                    <a [routerLink]="['/annuaire', c.slug]" class="link" [attr.aria-label]="'Voir la fiche ' + c.name">Voir →</a>
+                    <div class="actions-group">
+                      <a [routerLink]="['/annuaire', c.slug]" class="link">Voir</a>
+                      @if (c.status === 2) {
+                        <button (click)="suspend(c)" class="btn-action warn">Suspendre</button>
+                      } @else if (c.status === 4) {
+                        <button (click)="reactivate(c)" class="btn-action ok">Réactiver</button>
+                      }
+                      @if (c.status === 1) {
+                        <button (click)="reject(c)" class="btn-action danger">Rejeter</button>
+                      }
+                    </div>
                   </td>
                 </tr>
               }
@@ -99,15 +113,30 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
     .email { font-size: 11px; color: var(--color-outline); margin: 0; }
     .empty { text-align: center; color: var(--color-outline); padding: 32px; }
     .actions-col { text-align: right; }
+    
+    .actions-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
     .link { color: var(--color-primary); font-weight: 700; }
     .link:hover { text-decoration: underline; }
 
+    .btn-action {
+      background: none; border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-sm); padding: 4px 8px; font-size: 11px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-action.warn { color: var(--color-tertiary); }
+    .btn-action.ok   { color: var(--color-primary); }
+    .btn-action.danger { color: var(--color-error); }
+    .btn-action:hover { background: var(--color-surface-container); }
+
     .badge-draft { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
     .badge-rejected { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .badge-error { background: var(--color-error-container); color: var(--color-on-error-container); }
   `],
 })
 export class AdminEntreprisesComponent {
   private readonly companyService = inject(CompanyService);
+  private readonly toast = inject(ToastService);
+  private readonly modal = inject(ModalService);
   protected readonly query = signal('');
   
   private readonly trigger = new BehaviorSubject<string>('');
@@ -128,5 +157,41 @@ export class AdminEntreprisesComponent {
     const val = (e.target as HTMLInputElement).value;
     this.query.set(val);
     this.trigger.next(val);
+  }
+
+  async suspend(c: Company) {
+    const { confirmed } = await this.modal.confirm({
+      title: `Suspendre « ${c.name} » ?`,
+      body: 'La fiche ne sera plus visible par le public.',
+      confirmLabel: 'Suspendre',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
+    this.companyService.suspendCompany(c.id).subscribe(() => {
+      this.toast.success('Entreprise suspendue.');
+      this.trigger.next(this.query());
+    });
+  }
+
+  async reactivate(c: Company) {
+    this.companyService.reactivateCompany(c.id).subscribe(() => {
+      this.toast.success('Entreprise réactivée.');
+      this.trigger.next(this.query());
+    });
+  }
+
+  async reject(c: Company) {
+    const { confirmed, reason } = await this.modal.confirm({
+      title: `Rejeter « ${c.name} » ?`,
+      body: 'Motif du rejet :',
+      confirmLabel: 'Rejeter',
+      tone: 'danger',
+      reasonRequired: true
+    });
+    if (!confirmed || !reason) return;
+    this.companyService.rejectCompany(c.id, reason).subscribe(() => {
+      this.toast.success('Entreprise rejetée.');
+      this.trigger.next(this.query());
+    });
   }
 }

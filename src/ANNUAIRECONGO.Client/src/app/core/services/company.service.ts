@@ -20,18 +20,6 @@ export class CompanyService {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
 
-  getSectors(): Observable<Sector[]> {
-    return this.api.get<Sector[]>('/api/v1/companies/sectors');
-  }
-
-  getRegions(): Observable<Region[]> {
-    return this.api.get<Region[]>('/api/v1/companies/regions');
-  }
-
-  getCities(): Observable<City[]> {
-    return this.api.get<City[]>('/api/v1/companies/cities');
-  }
-
 getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>> {
       const params: Record<string, string | number> = {};
       
@@ -51,7 +39,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    }
 
    getCompanyBySlug(slug: string): Observable<Company> {
-     return this.api.get<Company>(`/api/v1/companies/slug/${slug}`);
+     return this.api.get<Company>(`/api/v1/companies/${slug}`);
    }
 
    createCompany(data: CreateCompanyRequest): Observable<Company> {
@@ -70,8 +58,16 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
       return this.api.post<void>(`/api/v1/companies/${id}/submit-company`, {});
     }
 
-    validateCompany(id: string): Observable<void> {
+   validateCompany(id: string): Observable<void> {
       return this.api.post<void>(`/api/v1/companies/${id}/validate-company`, {});
+    }
+
+    reactivateCompany(id: string): Observable<void> {
+      return this.api.post<void>(`/api/v1/companies/${id}/reactivate-company`, {});
+    }
+
+    suspendCompany(id: string): Observable<void> {
+      return this.api.post<void>(`/api/v1/companies/${id}/suspend-company`, {});
     }
 
     addContact(companyId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
@@ -79,7 +75,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
     }
 
    removeContact(companyId: string, contactId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/remove-contact`, { body: contactId });
+     return this.api.delete(`/api/v1/companies/${companyId}/contacts/${contactId}`);
    }
 
     updateContact(companyId: string, contactId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
@@ -91,7 +87,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    }
 
    removeService(companyId: string, serviceId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/remove-service`, { body: serviceId });
+     return this.api.delete(`/api/v1/companies/${companyId}/services/${serviceId}`);
    }
 
    addImage(companyId: string, imageUrl: string, displayOrder?: number, caption?: string): Observable<any> {
@@ -99,7 +95,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    }
 
    removeImage(companyId: string, imageId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/remove-image`, { body: imageId });
+     return this.api.delete(`/api/v1/companies/${companyId}/images/${imageId}`);
    }
 
    addDocument(companyId: string, documentUrl: string, documentType: string, description?: string, isPublic?: boolean): Observable<any> {
@@ -107,7 +103,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    }
 
    removeDocument(companyId: string, documentId: string): Observable<void> {
-     return this.api.delete(`/api/v1/companies/${companyId}/remove-document`, { body: documentId });
+     return this.api.delete(`/api/v1/companies/${companyId}/documents/${documentId}`);
    }
 
    reportCompany(companyId: string, reason: string): Observable<void> {
@@ -117,14 +113,6 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
   trackContactClick(companyId: string, contactType: number): Observable<void> {
     return this.api.post(`/api/v1/companies/${companyId}/contact-click`, { contactType });
   }
-
-   suspendCompany(companyId: string): Observable<void> {
-     return this.api.post<void>(`/api/v1/companies/${companyId}/suspend-company`, {});
-   }
-
-   reactivateCompany(companyId: string): Observable<void> {
-     return this.api.post<void>(`/api/v1/companies/${companyId}/reactivate-company`, {});
-   }
 
    rejectCompany(companyId: string, reason: string): Observable<void> {
      return this.api.post<void>(`/api/v1/companies/${companyId}/reject-company`, { reason });

@@ -6,6 +6,7 @@ using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ResendVerificationEmail;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.UpdateProfile;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.VerifyEmail;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
@@ -197,6 +198,22 @@ public sealed class IdentityController(ISender sender) : ApiController
         var result = await sender.Send(new DeleteAccountCommand(), ct);
         return result.Match(
             _ => NoContent(),
+            Problem);
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Updates user profile.")]
+    [EndpointDescription("Updates the personal and professional information of the currently authenticated user.")]
+    [EndpointName("UpdateProfile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new UpdateProfileCommand(request.FirstName, request.LastName, request.PhoneNumber, request.CompanyPosition), ct);
+        return result.Match(
+            _ => Ok(),
             Problem);
     }
 }

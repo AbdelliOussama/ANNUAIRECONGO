@@ -154,22 +154,22 @@ export class AdminUtilisateursComponent {
   private readonly result = toSignal(
     this.trigger.pipe(
       debounceTime(300),
-      switchMap(() => this.adminService.getUsers(1, 50)),
-      catchError(() => of({ items: [] as any[] }))
+      switchMap(() => this.adminService.getUsers()),
+      catchError(() => of([] as any[]))
     ),
-    { initialValue: { items: [] as any[] } }
+    { initialValue: [] as any[] }
   );
 
   protected readonly rows = computed(() => {
     const q = this.query().toLowerCase();
     const r = this.role();
-    return this.result().items.filter(u => 
+    return this.result().filter(u => 
       (r === 'all' || u.role === r) &&
-      (u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+      (u.firstName?.toLowerCase().includes(q) || u.lastName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
     );
   });
 
-  protected readonly loading = computed(() => this.result().items.length === 0 && this.query() === '');
+  protected readonly loading = computed(() => this.result().length === 0 && this.query() === '');
 
   protected onQuery(e: Event): void {
     this.query.set((e.target as HTMLInputElement).value);

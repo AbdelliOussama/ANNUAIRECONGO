@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
+import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
 /**
@@ -143,6 +144,7 @@ import { FR } from '@core/i18n/fr.constants';
 export class MotDePasseOublieComponent {
   protected readonly FR = FR;
   private readonly fb    = inject(FormBuilder);
+  private readonly auth  = inject(AuthService);
   private readonly toast = inject(ToastService);
 
   protected readonly form = this.fb.nonNullable.group({
@@ -160,16 +162,21 @@ export class MotDePasseOublieComponent {
     return FR.errors.validation;
   }
 
-  protected async submit(): Promise<void> {
+  protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+    const { email } = this.form.getRawValue();
     this.submitting.set(true);
-    // Mock: simulate the round-trip until /forgot-password is wired.
-    await new Promise((r) => setTimeout(r, 600));
-    this.submitting.set(false);
-    this.sent.set(true);
-    this.toast.success('Lien envoyé. Consultez votre messagerie.');
+
+    this.auth.forgotPassword(email).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.sent.set(true);
+        this.toast.success('Lien envoyé. Consultez votre messagerie.');
+      },
+      error: () => this.submitting.set(false)
+    });
   }
 }

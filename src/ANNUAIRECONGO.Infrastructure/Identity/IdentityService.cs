@@ -44,7 +44,18 @@ public class IdentityService : IIdentityService
         {
             return IdentityErrors.InvalidCredentials;
         }
-        return new  AppUserDto(user.Id,user.Email,await _userManager.GetRolesAsync(user),await _userManager.GetClaimsAsync(user));
+
+        var bo = await _context.BusinessOwners.FirstOrDefaultAsync(b => b.Id == Guid.Parse(user.Id));
+
+        return new AppUserDto(
+            user.Id,
+            user.Email!,
+            await _userManager.GetRolesAsync(user),
+            bo?.FirstName,
+            bo?.LastName,
+            bo?.Phone,
+            bo?.CompanyPosition
+        );
     }
 
     public async Task<bool> AuthorizeAsync(string userId, string? policyName)
@@ -63,15 +74,23 @@ public class IdentityService : IIdentityService
 
     public async Task<Result<AppUserDto>> GetUserByIdAsync(string userId)
     {
-        var user =await _userManager.FindByIdAsync(userId);
+        var user = await _userManager.FindByIdAsync(userId);
         if(user is null)
         {
             return IdentityErrors.UserNotFound;
         }
-        var roles =await _userManager.GetRolesAsync(user);
-        var claims =await _userManager.GetClaimsAsync(user);
 
-        return new  AppUserDto(user.Id,user.Email!,roles,claims);
+        var bo = await _context.BusinessOwners.FirstOrDefaultAsync(b => b.Id == Guid.Parse(user.Id));
+
+        return new AppUserDto(
+            user.Id,
+            user.Email!,
+            await _userManager.GetRolesAsync(user),
+            bo?.FirstName,
+            bo?.LastName,
+            bo?.Phone,
+            bo?.CompanyPosition
+        );
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -301,5 +320,20 @@ public class IdentityService : IIdentityService
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    public async Task<Result<Success>> UpdateProfileAsync(string userId, string firstName, string lastName, string phoneNumber, string? companyPosition, CancellationToken cancellationToken)
+    {
+        var bo = await _context.BusinessOwners.FirstOrDefaultAsync(b => b.Id == Guid.Parse(userId), cancellationToken);
+        if (bo == null)
+        {
+            return BusinessOwnerErrors.NotFound(Guid.Parse(userId));
+        }
+
+        var result = bo.UpdateProfile(firstName, lastName, phoneNumber, companyPosition);
+        if (result.IsError) return result.Errors;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Result.Success;
     }
 }

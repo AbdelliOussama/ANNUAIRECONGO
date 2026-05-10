@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
+import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
 /**
@@ -145,6 +146,7 @@ import { FR } from '@core/i18n/fr.constants';
 export class ReinitialiserMotDePasseComponent {
   protected readonly FR = FR;
   private readonly fb     = inject(FormBuilder);
+  private readonly auth   = inject(AuthService);
   private readonly toast  = inject(ToastService);
   private readonly route  = inject(ActivatedRoute);
 
@@ -155,6 +157,7 @@ export class ReinitialiserMotDePasseComponent {
 
   /** The single-use token coming from the e-mail link, or null if missing. */
   protected readonly tokenValue = computed(() => this.paramMap()?.get('token') ?? null);
+  protected readonly emailValue = computed(() => this.paramMap()?.get('email') ?? '');
 
   protected readonly form = this.fb.nonNullable.group(
     {
@@ -183,17 +186,29 @@ export class ReinitialiserMotDePasseComponent {
     return FR.errors.validation;
   }
 
-  protected async submit(): Promise<void> {
+  protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+    const token = this.tokenValue();
+    if (!token) return;
+
     this.submitting.set(true);
-    // Mock until /reset-password is wired
-    await new Promise((r) => setTimeout(r, 600));
-    this.submitting.set(false);
-    this.done.set(true);
-    this.toast.success('Mot de passe modifié avec succès.');
+    const data = {
+      email: this.emailValue(),
+      token: token,
+      newPassword: this.form.getRawValue().password
+    };
+
+    this.auth.resetPassword(data).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.done.set(true);
+        this.toast.success('Mot de passe modifié avec succès.');
+      },
+      error: () => this.submitting.set(false)
+    });
   }
 }
 

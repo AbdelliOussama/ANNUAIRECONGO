@@ -31,3 +31,23 @@ export interface RegisterRequest {
   phoneNumber?: string;
   companyPosition?: string;
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  newPassword: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  token: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}

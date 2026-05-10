@@ -95,6 +95,34 @@ export class AuthService {
      );
    }
 
+   forgotPassword(email: string): Observable<void> {
+     return this.api.post<void>('/identity/forgot-password', { email });
+   }
+
+   resetPassword(data: any): Observable<void> {
+     return this.api.post<void>('/identity/reset-password', data);
+   }
+
+   verifyEmail(data: any): Observable<void> {
+     return this.api.post<void>('/identity/verify-email', data);
+   }
+
+   resendVerification(email: string): Observable<void> {
+     return this.api.post<void>('/identity/resend-verification-email', { email });
+   }
+
+   changePassword(data: any): Observable<void> {
+     return this.api.post<void>('/identity/change-password', data);
+   }
+
+   updateProfile(data: any): Observable<void> {
+     return this.api.put<void>('/identity/profile', data);
+   }
+
+   deleteAccount(): Observable<void> {
+     return this.api.delete<void>('/identity/delete-account');
+   }
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   }
@@ -102,6 +130,10 @@ export class AuthService {
   getAuthHeaders(): { headers: { Authorization: string } } {
     const token = this.getToken();
     return { headers: { Authorization: `Bearer ${token}` } };
+  }
+
+  refreshUser(): void {
+    this.fetchCurrentUser();
   }
 
   private fetchCurrentUser(): void {

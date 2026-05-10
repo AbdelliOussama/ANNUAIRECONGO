@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CompanyService } from '@core/services/company.service';
+import { SectorService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
 import { UploadService } from '@core/services/upload.service';
 import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { ButtonComponent } from '@shared/ui/button/button.component';
@@ -10,7 +12,7 @@ import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
 import { Sector, City, CreateCompanyRequest, UpdateCompanyProfileRequest, Company, CompanyImage, CompanyDocument } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'ac-fiche-form',
@@ -270,6 +272,8 @@ export class FicheFormComponent {
 
   private readonly fb        = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
+  private readonly sectorService  = inject(SectorService);
+  private readonly geoService     = inject(GeographyService);
   private readonly uploadService  = inject(UploadService);
   private readonly boService      = inject(BusinessOwnerService);
   private readonly toast     = inject(ToastService);
@@ -280,8 +284,16 @@ export class FicheFormComponent {
   protected readonly gallery    = signal<string[]>([]);
   protected readonly documents  = signal<string[]>([]);
 
-  protected readonly sectors = toSignal(this.companyService.getSectors(), { initialValue: [] as Sector[] });
-  protected readonly cities  = toSignal(this.companyService.getCities(), { initialValue: [] as City[] });
+  protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
+  protected readonly cities  = toSignal(this.geoService.getRegions().pipe(
+    switchMap(regions => {
+      if (regions.length > 0) {
+        // For simplicity, fetch cities of the first region, or use a better strategy
+        return this.geoService.getCitiesByRegion(regions[0].id);
+      }
+      return of([] as City[]);
+    })
+  ), { initialValue: [] as City[] });
 
   protected readonly form = this.fb.nonNullable.group({
     name:        ['', [Validators.required, Validators.minLength(2)]],
@@ -327,7 +339,6 @@ export class FicheFormComponent {
   });
 
   constructor() {
-    // Keep hydration alive
     effect(() => {
         this.hydrate();
     });
@@ -391,39 +402,45 @@ export class FicheFormComponent {
     this.submitting.set(true);
     const value = this.form.getRawValue();
     
-    if (this.mode() === 'create') {
-      const request: CreateCompanyRequest = {
-        ...value,
-        sectorIds: [value.sectorId],
-        logoUrl: this.logoUrl() || undefined,
-      };
+    const obs$ = this.mode() === 'create' 
+      ? this.companyService.createCompany({ ...value, sectorIds: [value.sectorId] })
+      : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, { ...value, sectorIds: [value.sectorId] });
 
-      this.companyService.createCompany(request).subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.toast.success('Fiche créée et soumise pour validation.');
-          this.router.navigateByUrl('/espace');
-        },
-        error: () => this.submitting.set(false)
-      });
-    } else {
-      const companyId = this.companyToEdit()?.id;
-      if (!companyId) return;
+    obs$.pipe(
+      switchMap((company) => {
+        const companyId = company.id;
+        const tasks = [];
 
-      const request: UpdateCompanyProfileRequest = {
-        ...value,
-        sectorIds: [value.sectorId],
-        logoUrl: this.logoUrl() || undefined,
-      };
+        // 1. Update Media (Logo)
+        if (this.logoUrl()) {
+          tasks.push(this.companyService.updateCompanyMedia(companyId, this.logoUrl()!));
+        }
 
-      this.companyService.updateCompanyProfile(companyId, request).subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.toast.success('Fiche mise à jour.');
-          this.router.navigateByUrl('/espace');
-        },
-        error: () => this.submitting.set(false)
-      });
-    }
+        // 2. Sync Images (Simplified: only add new ones or handle a more complex diff)
+        // For now, we just add the current signal's images. 
+        // Note: Production code should avoid duplicates by checking company.images
+        this.gallery().forEach(url => {
+           if (!company.images?.some(i => i.imageUrl === url)) {
+             tasks.push(this.companyService.addImage(companyId, url));
+           }
+        });
+
+        // 3. Sync Documents
+        this.documents().forEach(url => {
+          if (!company.documents?.some(d => (d.documentUrl || d.fileUrl) === url)) {
+             tasks.push(this.companyService.addDocument(companyId, url, 'Other')); // Default type
+          }
+        });
+
+        return tasks.length > 0 ? forkJoin(tasks) : of(null);
+      })
+    ).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.toast.success(this.mode() === 'create' ? 'Fiche créée et soumise.' : 'Fiche mise à jour.');
+        this.router.navigateByUrl('/espace');
+      },
+      error: () => this.submitting.set(false)
+    });
   }
 }

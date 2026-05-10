@@ -295,11 +295,13 @@ export class EspaceAbonnementComponent {
       planId: plan.id,
       method: 0 // Stripe
     }).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.toast.success('Demande d\'abonnement créée.');
-        this.router.navigateByUrl('/espace/abonnement/succes');
+        this.router.navigate(['/espace/abonnement/succes'], {
+          queryParams: { paymentId: res.paymentId }
+        });
       },
-      error: (err) => {
+      error: () => {
         this.toast.error('Erreur lors de la création de l\'abonnement.');
       }
     });

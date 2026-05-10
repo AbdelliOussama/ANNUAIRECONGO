@@ -92,15 +92,15 @@ export class AdminDirigeantsComponent {
   private readonly adminService = inject(AdminService);
   protected readonly query = signal('');
 
-  private readonly users = toSignal(this.adminService.getUsers(1, 100), { 
-    initialValue: { items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 } as PaginatedResponse<any> 
+  private readonly users = toSignal(this.adminService.getUsers(), { 
+    initialValue: [] as any[] 
   });
   
-  protected readonly loading = computed(() => this.users().items.length === 0 && this.query() === '');
+  protected readonly loading = computed(() => this.users().length === 0 && this.query() === '');
 
   protected readonly rows = computed<DirigeantRow[]>(() => {
     const q = this.query().trim().toLowerCase();
-    const items = this.users().items;
+    const items = this.users();
     return items
       .filter((u: any) => u.roles?.includes('BusinessOwner') || u.roles?.includes('entreprise'))
       .map((u: any) => ({ fullName: u.fullName, email: u.email, position: 'Responsable', status: u.status }))

@@ -174,42 +174,56 @@ export class EspaceCompteComponent {
     return null;
   }
 
-  protected async saveProfile(): Promise<void> {
+  protected saveProfile(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       return;
     }
     this.savingProfile.set(true);
-    await new Promise((r) => setTimeout(r, 350));
-    this.savingProfile.set(false);
-    this.toast.success(FR.toast.saved);
+    const data = this.profileForm.getRawValue();
+    this.auth.updateProfile(data).subscribe({
+      next: () => {
+        this.savingProfile.set(false);
+        this.toast.success(FR.toast.saved);
+        this.auth.refreshUser(); // Need to add this to AuthService
+      },
+      error: () => this.savingProfile.set(false)
+    });
   }
 
-  protected async changePassword(): Promise<void> {
+  protected changePassword(): void {
     if (this.passwordForm.invalid) {
       this.passwordForm.markAllAsTouched();
       return;
     }
     this.savingPassword.set(true);
-    await new Promise((r) => setTimeout(r, 400));
-    this.savingPassword.set(false);
-    this.passwordForm.reset();
-    this.toast.success('Mot de passe modifié.');
+    const { current, next } = this.passwordForm.getRawValue();
+    this.auth.changePassword({ currentPassword: current, newPassword: next }).subscribe({
+      next: () => {
+        this.savingPassword.set(false);
+        this.passwordForm.reset();
+        this.toast.success('Mot de passe modifié.');
+      },
+      error: () => this.savingPassword.set(false)
+    });
   }
 
   protected async confirmDelete(): Promise<void> {
-    const { confirmed, reason } = await this.modal.confirm({
+    const { confirmed } = await this.modal.confirm({
       title: 'Supprimer définitivement mon compte ?',
       body: 'Cette action est irréversible. Votre fiche entreprise sera archivée et votre abonnement résilié.',
       tone: 'danger',
       confirmLabel: 'Supprimer mon compte',
       cancelLabel:  'Annuler',
-      reasonLabel:  'Aidez-nous à comprendre votre départ (facultatif)',
     });
     if (!confirmed) return;
-    this.toast.success('Demande de suppression enregistrée. Vous allez être déconnecté.');
-    if (reason) console.info('Departure reason:', reason);
-    setTimeout(() => this.auth.logout(), 800);
+    
+    this.auth.deleteAccount().subscribe({
+      next: () => {
+        this.toast.success('Compte supprimé. Vous allez être déconnecté.');
+        setTimeout(() => this.auth.logout(), 1500);
+      }
+    });
   }
 
   protected signOut(e: Event): void {

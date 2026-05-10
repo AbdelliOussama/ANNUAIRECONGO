@@ -66,108 +66,66 @@ public class ApplicationDbContextInitialiser(
             await _roleManager.CreateAsync(BusinessOwnerRole);
         }
 
-        // Default users
-        var Admin = new AppUser
+        // Admin Users
+        var admins = new List<(string Id, string Email)>
         {
-            Id = "19a59129-6c20-417a-834d-11a208d32d96",
-            Email = "Admin@localhost",
-            UserName = "Admin@localhost",
-            EmailConfirmed = true
+            ("19a59129-6c20-417a-834d-11a208d32d96", "admin@localhost"),
+            (Guid.NewGuid().ToString(), "superadmin@localhost"),
+            (Guid.NewGuid().ToString(), "support@localhost")
         };
 
-        if (_userManager.Users.All(u => u.Email != Admin.Email))
+        foreach (var a in admins)
         {
-            await _userManager.CreateAsync(Admin, Admin.Email);
-
-            if (!string.IsNullOrWhiteSpace(AdminRole.Name))
+            if (_userManager.Users.All(u => u.Email != a.Email))
             {
-                await _userManager.AddToRolesAsync(Admin, [AdminRole.Name]);
+                var user = new AppUser { Id = a.Id, Email = a.Email, UserName = a.Email, EmailConfirmed = true };
+                await _userManager.CreateAsync(user, a.Email); // Using email as password for simplicity in dev
+                if (!string.IsNullOrWhiteSpace(AdminRole.Name))
+                {
+                    await _userManager.AddToRolesAsync(user, [AdminRole.Name]);
+                }
             }
         }
 
-        var BusinessOwner1 = new AppUser
+        // Business Owner Users
+        var businessOwnersData = new List<(string Id, string Email, string FirstName, string LastName)>
         {
-            Id = "b6327240-0aea-46fc-863a-777fc4e42560",
-            Email = "john.businessOwner@localhost",
-            UserName = "john.businessOwner@localhost",
-            EmailConfirmed = true
+            ("b6327240-0aea-46fc-863a-777fc4e42560", "john.businessOwner@localhost", "John", "Doe"),
+            ("8104ab20-26c2-4651-b1de-c0baf04dbbd9", "peter.businessOwner@localhost", "Peter", "Smith"),
+            ("e17c83de-1089-4f19-bf79-5f789133d37f", "kevin.businessOwner@localhost", "Kevin", "Brown"),
+            ("54cd01ba-b9ae-4c14-bab6-f3df0219ba4c", "suzan.businessOwner@localhost", "Suzan", "White"),
+            (Guid.NewGuid().ToString(), "michel.moukouri@localhost", "Michel", "Moukouri"),
+            (Guid.NewGuid().ToString(), "alain.ngoma@localhost", "Alain", "Ngoma"),
+            (Guid.NewGuid().ToString(), "sylvie.kimbangou@localhost", "Sylvie", "Kimbangou"),
+            (Guid.NewGuid().ToString(), "patrick.obambi@localhost", "Patrick", "Obambi"),
+            (Guid.NewGuid().ToString(), "chantal.ebina@localhost", "Chantal", "Ebina"),
+            (Guid.NewGuid().ToString(), "jean.malonga@localhost", "Jean", "Malonga"),
+            (Guid.NewGuid().ToString(), "marie.moussavou@localhost", "Marie", "Moussavou")
         };
 
-        if (_userManager.Users.All(u => u.Email != BusinessOwner1.Email))
-        {
-            await _userManager.CreateAsync(BusinessOwner1, BusinessOwner1.Email);
+        var newBusinessOwners = new List<BusinessOwner>();
 
-            if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
+        foreach (var bo in businessOwnersData)
+        {
+            if (_userManager.Users.All(u => u.Email != bo.Email))
             {
-                await _userManager.AddToRolesAsync(BusinessOwner1, [BusinessOwnerRole.Name]);
+                var user = new AppUser { Id = bo.Id, Email = bo.Email, UserName = bo.Email, EmailConfirmed = true };
+                await _userManager.CreateAsync(user, "Password123!"); // Secure password for business owners
+                if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
+                {
+                    await _userManager.AddToRolesAsync(user, [BusinessOwnerRole.Name]);
+                }
+                
+                // Add to list to create domain entities
+                newBusinessOwners.Add(BusinessOwner.Create(Guid.Parse(bo.Id), bo.FirstName, bo.LastName, "06" + new Random().Next(10000000, 99999999).ToString(), "Directeur", Role.EntrepriseOwner).Value);
             }
         }
 
-        var BusinessOwner2 = new AppUser
+        if (newBusinessOwners.Any())
         {
-            Id = "8104ab20-26c2-4651-b1de-c0baf04dbbd9",
-            Email = "peter.businessOwner@localhost",
-            UserName = "peter.businessOwner@localhost",
-            EmailConfirmed = true
-        };
-
-        if (_userManager.Users.All(u => u.Email != BusinessOwner2.Email))
-        {
-            await _userManager.CreateAsync(BusinessOwner2, BusinessOwner2.Email);
-
-            if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
-            {
-                await _userManager.AddToRolesAsync(BusinessOwner2, [BusinessOwnerRole.Name]);
-            }
+            _context.BusinessOwners.AddRange(newBusinessOwners);
+            await _context.SaveChangesAsync();
         }
-
-        var BusinessOwner3 = new AppUser
-        {
-            Id = "e17c83de-1089-4f19-bf79-5f789133d37f",
-            Email = "kevin.businessOwner@localhost",
-            UserName = "kevin.businessOwner@localhost",
-            EmailConfirmed = true
-        };
-
-        if (_userManager.Users.All(u => u.Email != BusinessOwner3.Email))
-        {
-            await _userManager.CreateAsync(BusinessOwner3, BusinessOwner3.Email);
-
-            if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
-            {
-                await _userManager.AddToRolesAsync(BusinessOwner3, [BusinessOwnerRole.Name]);
-            }
-        }
-
-        var BusinessOwner4 = new AppUser
-        {
-            Id = "54cd01ba-b9ae-4c14-bab6-f3df0219ba4c",
-            Email = "suzan.businessOwner@localhost",
-            UserName = "suzan.businessOwner@localhost",
-            EmailConfirmed = true
-        };
-
-        if (_userManager.Users.All(u => u.Email != BusinessOwner4.Email))
-        {
-            await _userManager.CreateAsync(BusinessOwner4, BusinessOwner4.Email);
-
-            if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
-            {
-                await _userManager.AddToRolesAsync(BusinessOwner4, [BusinessOwnerRole.Name]);
-            }
-        }
-
-        if (!_context.BusinessOwners.Any())
-        {
-            _context.BusinessOwners.AddRange(
-            [
-                BusinessOwner.Create(Guid.Parse(BusinessOwner1.Id), "John", "Doe", "1234567890", "CEO", Role.EntrepriseOwner).Value,
-                BusinessOwner.Create(Guid.Parse(BusinessOwner2.Id), "Peter", "Doe", "1234567890", "CEO", Role.EntrepriseOwner).Value,
-                BusinessOwner.Create(Guid.Parse(BusinessOwner3.Id), "Kevin", "Doe", "1234567890", "CEO", Role.EntrepriseOwner).Value,
-                BusinessOwner.Create(Guid.Parse(BusinessOwner4.Id), "Suzan", "Doe", "1234567890", "CEO", Role.EntrepriseOwner).Value
-            ]);
-        }
-        await _context.SaveChangesAsync();
 
         if (!_context.Regions.Any())
         {
@@ -264,27 +222,23 @@ public class ApplicationDbContextInitialiser(
         {
             _context.Sectors.AddRange(
             [
-                Sector.Create(Guid.NewGuid(), "Technology", "Technology and software development companies").Value,
-                Sector.Create(Guid.NewGuid(), "Finance", "Banking, insurance, and financial services").Value,
-                Sector.Create(Guid.NewGuid(), "Healthcare", "Hospitals, clinics, and healthcare providers").Value,
-                Sector.Create(Guid.NewGuid(), "Education", "Schools, universities, and educational institutions").Value,
-                Sector.Create(Guid.NewGuid(), "Retail", "Retail stores and e-commerce businesses").Value,
-                Sector.Create(Guid.NewGuid(), "Construction", "Construction companies and real estate").Value,
-                Sector.Create(Guid.NewGuid(), "Energy", "Oil, gas, and renewable energy companies").Value,
-                Sector.Create(Guid.NewGuid(), "Telecommunications", "Telecom providers and internet services").Value,
-                Sector.Create(Guid.NewGuid(), "Agriculture", "Agriculture and agro-industry").Value,
-                Sector.Create(Guid.NewGuid(), "Tourism", "Hotels, restaurants, and tourism services").Value,
-                Sector.Create(Guid.NewGuid(), "Transport", "Transportation and logistics companies").Value,
-                Sector.Create(Guid.NewGuid(), "Food", "Food processing and beverage companies").Value,
-                Sector.Create(Guid.NewGuid(), "Media", "Media, advertising, and entertainment").Value,
-                Sector.Create(Guid.NewGuid(), "Consulting", "Consulting and professional services").Value,
-                Sector.Create(Guid.NewGuid(), "Manufacturing", "Manufacturing and industrial production").Value
+                Sector.Create(Guid.NewGuid(), "Agriculture", "Agriculture, élevage et pêche").Value,
+                Sector.Create(Guid.NewGuid(), "Commerce", "Vente en gros, détail et e-commerce").Value,
+                Sector.Create(Guid.NewGuid(), "Énergie", "Pétrole, gaz et énergies renouvelables").Value,
+                Sector.Create(Guid.NewGuid(), "Finances", "Banques, assurances et micro-finances").Value,
+                Sector.Create(Guid.NewGuid(), "Santé", "Hôpitaux, cliniques, et pharmacies").Value,
+                Sector.Create(Guid.NewGuid(), "Technologies", "Informatique, télécoms et startups").Value,
+                Sector.Create(Guid.NewGuid(), "Transport", "Transport terrestre, aérien, et logistique").Value,
+                Sector.Create(Guid.NewGuid(), "Tourisme", "Hôtellerie, restauration et agences de voyage").Value
             ]);
             await _context.SaveChangesAsync();
         }
 
          // Seed plans
         await PlanSeeder.SeedPlansAsync(_context);
+
+        // Seed companies, subscriptions, payments, and notifications
+        await CompanySeeder.SeedCompaniesAsync(_context, _userManager, _logger);
 
         await _context.SaveChangesAsync();
     }

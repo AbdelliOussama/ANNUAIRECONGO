@@ -41,4 +41,7 @@ public interface IIdentityService
 
     /// <summary>Permanently deletes the user account + linked BusinessOwner row. Companies are detached (OwnerId set to null).</summary>
     Task<Result<Success>> DeleteAccountAsync(string userId, CancellationToken cancellationToken);
+
+    /// <summary>Updates the personal and professional info of the user.</summary>
+    Task<Result<Success>> UpdateProfileAsync(string userId, string firstName, string lastName, string phoneNumber, string? companyPosition, CancellationToken cancellationToken);
 }

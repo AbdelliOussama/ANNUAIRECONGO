@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CompanyService } from '@core/services/company.service';
+import { GeographyService } from '@core/services/geography.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
-import { Region } from '@core/models/company.model';
+import { Region } from '@core/models/geography.model';
 
 @Component({
   selector: 'ac-admin-geographie',
@@ -61,7 +61,7 @@ import { Region } from '@core/models/company.model';
   `],
 })
 export class AdminGeographieComponent {
-  private readonly companyService = inject(CompanyService);
-  protected readonly regions = toSignal(this.companyService.getRegions(), { initialValue: [] as Region[] });
+  private readonly geographyService = inject(GeographyService);
+  protected readonly regions = toSignal(this.geographyService.getRegions(), { initialValue: [] as Region[] });
   protected readonly loading = computed(() => this.regions().length === 0);
 }

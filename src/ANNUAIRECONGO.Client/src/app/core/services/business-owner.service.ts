@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
 import { Company, BusinessOwner } from '../models/company.model';
 
 export interface UpdateBusinessOwnerRequest {
@@ -15,6 +16,7 @@ export interface UpdateBusinessOwnerRequest {
 })
 export class BusinessOwnerService {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   getBusinessOwners(): Observable<BusinessOwner[]> {
     return this.api.get<BusinessOwner[]>('/api/v1/business-owners');
@@ -25,7 +27,8 @@ export class BusinessOwnerService {
   }
 
   getCurrentOwner(): Observable<BusinessOwner> {
-    return this.api.get<BusinessOwner>('/api/v1/business-owners/me');
+    const userId = this.auth.getUserId();
+    return this.getBusinessOwnerById(userId!);
   }
 
   getMyCompanies(): Observable<Company[]> {

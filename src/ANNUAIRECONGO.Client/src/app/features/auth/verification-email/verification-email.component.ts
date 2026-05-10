@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ToastService } from '@shared/services/toast.service';
+import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
 /**
@@ -20,32 +21,49 @@ import { FR } from '@core/i18n/fr.constants';
   template: `
     <div class="auth-card">
       <div class="confirm">
-        <div class="icon-bubble" aria-hidden="true">
-          <span class="material-symbols-outlined icon-filled">mark_email_read</span>
-        </div>
+        @if (verifying()) {
+          <div class="icon-bubble" aria-hidden="true">
+            <span class="material-symbols-outlined spin">sync</span>
+          </div>
+          <h1>Vérification en cours...</h1>
+          <p class="body">Veuillez patienter pendant que nous activons votre compte.</p>
+        } @else if (verified()) {
+          <div class="icon-bubble ok" aria-hidden="true">
+            <span class="material-symbols-outlined icon-filled">verified</span>
+          </div>
+          <h1>Compte activé !</h1>
+          <p class="body">Votre adresse e-mail a été confirmée. Vous pouvez désormais profiter de tous nos services.</p>
+          <div class="actions">
+            <a routerLink="/auth/connexion" class="btn btn-primary">Se connecter</a>
+          </div>
+        } @else {
+          <div class="icon-bubble" aria-hidden="true">
+            <span class="material-symbols-outlined icon-filled">mark_email_read</span>
+          </div>
 
-        <h1>{{ FR.auth.verifyEmailTitle }}</h1>
-        <p class="body">
-          @if (email()) {
-            Un e-mail de confirmation a été envoyé à <strong>{{ email() }}</strong>.
-          } @else {
-            Un e-mail de confirmation a été envoyé à votre adresse.
-          }
-          Cliquez sur le lien qu'il contient pour activer votre compte.
-        </p>
-        <p class="hint">
-          Vous n'avez rien reçu ? Vérifiez vos courriers indésirables ou
-          <button type="button" class="link" (click)="resend()" [disabled]="sending()">renvoyez l'e-mail</button>.
-        </p>
+          <h1>{{ FR.auth.verifyEmailTitle }}</h1>
+          <p class="body">
+            @if (email()) {
+              Un e-mail de confirmation a été envoyé à <strong>{{ email() }}</strong>.
+            } @else {
+              Un e-mail de confirmation a été envoyé à votre adresse.
+            }
+            Cliquez sur le lien qu'il contient pour activer votre compte.
+          </p>
+          <p class="hint">
+            Vous n'avez rien reçu ? Vérifiez vos courriers indésirables ou
+            <button type="button" class="link" (click)="resend()" [disabled]="sending()">renvoyez l'e-mail</button>.
+          </p>
 
-        <div class="actions">
-          <a routerLink="/auth/connexion" class="btn btn-primary">
-            {{ FR.auth.loginAction }}
-          </a>
-          <a routerLink="/" class="btn btn-ghost">
-            {{ FR.actions.backToHome }}
-          </a>
-        </div>
+          <div class="actions">
+            <a routerLink="/auth/connexion" class="btn btn-primary">
+              {{ FR.auth.loginAction }}
+            </a>
+            <a routerLink="/" class="btn btn-ghost">
+              {{ FR.actions.backToHome }}
+            </a>
+          </div>
+        }
       </div>
     </div>
   `,
@@ -69,6 +87,9 @@ import { FR } from '@core/i18n/fr.constants';
       margin-bottom: 20px;
     }
     .icon-bubble .material-symbols-outlined { font-size: 40px; }
+    .icon-bubble.ok { background: var(--color-primary); color: var(--color-on-primary); }
+    .spin { animation: spin 2s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     h1 {
       font-family: var(--font-headline);
@@ -113,17 +134,47 @@ import { FR } from '@core/i18n/fr.constants';
 export class VerificationEmailComponent {
   protected readonly FR = FR;
   private readonly route = inject(ActivatedRoute);
+  private readonly auth  = inject(AuthService);
   private readonly toast = inject(ToastService);
 
   private readonly paramMap = toSignal(this.route.queryParamMap, { initialValue: null });
   protected readonly email = () => this.paramMap()?.get('email') ?? null;
+  protected readonly token = () => this.paramMap()?.get('token') ?? null;
 
   protected readonly sending = signal(false);
+  protected readonly verifying = signal(false);
+  protected readonly verified = signal(false);
 
-  protected async resend(): Promise<void> {
+  constructor() {
+    // If token present, attempt verification
+    const t = this.route.snapshot.queryParamMap.get('token');
+    const e = this.route.snapshot.queryParamMap.get('email');
+    if (t && e) {
+      this.verifying.set(true);
+      this.auth.verifyEmail({ email: e, token: t }).subscribe({
+        next: () => {
+          this.verifying.set(false);
+          this.verified.set(true);
+          this.toast.success('Compte activé ! Vous pouvez maintenant vous connecter.');
+        },
+        error: () => {
+          this.verifying.set(false);
+          this.toast.error('Échec de la vérification. Le lien est peut-être expiré.');
+        }
+      });
+    }
+  }
+
+  protected resend(): void {
+    const e = this.email();
+    if (!e) return;
     this.sending.set(true);
-    await new Promise((r) => setTimeout(r, 600));
-    this.sending.set(false);
-    this.toast.success('Un nouvel e-mail de confirmation vous a été envoyé.');
+    this.auth.resendVerification(e).subscribe({
+      next: () => {
+        this.sending.set(false);
+        this.toast.success('Un nouvel e-mail de confirmation vous a été envoyé.');
+      },
+      error: () => this.sending.set(false)
+    });
   }
 }

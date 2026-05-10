@@ -19,18 +19,21 @@ export class AdminService {
     return this.api.get<PaginatedResponse<Company>>('/api/v1/companies', { pageNumber: page, pageSize });
   }
 
-  // Users (Assuming an endpoint exists or using IdentityService)
-  getUsers(page: number = 1, pageSize: number = 10): Observable<PaginatedResponse<any>> {
-    return this.api.get<PaginatedResponse<any>>('/identity/users', { pageNumber: page, pageSize });
+  // Users (Business Owners list for admin)
+  getUsers(): Observable<any[]> {
+    return this.api.get<any[]>('/api/v1/business-owners');
   }
 
   // Audit Logs
-  getAuditLogs(page: number, pageSize: number): Observable<any> {
-    return this.api.get<any>(`/api/v1/admin/audit-logs?page=${page}&pageSize=${pageSize}`);
+  getAuditLogs(pageNumber: number = 1, pageSize: number = 20, searchTerm?: string): Observable<any> {
+    const params: Record<string, string | number> = { pageNumber, pageSize };
+    if (searchTerm) params['searchTerm'] = searchTerm;
+    return this.api.get<any>('/api/v1/admin/logs', params);
   }
 
+  // Plans
   getPlans(): Observable<any[]> {
-    return this.api.get<any[]>('/api/v1/admin/plans');
+    return this.api.get<any[]>('/api/v1/plans');
   }
 
   getSettings(): Observable<any> {
