@@ -1,5 +1,6 @@
+using ANNUAIRECONGO.Application.Features.Identity;
 using ANNUAIRECONGO.Application.Common.Interfaces;
-using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
+
 using ANNUAIRECONGO.Domain.Common.Results;
 
 using MediatR;

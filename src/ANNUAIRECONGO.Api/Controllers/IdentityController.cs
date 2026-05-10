@@ -17,6 +17,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ANNUAIRECONGO.Contracts.Requests.Identity;
+using ANNUAIRECONGO.Contracts.Responses.Identity;
+
 namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("identity")]
@@ -24,33 +26,42 @@ namespace ANNUAIRECONGO.Api.Controllers;
 public sealed class IdentityController(ISender sender) : ApiController
 {
     [HttpPost("token/generate")]
-    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Generates an access and refresh token for a valid user.")]
     [EndpointDescription("Authenticates a user using provided credentials and returns a JWT token pair.")]
     [EndpointName("GenerateToken")]
-    public async Task<IActionResult> GenerateToken([FromBody] GenerateTokenQuery request, CancellationToken ct)
+    public async Task<IActionResult> GenerateToken([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(request, ct);
+        var result = await sender.Send(new GenerateTokenQuery(request.Email, request.Password), ct);
         return result.Match(
-            response => Ok(response),
+            response => Ok(new ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse
+            {
+                AccessToken = response.AccessToken,
+                RefreshToken = response.RefreshToken,
+                ExpiresOnUtc = response.ExpiresOnUtc
+            }),
             Problem);
     }
 
     [HttpPost("token/refresh-token")]
-    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Refreshes access token using a valid refresh token.")]
     [EndpointDescription("Exchanges an expired access token and a valid refresh token for a new token pair.")]
     [EndpointName("RefreshToken")]
-    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenQuery request, CancellationToken ct)
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(request, ct);
+        var result = await sender.Send(new RefreshTokenQuery(request.RefreshToken, request.ExpiredAccessToken), ct);
         return result.Match(
-            response => Ok(response),
+            response => Ok(new ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse
+            {
+                AccessToken = response.AccessToken,
+                RefreshToken = response.RefreshToken,
+                ExpiresOnUtc = response.ExpiresOnUtc
+            }),
             Problem);
     }
 
@@ -65,6 +76,11 @@ public sealed class IdentityController(ISender sender) : ApiController
     public async Task<IActionResult> GetCurrentUserInfo(CancellationToken ct)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Problem([ANNUAIRECONGO.Domain.Identity.IdentityErrors.UserNotFound]);
+        }
 
         var result = await sender.Send(new GetUserByIdQuery(userId), ct);
 
