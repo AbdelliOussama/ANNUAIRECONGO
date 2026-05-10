@@ -35,6 +35,7 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.Documents;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
 using ANNUAIRECONGO.Contracts.Requests.Companies.StatusTransitions;
+using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyBySlugQuery;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -97,6 +98,24 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
+    [HttpGet("{slug}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Get a company by slug.")]
+    [EndpointDescription("This endpoint gets a company by slug.")]
+    [EndpointName("GetCompanyBySlug")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCompanyBySlug([FromRoute] string slug, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetCompanyBySlugQuery(slug, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -112,6 +131,8 @@ public sealed class CompaniesController(ISender sender) : ApiController
         [FromQuery] Guid? cityId = null,
         [FromQuery] Guid? regionId = null,
         [FromQuery] int? status = null,
+        [FromQuery]string? Rccm = null,
+        [FromQuery]string? Niu = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -121,6 +142,8 @@ public sealed class CompaniesController(ISender sender) : ApiController
             cityId,
             regionId,
             status,
+            Rccm,
+            Niu,
             pageNumber,
             pageSize), ct);
         return result.Match(

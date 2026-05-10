@@ -32,6 +32,8 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
                 c.Name.Contains(request.SearchTerm) ||
                 (c.Description != null && c.Description.Contains(request.SearchTerm)) ||
                 (c.Address != null && c.Address.Contains(request.SearchTerm))
+                || (c.Rccm != null && c.Rccm.Contains(request.SearchTerm)) ||
+                (c.Niu != null && c.Niu.Contains(request.SearchTerm))   
             );
         }
 
@@ -39,6 +41,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         bool needRegionFilter = request.RegionId.HasValue;
         bool needCityFilter = request.CityId.HasValue;
         bool needStatusFilter = request.Status.HasValue;
+        bool needRccmFilter = request.Rccm != null;
+        bool needNiuFilter = request.Niu != null;
+
 
         if (needSectorFilter)
         {
@@ -60,7 +65,14 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             var statusValue = (CompanyStatus)request.Status.Value;
             query = query.Where(c => c.Status == statusValue);
         }
-
+        if(needRccmFilter)
+        {
+            query = query.Where(c => c.Rccm == request.Rccm);
+        }
+        if(needNiuFilter)
+        {
+            query = query.Where(c => c.Niu == request.Niu);
+        }
         var totalCount = await query.CountAsync(cancellationToken);
         var companies = await query
             .Skip((request.PageNumber - 1) * request.PageSize)
