@@ -13,6 +13,10 @@ export class GeographyService {
     return this.api.get<Region[]>('/api/v1/geography');
   }
 
+  getCities(): Observable<City[]> {
+    return this.api.get<City[]>('/api/v1/geography/cities');
+  }
+
   getCitiesByRegion(regionId: string): Observable<City[]> {
     return this.api.get<City[]>(`/api/v1/geography/${regionId}/cities`);
   }

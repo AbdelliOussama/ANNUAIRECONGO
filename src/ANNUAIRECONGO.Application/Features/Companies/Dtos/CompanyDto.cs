@@ -50,6 +50,9 @@ public class CompanyDto
     public bool IsVerified { get; set; }
     public bool IsPremium { get; set; }
 
+    [JsonPropertyName("submittedAt")]
+    public DateTime? SubmittedAt { get; set; }
+
     // Identity / metadata
     public string? Rccm { get; set; }
     public string? Niu { get; set; }

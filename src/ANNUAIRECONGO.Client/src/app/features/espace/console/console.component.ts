@@ -13,6 +13,9 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 import { DatePipe } from '@angular/common';
 import { FR } from '@core/i18n/fr.constants';
+import { CompanyService } from '@core/services/company.service';
+import { ToastService } from '@shared/services/toast.service';
+import { ModalService } from '@shared/services/modal.service';
 
 @Component({
   selector: 'ac-espace-console',
@@ -113,7 +116,13 @@ import { FR } from '@core/i18n/fr.constants';
                 <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
                 Voir publiquement
               </a>
-              <a routerLink="/espace/fiche/editer" class="btn btn-primary btn-sm">
+              @if (company()!.status === 0 || company()!.status === 3) {
+                <button type="button" class="btn btn-primary btn-sm" (click)="onSubmitCompany()" [disabled]="submitting()">
+                  <span class="material-symbols-outlined" aria-hidden="true">publish</span>
+                  Soumettre pour validation
+                </button>
+              }
+              <a routerLink="/espace/fiche/editer" class="btn btn-outline btn-sm">
                 <span class="material-symbols-outlined" aria-hidden="true">edit</span>
                 Modifier
               </a>
@@ -318,8 +327,12 @@ export class EspaceConsoleComponent {
   private readonly notifService= inject(NotificationService);
   private readonly statsService= inject(StatsService);
   private readonly authService = inject(AuthService);
+  private readonly companyService = inject(CompanyService);
+  private readonly toast = inject(ToastService);
+  private readonly modal = inject(ModalService);
 
   protected readonly identity = this.authService.currentUser;
+  protected readonly submitting = signal(false);
 
   private readonly companyData = toSignal<Company | null>(
     this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
@@ -405,5 +418,31 @@ export class EspaceConsoleComponent {
       case 3: return 'status status-rejetee';
       default: return 'status status-brouillon';
     }
+  }
+
+  protected onSubmitCompany(): void {
+    const c = this.company();
+    if (!c) return;
+
+    this.modal.confirm({
+      title: 'Soumettre votre fiche ?',
+      body: 'Votre fiche sera examinée par un administrateur avant d\'être publiée sur l\'annuaire.',
+      tone: 'confirm',
+      confirmLabel: 'Soumettre maintenant'
+    }).then(({ confirmed }) => {
+      if (!confirmed) return;
+      
+      this.submitting.set(true);
+      this.companyService.submitCompany(c.id).subscribe({
+        next: () => {
+          this.toast.success('Fiche soumise avec succès !');
+          window.location.reload(); 
+        },
+        error: () => {
+          this.submitting.set(false);
+          this.toast.error('Erreur lors de la soumission.');
+        }
+      });
+    });
   }
 }

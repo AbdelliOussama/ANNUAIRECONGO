@@ -40,6 +40,7 @@ public class Company : AuditableEntity
     public bool IsFeatured { get; private set; }
     public bool IsVerified { get; private set; }
     public bool IsPremium { get; private set; }
+    public DateTime? SubmittedAt { get; private set; }
 
     // ── Navigation Properties ─────────────────────────────────────
     public BusinessOwner? Owner { get; private set; }
@@ -135,6 +136,9 @@ public class Company : AuditableEntity
         bool? isVerified = null,
         bool? isPremium = null)
     {
+        // Check if sensitive fields changed to trigger re-validation
+        bool identityChanged = (Name != name) || (Rccm != rccm) || (Niu != niu);
+
         Name = name;
         Slug = SlugHelper.GenerateSlug(name);
         Description = description;
@@ -149,9 +153,17 @@ public class Company : AuditableEntity
         if (isVerified.HasValue) IsVerified = isVerified.Value;
         if (isPremium.HasValue) IsPremium = isPremium.Value;
 
+        // If identity changed and company was already validated, send back to pending
+        if (identityChanged && Status == CompanyStatus.Active)
+        {
+            Status = CompanyStatus.Pending;
+            SubmittedAt = DateTime.UtcNow;
+        }
+
         _companySectors.Clear();
         foreach (var sectorId in sectorIds)
             _companySectors.Add(CompanySector.Create(Id, sectorId).Value);
+            
         return Result.Updated;
     }
 
@@ -169,6 +181,7 @@ public class Company : AuditableEntity
         if (Status != CompanyStatus.Draft)
             return CompanyErrors.NotInDraft;
         Status = CompanyStatus.Pending;
+        SubmittedAt = DateTime.UtcNow;
         return Result.Updated;
     }
     public Result<Updated> Validate()

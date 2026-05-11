@@ -30,6 +30,8 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
       if (filter.status !== null && filter.status !== undefined) params['status'] = filter.status;
       if (filter.pageNumber) params['pageNumber'] = filter.pageNumber;
       if (filter.pageSize) params['pageSize'] = filter.pageSize;
+      if (filter.sortBy) params['sortBy'] = filter.sortBy;
+      if (filter.sortOrder) params['sortOrder'] = filter.sortOrder;
   
       return this.api.get<PaginatedResponse<Company>>('/api/v1/companies', params);
    }

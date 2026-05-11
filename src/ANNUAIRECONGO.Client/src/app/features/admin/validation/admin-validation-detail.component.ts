@@ -171,11 +171,12 @@ export class AdminValidationDetailComponent {
       status: this.mapStatus(c.status),
       sectorLabel: c.sectors?.[0]?.name || 'N/A',
       city: c.cityName || 'N/A',
-      submittedAt: c.createdAt,
+      submittedAt: c.submittedAt || c.createdAt,
       rccm: c.rccm || 'N/A',
       niu: c.niu || 'N/A',
       ownerId: c.ownerId,
-      rejectionReason: '', 
+      // Audit: rejectionReason is used for feedback in rejected status
+      rejectionReason: c.rejectionReason || '', 
       images: c.images || []
     };
   });

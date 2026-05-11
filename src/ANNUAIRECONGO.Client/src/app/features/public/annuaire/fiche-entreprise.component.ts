@@ -10,6 +10,18 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { CompanyService } from '@core/services/company.service';
 import { Company, CompanyContact, CompanyDocument, ContactType, DocumentType as DocTypeEnum } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
+import * as L from 'leaflet';
+
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  'Brazzaville':  { lat: -4.2634,  lng: 15.2429 },
+  'Pointe-Noire': { lat: -4.7761,  lng: 11.8636 },
+  'Dolisie':      { lat: -4.1990,  lng: 12.6702 },
+  'Oyo':          { lat: -1.2500,  lng: 15.7167 },
+  'Ouesso':       { lat:  1.6136,  lng: 16.0517 },
+  'Owando':       { lat: -0.4819,  lng: 15.8999 },
+  'Impfondo':     { lat:  1.6373,  lng: 18.0667 },
+  'Madingou':     { lat: -4.1536,  lng: 13.5500 },
+};
 
 type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
 
@@ -169,8 +181,11 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
             }
             @case ('localisation') {
               <h2 class="panel-title">Localisation</h2>
-              <p class="muted">{{ fiche()!.address }}, {{ fiche()!.city }}, {{ fiche()!.region }}.</p>
-              <p class="muted">La carte interactive sera bientôt disponible.</p>
+              <p class="muted mb-6">{{ fiche()!.address }}, {{ fiche()!.city }}, {{ fiche()!.region }}.</p>
+              
+              <div class="map-wrap">
+                <div #mapContainer class="map-el" id="fiche-map"></div>
+              </div>
             }
             @case ('documents') {
               <h2 class="panel-title">Documents légaux</h2>
@@ -320,16 +335,30 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     .doc-info p { font-size: 12px; color: var(--color-on-surface-variant); margin: 2px 0 0; }
 
     .muted { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.6; }
+    .mb-6 { margin-bottom: 24px; }
+
+    .map-wrap {
+      height: 400px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--color-outline-variant);
+      background: var(--color-surface-container-low);
+    }
+    .map-el { width: 100%; height: 100%; }
 
     @keyframes ac-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   `],
 })
-export class FicheEntrepriseComponent {
+export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
   private readonly route          = inject(ActivatedRoute);
   private readonly titleService   = inject(Title);
   private readonly metaService    = inject(Meta);
+
+  @ViewChild('mapContainer') private mapEl?: ElementRef<HTMLElement>;
+  private map?: L.Map;
+  private marker?: L.Marker;
 
   protected readonly tabs: TabDescriptor[] = [
     { id: 'apropos',     label: 'À propos',    icon: 'description' },
@@ -398,6 +427,8 @@ export class FicheEntrepriseComponent {
       publicDocuments: c.documents?.filter((d: CompanyDocument) => d.isPublic) || [],
       services: c.services || [],
       allSectors: c.sectors || [],
+      lat: c.latitude,
+      lng: c.longitude,
     };
   });
 
@@ -433,5 +464,55 @@ export class FicheEntrepriseComponent {
     if (id) {
       this.companyService.trackContactClick(id, type).subscribe();
     }
+  }
+
+  ngAfterViewInit(): void {
+    // The map is inside a tab, so we need to observe when the 'localisation' tab becomes active
+    effect(() => {
+      if (this.activeTab() === 'localisation') {
+        // Wait for DOM
+        setTimeout(() => this.initMap(), 50);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.map?.remove();
+  }
+
+  private initMap(): void {
+    if (!this.mapEl || this.map) return;
+
+    const f = this.fiche();
+    if (!f) return;
+
+    let lat = f.lat;
+    let lng = f.lng;
+
+    // Fallback to city coords if company has no precise coords
+    if (!lat || !lng) {
+      const city = CITY_COORDS[f.city];
+      if (city) {
+        lat = city.lat;
+        lng = city.lng;
+      } else {
+        // Default to Congo center
+        lat = -1.5;
+        lng = 15.0;
+      }
+    }
+
+    this.map = L.map(this.mapEl.nativeElement, {
+      center: [lat, lng],
+      zoom: 14,
+      scrollWheelZoom: false,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(this.map);
+
+    this.marker = L.marker([lat, lng]).addTo(this.map);
+    this.marker.bindPopup(`<strong>${f.name}</strong><br>${f.address}`).openPopup();
   }
 }

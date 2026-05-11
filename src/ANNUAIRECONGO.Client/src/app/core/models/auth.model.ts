@@ -28,8 +28,14 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
-  companyPosition?: string;
+  phoneNumber: string;
+  companyPosition: string;
+  companyName: string;
+  cityId: string;
+  sectorIds: string[];
+  website?: string;
+  rccm?: string;
+  niu?: string;
 }
 
 export interface ForgotPasswordRequest {

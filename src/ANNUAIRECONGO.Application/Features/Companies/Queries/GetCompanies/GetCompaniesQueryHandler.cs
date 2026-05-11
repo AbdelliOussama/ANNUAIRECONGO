@@ -74,8 +74,31 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         {
             query = query.Where(c => c.Niu == request.Niu);
         }
-        var totalCount = await query.CountAsync(cancellationToken);
-        var companies = await query
+
+        // Apply Sorting
+        // Always prioritize Premium companies in the directory
+        var orderedQuery = query.OrderByDescending(c => c.IsPremium);
+
+        if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            var isDescending = string.Equals(request.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            
+            orderedQuery = request.SortBy.ToLower() switch
+            {
+                "name" => isDescending ? orderedQuery.ThenByDescending(c => c.Name) : orderedQuery.ThenBy(c => c.Name),
+                "date" => isDescending ? orderedQuery.ThenByDescending(c => c.CreatedAtUtc) : orderedQuery.ThenBy(c => c.CreatedAtUtc),
+                "status" => isDescending ? orderedQuery.ThenByDescending(c => c.Status) : orderedQuery.ThenBy(c => c.Status),
+                _ => orderedQuery.ThenByDescending(c => c.CreatedAtUtc)
+            };
+        }
+        else
+        {
+            // Default sort: Newest first
+            orderedQuery = orderedQuery.ThenByDescending(c => c.CreatedAtUtc);
+        }
+
+        var totalCount = await orderedQuery.CountAsync(cancellationToken);
+        var companies = await orderedQuery
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);

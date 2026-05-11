@@ -99,7 +99,20 @@ public sealed class IdentityController(ISender sender) : ApiController
      [EndpointName("Register")]
      public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
      {
-         var result =await sender.Send(new RegisterCommand(request.Email,request.Password,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition), ct);
+         var result = await sender.Send(new RegisterCommand(
+             request.Email,
+             request.Password,
+             request.FirstName,
+             request.LastName,
+             request.PhoneNumber,
+             request.CompanyPosition,
+             request.CompanyName,
+             request.CityId,
+             request.SectorIds,
+             request.Website,
+             request.Rccm,
+             request.Niu), ct);
+
          return result.Match(
              userId => Created($"identity/{userId}", userId),
              Problem);

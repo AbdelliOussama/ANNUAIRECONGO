@@ -82,9 +82,11 @@ export interface Company {
   email?: string;       // added
   websiteUrl?: string;  // added
   status: CompanyStatus;
+  rejectionReason?: string;
   isFeatured: boolean;
   isVerified: boolean;
   isPremium: boolean;
+  submittedAt?: Date | string;
   rccm?: string;
   niu?: string;
   yearFounded?: number;
@@ -259,6 +261,8 @@ export interface CompanyFilter {
   status?: number | null;
   pageNumber?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export interface CreateCompanyRequest {

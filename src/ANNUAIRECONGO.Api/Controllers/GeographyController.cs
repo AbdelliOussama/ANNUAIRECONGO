@@ -3,6 +3,7 @@ using ANNUAIRECONGO.Application.Features.Geography.Commands.CreateRegion;
 using ANNUAIRECONGO.Application.Features.Geography.Commands.DeleteCity;
 using ANNUAIRECONGO.Application.Features.Geography.Commands.DeleteRegion;
 using ANNUAIRECONGO.Application.Features.Geography.Dtos;
+using ANNUAIRECONGO.Application.Features.Geography.Queries.GetCities;
 using ANNUAIRECONGO.Application.Features.Geography.Queries.GetCitiesByRegion;
 using ANNUAIRECONGO.Application.Features.Geography.Queries.GetRegions;
 using ANNUAIRECONGO.Contracts.Requests.Geography;
@@ -29,6 +30,22 @@ public sealed class GeographyController(ISender sender) : ApiController
     public async Task<IActionResult> GetRegions(CancellationToken ct)
     {
         var result = await sender.Send(new GetRegionsQuery(), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
+    [HttpGet("cities")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Get all cities.")]
+    [EndpointDescription("This endpoint gets all cities.")]
+    [EndpointName("GetCities")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCities(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetCitiesQuery(), ct);
         return result.Match(
             response => Ok(response),
             Problem);

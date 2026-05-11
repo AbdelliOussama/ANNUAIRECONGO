@@ -8,6 +8,11 @@ import { ToastService } from '@shared/services/toast.service';
 import { AuthService } from '@core/services/auth.service';
 import { FR } from '@core/i18n/fr.constants';
 
+import { SectorService } from '@core/services/sector.service';
+import { GeographyService } from '@core/services/geography.service';
+import { City } from '@core/models/geography.model';
+import { Sector } from '@core/models/company.model';
+
 /**
  * /auth/inscription — registration in 3 explicit steps.
  *
@@ -16,10 +21,7 @@ import { FR } from '@core/i18n/fr.constants';
  *  - C4       : submit intercepted, no default GET fallback
  *  - C1 / M2  : every label & message in French; uses design system fonts
  *  - P5       : "S'inscrire" everywhere (verb pronominal)
- *
- * Step 1 — compte personnel
- * Step 2 — entreprise (RCCM / NIU / secteur / ville / website)
- * Step 3 — vérification e-mail (visual confirmation)
+ *  - Senior   : dynamic sector/city selection + unified registration
  */
 @Component({
   selector: 'ac-inscription',
@@ -153,29 +155,32 @@ import { FR } from '@core/i18n/fr.constants';
 
           <div class="form-group">
             <label class="form-label" for="reg-sector">Secteur principal *</label>
-            <select id="reg-sector" formControlName="sector" class="form-input"
-                    [attr.aria-invalid]="companyForm.get('sector')?.invalid && companyForm.get('sector')?.touched ? true : null">
+            <select id="reg-sector" formControlName="sectorId" class="form-input"
+                    [attr.aria-invalid]="companyForm.get('sectorId')?.invalid && companyForm.get('sectorId')?.touched ? true : null">
               <option value="">Sélectionnez un secteur</option>
-              <option [value]="FR.sectors.maritime.slug">{{ FR.sectors.maritime.name }}</option>
-              <option [value]="FR.sectors.logistique.slug">{{ FR.sectors.logistique.name }}</option>
-              <option [value]="FR.sectors.douane.slug">{{ FR.sectors.douane.name }}</option>
-              <option [value]="FR.sectors.industrie.slug">{{ FR.sectors.industrie.name }}</option>
-              <option [value]="FR.sectors.securite.slug">{{ FR.sectors.securite.name }}</option>
-              <option [value]="FR.sectors.manutention.slug">{{ FR.sectors.manutention.name }}</option>
+              @for (s of sectors(); track s.id) {
+                <option [value]="s.id">{{ s.name }}</option>
+              }
             </select>
-            @if (errorFor(companyForm, 'sector')) {
-              <p class="form-error" role="alert">{{ errorFor(companyForm, 'sector') }}</p>
+            @if (errorFor(companyForm, 'sectorId')) {
+              <p class="form-error" role="alert">{{ errorFor(companyForm, 'sectorId') }}</p>
             }
           </div>
 
           <div class="grid-2">
-            <ac-input
-              formControlName="city"
-              label="Ville"
-              placeholder="Pointe-Noire, Brazzaville…"
-              [required]="true"
-              [error]="errorFor(companyForm, 'city')"
-            />
+            <div class="form-group">
+              <label class="form-label" for="reg-city">Ville *</label>
+              <select id="reg-city" formControlName="cityId" class="form-input"
+                      [attr.aria-invalid]="companyForm.get('cityId')?.invalid && companyForm.get('cityId')?.touched ? true : null">
+                <option value="">Sélectionnez une ville</option>
+                @for (c of cities(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+              @if (errorFor(companyForm, 'cityId')) {
+                <p class="form-error" role="alert">{{ errorFor(companyForm, 'cityId') }}</p>
+              }
+            </div>
             <ac-input
               formControlName="website"
               type="url"
@@ -337,6 +342,8 @@ export class InscriptionComponent {
 
   protected readonly step = signal<0 | 1 | 2>(0);
   protected readonly submitting = signal(false);
+  protected readonly sectors = signal<Sector[]>([]);
+  protected readonly cities  = signal<City[]>([]);
 
   protected readonly steps: StepDescriptor[] = [
     { id: 'compte',       label: FR.auth.stepperAccount },
@@ -372,11 +379,19 @@ export class InscriptionComponent {
     companyName: ['', [Validators.required, Validators.minLength(2)]],
     rccm:        ['', [Validators.required, Validators.pattern(/^[A-Z]{2,3}-[A-Z]{2,4}-\d{4}-[A-Z]-\d{3,5}$/)]],
     niu:         ['', [Validators.required, Validators.minLength(8)]],
-    sector:      ['', Validators.required],
-    city:        ['', [Validators.required, Validators.minLength(2)]],
+    sectorId:    ['', Validators.required],
+    cityId:      ['', Validators.required],
     website:     ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
     position:    ['', Validators.required],
   });
+
+  constructor() {
+    const sectorService = inject(SectorService);
+    const geographyService = inject(GeographyService);
+
+    sectorService.getSectors().subscribe(s => this.sectors.set(s));
+    geographyService.getCities().subscribe(c => this.cities.set(c));
+  }
 
   protected readonly confirmPasswordError = computed(() => {
     const c = this.accountForm.get('confirmPassword');
@@ -432,6 +447,12 @@ export class InscriptionComponent {
       phoneNumber: account.phone,
       password:  account.password,
       companyPosition: company.position,
+      companyName: company.companyName,
+      cityId:    company.cityId,
+      sectorIds: [company.sectorId],
+      website:   company.website || undefined,
+      rccm:      company.rccm,
+      niu:       company.niu
     }).subscribe({
       next: () => {
         this.submitting.set(false);

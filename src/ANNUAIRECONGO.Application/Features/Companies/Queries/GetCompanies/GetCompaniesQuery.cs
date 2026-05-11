@@ -13,5 +13,7 @@ public sealed record GetCompaniesQuery(
     int? Status,
     string? Rccm,
     string? Niu,
+    string? SortBy,
+    string? SortOrder,
     int PageNumber,
     int PageSize) : IRequest<Result<PaginatedList<CompanyDto>>>;

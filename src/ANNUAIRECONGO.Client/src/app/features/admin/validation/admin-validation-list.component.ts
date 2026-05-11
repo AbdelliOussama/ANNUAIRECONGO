@@ -181,7 +181,7 @@ export class AdminValidationListComponent {
       sectorLabel: c.sectors?.[0]?.name || 'N/A',
       city: c.cityName || 'N/A',
       ownerName: c.ownerName || 'N/A',
-      submittedAt: c.createdAt,
+      submittedAt: c.submittedAt || c.createdAt,
       status: this.mapStatus(c.status)
     }));
   });

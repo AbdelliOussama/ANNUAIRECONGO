@@ -123,16 +123,18 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [MapToApiVersion("1.0")]
     [AllowAnonymous]
     public async Task<IActionResult> GetAllCompanies(
-        CancellationToken ct,
         [FromQuery] string? searchTerm = null,
         [FromQuery] Guid? sectorId = null,
         [FromQuery] Guid? cityId = null,
         [FromQuery] Guid? regionId = null,
         [FromQuery] int? status = null,
-        [FromQuery]string? Rccm = null,
-        [FromQuery]string? Niu = null,
+        [FromQuery] string? Rccm = null,
+        [FromQuery] string? Niu = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
     {
         var result = await sender.Send(new GetCompaniesQuery(
             searchTerm,
@@ -142,6 +144,8 @@ public sealed class CompaniesController(ISender sender) : ApiController
             status,
             Rccm,
             Niu,
+            sortBy,
+            sortOrder,
             pageNumber,
             pageSize), ct);
         return result.Match(

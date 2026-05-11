@@ -130,6 +130,15 @@ interface Filters {
               Filtres
             </button>
 
+            <div class="view-toggle" role="group" aria-label="Tri">
+              <select class="sort-select" [value]="sortBy() + ':' + sortOrder()" (change)="onSort($event)">
+                <option value="date:desc">Nouveautés</option>
+                <option value="name:asc">Nom (A-Z)</option>
+                <option value="name:desc">Nom (Z-A)</option>
+                <option value="date:asc">Ancienneté</option>
+              </select>
+            </div>
+
             <div class="view-toggle" role="group" aria-label="Affichage">
               <button
                 type="button"
@@ -325,6 +334,17 @@ interface Filters {
       box-shadow: var(--shadow-card);
     }
 
+    .sort-select {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-on-surface);
+      padding: 0 8px;
+      cursor: pointer;
+      outline: none;
+    }
+
     .pagination-wrap { display: flex; justify-content: center; margin-top: 32px; }
   `],
 })
@@ -343,6 +363,8 @@ export class AnnuaireListComponent {
     verifiedOnly: false,
   });
   protected readonly page    = signal(1);
+  protected readonly sortBy  = signal('date');
+  protected readonly sortOrder = signal('desc');
   protected readonly view    = signal<'grid' | 'list'>('grid');
   protected readonly filtersOpen = signal(false);
 
@@ -359,6 +381,8 @@ export class AnnuaireListComponent {
           sectorId: this.filters().sectorId || undefined,
           regionId: this.filters().regionId || undefined,
           status: this.filters().verifiedOnly ? 2 : undefined,
+          sortBy: this.sortBy(),
+          sortOrder: this.sortOrder(),
           pageNumber: this.page(),
           pageSize: 9,
         }).pipe(
@@ -397,6 +421,8 @@ export class AnnuaireListComponent {
         verifiedOnly: qp['verifiees'] === '1',
       });
       this.page.set(qp['page'] ? Math.max(1, Number(qp['page'])) : 1);
+      this.sortBy.set(qp['tri'] ?? 'date');
+      this.sortOrder.set(qp['ordre'] ?? 'desc');
       this.trigger.next();
     });
   }
@@ -419,6 +445,16 @@ export class AnnuaireListComponent {
     this.filters.update((f) => ({ ...f, verifiedOnly: (e.target as HTMLInputElement).checked }));
     this.page.set(1); this.syncToUrl();
   }
+  
+  protected onSort(e: Event): void {
+    const val = (e.target as HTMLSelectElement).value;
+    const [by, order] = val.split(':');
+    this.sortBy.set(by);
+    this.sortOrder.set(order);
+    this.page.set(1);
+    this.syncToUrl();
+  }
+
   protected onPage(p: number): void { this.page.set(p); this.syncToUrl(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   protected reset(): void {
@@ -437,6 +473,8 @@ export class AnnuaireListComponent {
       secteur:   f.sectorId || undefined,
       region:    f.regionId || undefined,
       verifiees: f.verifiedOnly ? '1' : undefined,
+      tri:       this.sortBy() !== 'date' ? this.sortBy() : undefined,
+      ordre:     this.sortOrder() !== 'desc' ? this.sortOrder() : undefined,
       page:      this.page() > 1 ? String(this.page()) : undefined,
     };
     this.router.navigate([], {

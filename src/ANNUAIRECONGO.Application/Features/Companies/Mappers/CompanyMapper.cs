@@ -51,6 +51,7 @@ public static class CompanyMapper
             IsFeatured = company.IsFeatured,
             IsVerified = company.IsVerified,
             IsPremium = company.IsPremium,
+            SubmittedAt = company.SubmittedAt,
             Rccm = company.Rccm,
             Niu = company.Niu,
             YearFounded = company.YearFounded,
