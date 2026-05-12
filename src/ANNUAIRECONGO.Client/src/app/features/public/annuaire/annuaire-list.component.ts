@@ -15,6 +15,7 @@ import { switchMap, catchError, of, tap } from 'rxjs';
 interface Filters {
   query: string;
   sectorId: string;
+  sectorSlug: string; // Added to store the slug from URL
   regionId: string;
   verifiedOnly: boolean;
 }
@@ -359,6 +360,7 @@ export class AnnuaireListComponent {
   protected readonly filters = signal<Filters>({
     query: '',
     sectorId: '',
+    sectorSlug: '',
     regionId: '',
     verifiedOnly: false,
   });
@@ -371,16 +373,38 @@ export class AnnuaireListComponent {
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
   protected readonly regions = toSignal(this.geoService.getRegions(), { initialValue: [] as Region[] });
 
-  // Simplified reactive data fetching
-  private readonly params$ = toObservable(computed(() => ({
-    q:         this.filters().query,
-    secteur:   this.filters().sectorId,
-    region:    this.filters().regionId,
-    verifiees: this.filters().verifiedOnly,
-    page:      this.page(),
-    tri:       this.sortBy(),
-    ordre:     this.sortOrder()
-  })));
+  // Resolved filters for the API
+  private readonly resolvedParams = computed(() => {
+    const f = this.filters();
+    const allSectors = this.sectors();
+    
+    let sectorId = f.sectorId;
+    let sectorSlug = f.sectorSlug;
+
+    // If we only have a slug (e.g. from URL), try to find the ID
+    if (!sectorId && sectorSlug) {
+      const found = allSectors.find(s => s.slug === sectorSlug);
+      if (found) sectorId = found.id;
+    } 
+    // If we have an ID (e.g. from dropdown), find the slug for the URL
+    else if (sectorId && !sectorSlug) {
+      const found = allSectors.find(s => s.id === sectorId);
+      if (found) sectorSlug = found.slug;
+    }
+
+    return {
+      q:         f.query,
+      sectorId:  sectorId,
+      sectorSlug: sectorSlug,
+      regionId:  f.regionId,
+      verifiees: f.verifiedOnly,
+      page:      this.page(),
+      tri:       this.sortBy(),
+      ordre:     this.sortOrder()
+    };
+  });
+
+  private readonly params$ = toObservable(this.resolvedParams);
 
   private readonly result = toSignal<PaginatedResponse<Company> | null>(
     this.params$.pipe(
@@ -388,8 +412,9 @@ export class AnnuaireListComponent {
       switchMap(p => 
         this.companyService.getCompanies({
           searchTerm: p.q || undefined,
-          sectorId:   p.secteur || undefined,
-          regionId:   p.region || undefined,
+          sectorId:   p.sectorId || undefined,
+          sectorSlug: p.sectorSlug || undefined,
+          regionId:   p.regionId || undefined,
           status:     2, // Force Active status
           sortBy:     p.tri,
           sortOrder:  p.ordre,
@@ -429,9 +454,13 @@ export class AnnuaireListComponent {
 
   constructor() {
     this.route.queryParams.subscribe((qp) => {
+      const secteurParam = qp['secteur'] ?? '';
+      const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(secteurParam);
+
       this.filters.set({
         query:        qp['q']        ?? '',
-        sectorId:     qp['secteur']  ?? '',
+        sectorId:     isGuid ? secteurParam : '',
+        sectorSlug:   !isGuid ? secteurParam : '',
         regionId:     qp['region']   ?? '',
         verifiedOnly: qp['verifiees'] === '1',
       });
@@ -448,8 +477,10 @@ export class AnnuaireListComponent {
     this.syncToUrl();
   }
   protected onSector(e: Event): void {
-    this.filters.update((f) => ({ ...f, sectorId: (e.target as HTMLSelectElement).value }));
-    this.page.set(1); this.syncToUrl();
+    const val = (e.target as HTMLSelectElement).value;
+    this.filters.update((f) => ({ ...f, sectorId: val, sectorSlug: '' }));
+    this.page.set(1); 
+    this.syncToUrl();
   }
   protected onRegion(e: Event): void {
     this.filters.update((f) => ({ ...f, regionId: (e.target as HTMLSelectElement).value }));
@@ -472,7 +503,7 @@ export class AnnuaireListComponent {
   protected onPage(p: number): void { this.page.set(p); this.syncToUrl(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   protected reset(): void {
-    this.filters.set({ query: '', sectorId: '', regionId: '', verifiedOnly: false });
+    this.filters.set({ query: '', sectorId: '', sectorSlug: '', regionId: '', verifiedOnly: false });
     this.page.set(1);
     this.syncToUrl();
   }
@@ -481,12 +512,12 @@ export class AnnuaireListComponent {
   protected closeFilters(): void { this.filtersOpen.set(false); }
 
   private syncToUrl(): void {
-    const f = this.filters();
+    const p = this.resolvedParams();
     const queryParams: Record<string, string | undefined> = {
-      q:         f.query  || undefined,
-      secteur:   f.sectorId || undefined,
-      region:    f.regionId || undefined,
-      verifiees: f.verifiedOnly ? '1' : undefined,
+      q:         p.q  || undefined,
+      secteur:   p.sectorSlug || p.sectorId || undefined,
+      region:    p.regionId || undefined,
+      verifiees: p.verifiees ? '1' : undefined,
       tri:       this.sortBy() !== 'date' ? this.sortBy() : undefined,
       ordre:     this.sortOrder() !== 'desc' ? this.sortOrder() : undefined,
       page:      this.page() > 1 ? String(this.page()) : undefined,

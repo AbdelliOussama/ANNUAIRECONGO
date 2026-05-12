@@ -125,6 +125,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     public async Task<IActionResult> GetAllCompanies(
         [FromQuery] string? searchTerm = null,
         [FromQuery] Guid? sectorId = null,
+        [FromQuery] string? sectorSlug = null,
         [FromQuery] Guid? cityId = null,
         [FromQuery] Guid? regionId = null,
         [FromQuery] int? status = null,
@@ -139,6 +140,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
         var result = await sender.Send(new GetCompaniesQuery(
             searchTerm,
             sectorId,
+            sectorSlug,
             cityId,
             regionId,
             status,

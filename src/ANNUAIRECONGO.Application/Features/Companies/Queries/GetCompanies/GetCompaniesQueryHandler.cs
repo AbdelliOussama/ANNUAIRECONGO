@@ -38,7 +38,7 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             );
         }
 
-        bool needSectorFilter = request.SectorId.HasValue;
+        bool needSectorFilter = request.SectorId.HasValue || !string.IsNullOrWhiteSpace(request.SectorSlug);
         bool needRegionFilter = request.RegionId.HasValue;
         bool needCityFilter = request.CityId.HasValue;
         bool needStatusFilter = request.Status.HasValue;
@@ -48,7 +48,14 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
 
         if (needSectorFilter)
         {
-            query = query.Where(c => c.CompanySectors.Any(cs => cs.SectorId == request.SectorId.Value));
+            if (request.SectorId.HasValue)
+            {
+                query = query.Where(c => c.CompanySectors.Any(cs => cs.SectorId == request.SectorId.Value));
+            }
+            else if (!string.IsNullOrWhiteSpace(request.SectorSlug))
+            {
+                query = query.Where(c => c.CompanySectors.Any(cs => cs.Sector.Slug == request.SectorSlug));
+            }
         }
 
         if (needCityFilter)

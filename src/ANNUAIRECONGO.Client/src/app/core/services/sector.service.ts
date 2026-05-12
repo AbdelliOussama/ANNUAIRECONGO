@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { Sector } from '../models/company.model';
 
@@ -10,7 +10,12 @@ export class SectorService {
   private readonly api = inject(ApiService);
 
   getSectors(): Observable<Sector[]> {
-    return this.api.get<Sector[]>('/api/v1/sectors');
+    return this.api.get<any[]>('/api/v1/sectors').pipe(
+      map(sectors => sectors.map(s => ({
+        ...s,
+        id: s.id || s.sectorId // Ensure id is populated for template binding
+      })))
+    );
   }
 
   getSectorById(id: string): Observable<Sector> {

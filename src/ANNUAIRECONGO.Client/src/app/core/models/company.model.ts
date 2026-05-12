@@ -47,10 +47,9 @@ export interface CompanyDocument {
 }
 
 export interface Sector {
-  id: string;      // added for compatibility
-  sectorId: string;
+  id: string; // This will map to sectorId from the API
   name: string;
-  slug?: string;
+  slug: string;
   iconUrl?: string;
   description?: string;
   isActive?: boolean;
@@ -255,6 +254,7 @@ export interface PaginatedResponse<T> {
 export interface CompanyFilter {
   searchTerm?: string;
   sectorId?: string;
+  sectorSlug?: string;
   cityId?: string;
   regionId?: string;
   ownerId?: string;

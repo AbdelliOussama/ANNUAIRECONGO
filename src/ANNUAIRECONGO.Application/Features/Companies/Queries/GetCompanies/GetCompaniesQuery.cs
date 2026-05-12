@@ -8,6 +8,7 @@ namespace ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanies;
 public sealed record GetCompaniesQuery(
     string? SearchTerm,
     Guid? SectorId,
+    string? SectorSlug,
     Guid? CityId,
     Guid? RegionId,
     int? Status,
