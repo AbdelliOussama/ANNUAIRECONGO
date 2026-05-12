@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { CompanyCardComponent, CompanyCardData } from '@shared/components/company-card/company-card.component';
 import { PaginationComponent } from '@shared/ui/pagination/pagination.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
@@ -10,7 +10,7 @@ import { SectorService } from '@core/services/sector.service';
 import { GeographyService } from '@core/services/geography.service';
 import { Sector, Region, Company, PaginatedResponse } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
-import { switchMap, BehaviorSubject, map, catchError, of } from 'rxjs';
+import { switchMap, catchError, of, tap } from 'rxjs';
 
 interface Filters {
   query: string;
@@ -371,23 +371,37 @@ export class AnnuaireListComponent {
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
   protected readonly regions = toSignal(this.geoService.getRegions(), { initialValue: [] as Region[] });
 
-  private readonly trigger = new BehaviorSubject<void>(undefined);
+  // Simplified reactive data fetching
+  private readonly params$ = toObservable(computed(() => ({
+    q:         this.filters().query,
+    secteur:   this.filters().sectorId,
+    region:    this.filters().regionId,
+    verifiees: this.filters().verifiedOnly,
+    page:      this.page(),
+    tri:       this.sortBy(),
+    ordre:     this.sortOrder()
+  })));
+
   private readonly result = toSignal<PaginatedResponse<Company> | null>(
-    this.trigger.pipe(
-      map(() => this.loading.set(true)),
-      switchMap(() =>
+    this.params$.pipe(
+      tap(() => this.loading.set(true)),
+      switchMap(p => 
         this.companyService.getCompanies({
-          searchTerm: this.filters().query || undefined,
-          sectorId: this.filters().sectorId || undefined,
-          regionId: this.filters().regionId || undefined,
-          status: this.filters().verifiedOnly ? 2 : undefined,
-          sortBy: this.sortBy(),
-          sortOrder: this.sortOrder(),
-          pageNumber: this.page(),
-          pageSize: 9,
+          searchTerm: p.q || undefined,
+          sectorId:   p.secteur || undefined,
+          regionId:   p.region || undefined,
+          status:     2, // Force Active status
+          sortBy:     p.tri,
+          sortOrder:  p.ordre,
+          pageNumber: p.page,
+          pageSize:   9,
         }).pipe(
-          map(res => { this.loading.set(false); return res; }),
-          catchError(() => { this.loading.set(false); return of(null); })
+          tap(() => this.loading.set(false)),
+          catchError((err) => {
+            console.error('Annuaire: fetch failed', err);
+            this.loading.set(false);
+            return of(null);
+          })
         )
       )
     ),
@@ -397,20 +411,21 @@ export class AnnuaireListComponent {
   protected readonly loading    = signal(true);
   protected readonly totalCount = computed(() => this.result()?.totalCount ?? 0);
   protected readonly totalPages = computed(() => this.result()?.totalPages ?? 1);
-  protected readonly cards      = computed<CompanyCardData[]>(() =>
-    (this.result()?.items ?? []).map((c) => ({
-      id: c.id,
-      slug: c.slug,
-      name: c.name,
+  protected readonly cards      = computed<CompanyCardData[]>(() => {
+    const items = this.result()?.items || [];
+    return items.map((c) => ({
+      id:          c.id,
+      name:        c.name,
+      slug:        c.slug,
       sectorLabel: c.sectors?.[0]?.name || 'N/A',
       sectorIcon:  c.sectors?.[0]?.iconUrl || 'business',
-      sectors: c.sectors || [],
+      sectors:     c.sectors || [],
       description: c.description || '',
-      city: c.cityName || '',
-      isVerified: c.status === 2,
-      isPremium:  c.isPremium,
-    }))
-  );
+      city:        c.cityName || c.city?.name || 'Congo',
+      isVerified:  c.status === 2 || c.isVerified,
+      isPremium:   c.isPremium,
+    }));
+  });
 
   constructor() {
     this.route.queryParams.subscribe((qp) => {
@@ -423,7 +438,6 @@ export class AnnuaireListComponent {
       this.page.set(qp['page'] ? Math.max(1, Number(qp['page'])) : 1);
       this.sortBy.set(qp['tri'] ?? 'date');
       this.sortOrder.set(qp['ordre'] ?? 'desc');
-      this.trigger.next();
     });
   }
 
@@ -483,6 +497,5 @@ export class AnnuaireListComponent {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
-    this.trigger.next();
   }
 }

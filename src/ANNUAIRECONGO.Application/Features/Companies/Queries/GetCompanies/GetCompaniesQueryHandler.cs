@@ -66,6 +66,12 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             var statusValue = (CompanyStatus)request.Status.Value;
             query = query.Where(c => c.Status == statusValue);
         }
+        else 
+        {
+            // Default to Active status for the directory listings if not specified
+            query = query.Where(c => c.Status == CompanyStatus.Active);
+        }
+
         if(needRccmFilter)
         {
             query = query.Where(c => c.Rccm == request.Rccm);
@@ -103,20 +109,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        if (companies is null || !companies.Any())
-        {
-            _logger.LogWarning("No companies found");
-            return new PaginatedList<CompanyDto>
-            {
-                Items = new List<CompanyDto>(),
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = 0,
-                TotalPages = 0
-            };
-        }
+        // Map to DTOs even if the list is empty, to preserve TotalCount for pagination
+        var companiesDto = companies?.ToDtoList() ?? new List<CompanyDto>();
 
-        var companiesDto = companies.ToDtoList();
         var paginatedList = new PaginatedList<CompanyDto>
         {
             Items = companiesDto,
@@ -125,6 +120,11 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             TotalCount = totalCount,
             TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize)
         };
+
+        if (!companiesDto.Any() && totalCount > 0)
+        {
+            _logger.LogWarning("Requested page {PageNumber} returned no companies, but total count is {TotalCount}", request.PageNumber, totalCount);
+        }
 
         return paginatedList;
     }
