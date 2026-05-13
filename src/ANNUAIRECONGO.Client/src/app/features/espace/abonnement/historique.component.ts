@@ -130,9 +130,10 @@ import { DatePipe } from '@angular/common';
     .link .material-symbols-outlined { font-size: 18px; }
 
     .badge-0 { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); } /* Pending */
-    .badge-2 { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); } /* Completed */
-    .badge-3 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Failed */
-    .badge-4 { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); } /* Refunded */
+    .badge-1 { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); } /* Success/Completed */
+    .badge-2 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Failed */
+    .badge-3 { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); } /* Refunded */
+    .badge-4 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Rejected */
   `],
 })
 export class HistoriquePaiementsComponent {

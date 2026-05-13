@@ -142,8 +142,11 @@ export enum PaymentMethod {
 
 export interface Payment {
   id: string;
+  reference: string;
   companyId: string;
+  companyName?: string;
   subscriptionId: string;
+  planName?: string;
   amount: number;
   currency: string;
   method: number;
@@ -151,16 +154,17 @@ export interface Payment {
   gatewayRef?: string;
   invoiceUrl?: string;
   paidAt?: string;
-  LastModifiedAt: string;
+  createdAt: string;
+  lastModifiedAt: string;
 }
 
 export enum PaymentStatus {
   Pending = 0,
-  Processing = 1,
-  Completed = 2,
-  Failed = 3,
-  Refunded = 4,
-  Rejected = 5
+  Success = 1,
+  Completed = 1, // Alias for Success
+  Failed = 2,
+  Refunded = 3,
+  Rejected = 4   // Added as placeholder for rejections
 }
 
 export interface Notification {

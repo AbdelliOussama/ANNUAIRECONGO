@@ -42,4 +42,8 @@ export class SubscriptionService {
   getCompanyPayments(companyId: string): Observable<Payment[]> {
     return this.api.get<Payment[]>(`/api/v1/subscriptions/payments/company/${companyId}`);
   }
+
+  getPendingPayments(): Observable<Payment[]> {
+    return this.api.get<Payment[]>('/api/v1/subscriptions/payments/pending');
+  }
 }

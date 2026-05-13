@@ -148,4 +148,21 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
             response => Ok(response),
             Problem);
     }
+
+    [HttpGet("payments/pending")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Get all pending payments (Admin only).")]
+    [EndpointDescription("This endpoint returns all payments that are currently pending validation across the platform.")]
+    [EndpointName("GetPendingPayments")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> GetPendingPayments(CancellationToken ct)
+    {
+        var result = await sender.Send(new Application.Features.Subscriptions.Payments.Queries.GetPendingPayments.GetPendingPaymentsQuery(), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
 }

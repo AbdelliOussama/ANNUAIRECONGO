@@ -344,6 +344,12 @@ export const routes: Routes = [
           import('./features/admin/notifications/admin-notifications.component').then((m) => m.AdminNotificationsComponent),
         title: 'Notifications — Admin',
       },
+      {
+        path: 'paiements',
+        loadComponent: () =>
+          import('./features/admin/abonnements/admin-payments.component').then((m) => m.AdminPaymentsComponent),
+        title: 'Validation des paiements — Admin',
+      },
     ],
   },
 

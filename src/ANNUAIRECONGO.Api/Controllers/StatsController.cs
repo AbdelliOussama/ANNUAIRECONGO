@@ -1,3 +1,4 @@
+using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Stats.Dtos;
 using ANNUAIRECONGO.Application.Features.Stats.Queries.GetCompanyStats;
 using ANNUAIRECONGO.Application.Features.Stats.Queries.GetPlatformSummary;
@@ -12,7 +13,7 @@ namespace ANNUAIRECONGO.Api.Controllers;
 
 [Route("api/v{version:apiVersion}/stats")]
 [ApiVersion("1.0")]
-public sealed class StatsController(ISender sender) : ApiController
+public sealed class StatsController(ISender sender, IUser user) : ApiController
 {
     [HttpGet("platform-summary")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -75,7 +76,7 @@ public sealed class StatsController(ISender sender) : ApiController
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanyStats([FromRoute] Guid companyId, CancellationToken ct)
     {
-        var result = await sender.Send(new GetCompanyStatsQuery(companyId), ct);
+        var result = await sender.Send(new GetCompanyStatsQuery(companyId, user.Id), ct);
         return result.Match(
             response => Ok(response),
             Problem);
