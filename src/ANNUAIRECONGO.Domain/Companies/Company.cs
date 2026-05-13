@@ -169,8 +169,8 @@ public class Company : AuditableEntity
 
     public Result<Updated> UpdateMedia(string? logoUrl, string? coverUrl)
     {
-        LogoUrl = logoUrl;
-        CoverUrl = coverUrl;
+        if (logoUrl != null) LogoUrl = logoUrl;
+        if (coverUrl != null) CoverUrl = coverUrl;
         return Result.Updated;
     }
 

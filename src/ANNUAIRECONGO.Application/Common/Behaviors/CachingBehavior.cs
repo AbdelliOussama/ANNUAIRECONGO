@@ -38,6 +38,7 @@ public class CachingBehavior<TRequest, TResponse>(
 
                 if (response is IResult res && !res.IsSuccess)
                 {
+                    // Do NOT cache failures
                     return response;
                 }
 

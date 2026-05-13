@@ -568,8 +568,20 @@ export class FicheFormComponent {
       : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, { ...value });
 
     obs$.pipe(
-      switchMap((company) => {
-        const companyId = company.id;
+      switchMap((result: any) => {
+        // If we're editing, updateCompanyProfile returns 'Updated' which doesn't have an id.
+        // We use the ID from the companyToEdit signal.
+        // If we're creating, createCompany returns the CompanyDto which HAS an id.
+        const companyId = this.mode() === 'edit' ? this.companyToEdit()!.id : result.id;
+        
+        if (!companyId) {
+          console.error('FicheForm: No companyId found after submission', result);
+          return of(null);
+        }
+
+        // For checking existing items, use the company from create response OR the one we're editing
+        const companyData = this.mode() === 'edit' ? this.companyToEdit() : result;
+
         const tasks = [];
 
         // 1. Update Media (Logo)
@@ -577,18 +589,16 @@ export class FicheFormComponent {
           tasks.push(this.companyService.updateCompanyMedia(companyId, this.logoUrl()!));
         }
 
-        // 2. Sync Images (Simplified: only add new ones or handle a more complex diff)
-        // For now, we just add the current signal's images. 
-        // Note: Production code should avoid duplicates by checking company.images
+        // 2. Sync Images
         this.gallery().forEach(url => {
-           if (!company.images?.some(i => i.imageUrl === url)) {
+           if (!companyData?.images?.some((i: any) => i.imageUrl === url)) {
              tasks.push(this.companyService.addImage(companyId, url));
            }
         });
 
         this.documents().forEach(url => {
-          if (!company.documents?.some(d => (d.documentUrl || d.fileUrl) === url)) {
-             tasks.push(this.companyService.addDocument(companyId, url, 'Other')); // Default type
+          if (!companyData?.documents?.some((d: any) => (d.documentUrl || d.fileUrl) === url)) {
+             tasks.push(this.companyService.addDocument(companyId, url, 'Other')); 
           }
         });
 
@@ -627,7 +637,14 @@ export class FicheFormComponent {
           }
         });
 
-        return tasks.length > 0 ? forkJoin(tasks) : of(null);
+        return tasks.length > 0 
+          ? forkJoin(tasks).pipe(
+              catchError(err => {
+                console.error('FicheForm: Error in post-submission tasks', err);
+                return of(null);
+              })
+            )
+          : of(null);
       })
     ).subscribe({
       next: () => {
@@ -635,7 +652,11 @@ export class FicheFormComponent {
         this.toast.success(this.mode() === 'create' ? 'Fiche créée et soumise.' : 'Fiche mise à jour.');
         this.router.navigateByUrl('/espace');
       },
-      error: () => this.submitting.set(false)
+      error: (err) => {
+        this.submitting.set(false);
+        console.error('FicheForm: Global submission error', err);
+        this.toast.error('Une erreur est survenue lors de l\'enregistrement.');
+      }
     });
   }
 }

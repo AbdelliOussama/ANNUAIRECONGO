@@ -23,11 +23,22 @@ public sealed record SubscribeCommandHandler(
     {
         // 1. Validate company exists and belongs to current user
         var company = await context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, ct);
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == currentUser.Id, ct);
+        
         if (company is null)
-            return CompanyErrors.CompanyNotFound(request.CompanyId);
-        if (!company.IsOwnedBy(currentUser.Id!))
-            return CompanyErrors.NotOwner;
+        {
+             // Check if company exists at all to return 404 vs 403
+             var exists = await context.Companies.AnyAsync(c => c.Id == request.CompanyId, ct);
+             
+             if (exists)
+             {
+                 logger.LogWarning("Ownership check failed for Company {CompanyId}. CurrentUserId: {CurrentUserId}", 
+                    request.CompanyId, currentUser.Id);
+                 return CompanyErrors.NotOwner;
+             }
+             
+             return CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
 
         // 2. Validate plan exists and is active
         var plan = await context.Plans

@@ -27,9 +27,10 @@ public sealed record GetMyCompaniesQueryHandler(IAppDbContext Context, ILogger<G
             .ThenInclude(c => c.Region)
             .Include(c => c.CompanySectors)
             .ThenInclude(cs => cs.Sector)
-            // Audit fix #4 — espace console reads company.activeSubscription
-            // (current plan, expiry, status). Loading it here avoids the FE
-            // making a second call to /api/v1/subscriptions/company/{id}.
+            .Include(c => c.Services)
+            .Include(c => c.Contacts)
+            .Include(c => c.Images)
+            .Include(c => c.Documents)
             .Include(c => c.Subscriptions)
             .ThenInclude(s => s.Plan)
             .Where(c => c.OwnerId.ToString() == _currentUser.Id)

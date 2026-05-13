@@ -19,7 +19,7 @@ namespace ANNUAIRECONGO.Api.Controllers;
 [Route("api/v{version:apiVersion}/subscriptions")]
 [ApiVersion("1.0")]
 [Authorize]
-public sealed class SubscriptionsController(ISender sender) : ApiController
+public sealed class SubscriptionsController(ISender sender, IUser user) : ApiController
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -69,7 +69,7 @@ public sealed class SubscriptionsController(ISender sender) : ApiController
     public async Task<IActionResult> GetCompanySubscriptions([FromRoute] Guid companyId, CancellationToken ct)
     {
 
-        var result = await sender.Send(new GetCompanySubscriptionsQuery(companyId), ct);
+        var result = await sender.Send(new GetCompanySubscriptionsQuery(companyId, user.Id), ct);
         return result.Match(
             response => Ok(response),
             Problem);
@@ -143,7 +143,7 @@ public sealed class SubscriptionsController(ISender sender) : ApiController
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanyPayments([FromRoute] Guid companyId, CancellationToken ct)
     {
-        var result = await sender.Send(new GetCompanyPaymentsQuery(companyId), ct);
+        var result = await sender.Send(new GetCompanyPaymentsQuery(companyId, user.Id), ct);
         return result.Match(
             response => Ok(response),
             Problem);

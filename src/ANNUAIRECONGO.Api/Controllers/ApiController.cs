@@ -29,6 +29,7 @@ public class ApiController : ControllerBase
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
             ErrorKind.Validation => StatusCodes.Status400BadRequest,
             ErrorKind.NotFound => StatusCodes.Status404NotFound,
+            ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
             ErrorKind.Unauthorized => StatusCodes.Status401Unauthorized,
             _ => StatusCodes.Status500InternalServerError,
         };

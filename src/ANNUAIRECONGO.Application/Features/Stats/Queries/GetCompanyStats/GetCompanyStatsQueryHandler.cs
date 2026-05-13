@@ -29,15 +29,18 @@ public sealed class GetCompanyStatsQueryHandler(
     public async Task<Result<CompanyStatsDto>> Handle(GetCompanyStatsQuery request, CancellationToken cancellationToken)
     {
         // Ownership check — the espace endpoint is owner-scoped.
-        var company = await _context.Companies
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
-
-        if (company is null)
-            return CompanyErrors.CompanyNotFound(request.CompanyId);
-
-        if (!company.IsOwnedBy(_currentUser.Id ?? string.Empty))
-            return CompanyErrors.NotOwner;
+        var isOwner = await _context.Companies
+            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == _currentUser.Id, cancellationToken);
+        
+        if (!isOwner)
+        {
+             _logger.LogWarning("Ownership check failed for Company {CompanyId}. CurrentUserId: {CurrentUserId}", 
+                request.CompanyId, _currentUser.Id);
+             
+             // Check if company exists at all to return 404 vs 403
+             var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
+             return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
 
         // ── Aggregate raw events ──────────────────────────────────────
         var views = await _context.ProfileViews

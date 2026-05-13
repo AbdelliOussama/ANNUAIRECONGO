@@ -17,13 +17,22 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
 
     public async Task<Result<List<SubscriptionDto>>> Handle(GetCompanySubscriptionsQuery request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var userId = request.UserId ?? _currentUser.Id;
+        _logger.LogInformation("GetCompanySubscriptions: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}", 
+            request.CompanyId, userId);
+
+        var isOwner = await _context.Companies
+            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == userId, cancellationToken);
         
-        if (company is null)
-            return CompanyErrors.CompanyNotFound(request.CompanyId);
-        if (!company.IsOwnedBy(_currentUser.Id!))
-            return CompanyErrors.NotOwner;
+        if (!isOwner)
+        {
+             _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}", 
+                request.CompanyId, userId);
+             
+             // Check if company exists at all to return 404 vs 403
+             var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
+             return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
 
         var subscriptions = await _context.Subscriptions
             .Include(s => s.Plan)

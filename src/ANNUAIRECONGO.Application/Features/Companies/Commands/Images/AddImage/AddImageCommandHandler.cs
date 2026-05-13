@@ -26,20 +26,21 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
             .Include(s => s.Plan)
             .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.ExpiringSoon)
             .FirstOrDefaultAsync(s => s.CompanyId == request.CompanyId, cancellationToken);
-        if (subscription is null)
-        {
-            _logger.LogWarning("Company with id {CompanyId} does not have a subscription ", request.CompanyId);
-            return CompanyErrors.CompanyWithoutSubscription(request.CompanyId);
-        }
+
+        // If no active subscription, we use a default limit of 3 images (equivalent to Free plan)
+        // rather than blocking the user entirely.
+        int maxImagesAllowed = subscription?.Plan?.MaxImages ?? 3; 
+
         var isOwner =company.IsOwnedBy(_currentUser.Id);
         if (!isOwner)
         {
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        if(company.Images.Count >= subscription.Plan.MaxImages)
+
+        if(company.Images.Count >= maxImagesAllowed)
         {
-            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of images allowed by the subscription plan", request.CompanyId);
+            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of images allowed ({Max})", request.CompanyId, maxImagesAllowed);
             return CompanyErrors.ImageLimitReached;
         }
         if(company.Images.Any(i => i.ImageUrl == request.ImageUrl))

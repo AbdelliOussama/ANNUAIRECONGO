@@ -4,9 +4,9 @@ using ANNUAIRECONGO.Domain.Common.Results;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Queries.GetCompanyPayments;
 
-public sealed record GetCompanyPaymentsQuery(Guid CompanyId) : ICachedQuery<Result<List<PaymentDto>>>
+public sealed record GetCompanyPaymentsQuery(Guid CompanyId, string? UserId) : ICachedQuery<Result<List<PaymentDto>>>
 {
-    public string CacheKey => $"company-payments-{CompanyId}";
+    public string CacheKey => $"company-payments-{CompanyId}-{UserId}";
     
     public string[] Tags => ["company", "payments"];
     

@@ -27,21 +27,20 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
             .Include(s => s.Plan)
             .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.ExpiringSoon)
             .FirstOrDefaultAsync(s => s.CompanyId == request.CompanyId, cancellationToken);
-        if (subscription is null)
-        {
-            _logger.LogWarning("Company with id {CompanyId} does not have a subscription ", request.CompanyId);
-            return CompanyErrors.CompanyWithoutSubscription(request.CompanyId);
-        }
+        
+        int maxDocsAllowed = subscription?.Plan?.MaxDocuments ?? 1;
+
         var isOwner = company.IsOwnedBy(_currentUser.Id);
         if (!isOwner)
         {
             _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
             return CompanyErrors.NotOwner;
         }
-        // Check if the company has reached the maximum number of documents allowed by the subscription plan
-        if (company.Documents.Count >= subscription.Plan.MaxDocuments)
+
+        // Check if the company has reached the maximum number of documents allowed
+        if (company.Documents.Count >= maxDocsAllowed)
         {
-            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of documents allowed by the subscription plan", request.CompanyId);
+            _logger.LogWarning("Company with id {CompanyId} has reached the maximum number of documents allowed ({Max})", request.CompanyId, maxDocsAllowed);
             return CompanyErrors.DocumentLimitReached;
         }
         var documentResult = CompanyDocument.Create(request.CompanyId, request.DocumentType, request.DocumentUrl, request.isPublic);

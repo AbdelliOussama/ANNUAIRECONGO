@@ -17,13 +17,22 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
     private readonly IUser _currentUser = currentUser;
     public async Task<Result<List<PaymentDto>>> Handle(GetCompanyPaymentsQuery request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId, cancellationToken);
+        var userId = request.UserId ?? _currentUser.Id;
+        _logger.LogInformation("GetCompanyPayments: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}", 
+            request.CompanyId, userId);
 
-        if (company is null)
-            return CompanyErrors.CompanyNotFound(request.CompanyId);
-        if (!company.IsOwnedBy(_currentUser.Id!))
-            return CompanyErrors.NotOwner;
+        var isOwner = await _context.Companies
+            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == userId, cancellationToken);
+        
+        if (!isOwner)
+        {
+             _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}", 
+                request.CompanyId, userId);
+             
+             // Check if company exists at all to return 404 vs 403
+             var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
+             return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
 
         var payments = await _context.Payments
             .Include(p => p.Subscription)
