@@ -327,6 +327,12 @@ export const routes: Routes = [
         title: 'Forfaits — Admin',
       },
       {
+        path: 'signalements',
+        loadComponent: () =>
+          import('./features/admin/signalements/admin-reports.component').then((m) => m.AdminReportsComponent),
+        title: 'Signalements — Admin',
+      },
+      {
         path: 'audit',
         loadComponent: () =>
           import('./features/admin/audit/admin-audit.component').then((m) => m.AdminAuditComponent),

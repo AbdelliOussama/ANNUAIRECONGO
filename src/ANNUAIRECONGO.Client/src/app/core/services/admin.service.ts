@@ -43,4 +43,13 @@ export class AdminService {
   updateSettings(settings: any): Observable<any> {
     return this.api.put<any>('/api/v1/admin/settings', settings);
   }
+
+  // Reports
+  getReports(pageNumber: number = 1, pageSize: number = 20): Observable<PaginatedResponse<any>> {
+    return this.api.get<PaginatedResponse<any>>('/api/v1/companies/reports', { pageNumber, pageSize });
+  }
+
+  processReport(reportId: string, dismiss: boolean): Observable<any> {
+    return this.api.post<any>(`/api/v1/companies/reports/${reportId}/process`, { dismiss });
+  }
 }

@@ -118,6 +118,12 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
               </a>
             }
           </div>
+          <div style="margin-top: 12px; text-align: right;">
+            <button class="btn btn-ghost btn-sm" (click)="report()" style="color: var(--color-error); font-size: 12px;">
+              <span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">flag</span>
+              Signaler cette entreprise
+            </button>
+          </div>
         </header>
 
         <!-- Tabs -->
@@ -368,8 +374,22 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
   private readonly route          = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly titleService   = inject(Title);
   private readonly metaService    = inject(Meta);
+
+  report() {
+    const reason = window.prompt('Veuillez indiquer le motif du signalement (ex: Informations fausses, Contenu inapproprié, etc.) :');
+    if (reason && reason.trim() !== '') {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) {
+        this.companyService.reportCompany(id, reason.trim()).subscribe({
+          next: () => window.alert('Merci. Votre signalement a bien été pris en compte par nos équipes.'),
+          error: () => window.alert('Une erreur est survenue lors du signalement.')
+        });
+      }
+    }
+  }
 
   @ViewChild('mapContainer') private mapEl?: ElementRef<HTMLElement>;
   private map?: L.Map;

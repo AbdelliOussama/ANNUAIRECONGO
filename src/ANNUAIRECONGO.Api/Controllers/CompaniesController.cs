@@ -36,6 +36,8 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.Services;
 using ANNUAIRECONGO.Contracts.Requests.Companies.Reports;
 using ANNUAIRECONGO.Contracts.Requests.Companies.StatusTransitions;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyBySlugQuery;
+using ANNUAIRECONGO.Application.Features.Companies.Queries.GetReports;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.Reports.ProcessReport;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -461,6 +463,45 @@ public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest 
 {
     var command = new AddReportCommand(id, HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, commandRequest.Reason);
     var result = await sender.Send(command, ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+
+[HttpGet("reports")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Get paginated list of company reports.")]
+[EndpointDescription("This endpoint gets all company reports.")]
+[EndpointName("GetReports")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> GetReports(
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 20,
+    CancellationToken ct = default)
+{
+    var result = await sender.Send(new GetReportsQuery(pageNumber, pageSize), ct);
+    return result.Match(
+        response => Ok(response),
+        Problem
+    );
+}
+
+[HttpPost("reports/{reportId:guid}/process")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Process a company report.")]
+[EndpointDescription("This endpoint allows admins to dismiss or mark a report as reviewed.")]
+[EndpointName("ProcessReport")]
+[MapToApiVersion("1.0")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] ProcessReportRequest request, CancellationToken ct)
+{
+    var result = await sender.Send(new ProcessReportCommand(reportId, request.Dismiss), ct);
     return result.Match(
         response => Ok(response),
         Problem

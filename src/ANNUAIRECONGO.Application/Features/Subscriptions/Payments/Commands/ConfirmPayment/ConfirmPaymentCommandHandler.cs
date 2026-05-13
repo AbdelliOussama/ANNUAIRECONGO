@@ -13,11 +13,13 @@ namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.Con
 
 public sealed class ConfirmPaymentCommandHandler(
     IAppDbContext context, ILogger<ConfirmPaymentCommandHandler> logger,
-    HybridCache cache) : IRequestHandler<ConfirmPaymentCommand, Result<PaymentDto>>
+    HybridCache cache, IInvoiceService invoiceService) : IRequestHandler<ConfirmPaymentCommand, Result<PaymentDto>>
 {
     private readonly IAppDbContext _context = context;
     private readonly ILogger<ConfirmPaymentCommandHandler> _logger = logger;
     private readonly HybridCache _cache = cache;
+    private readonly IInvoiceService _invoiceService = invoiceService;
+
     public async Task<Result<PaymentDto>> Handle(ConfirmPaymentCommand request, CancellationToken cancellationToken)
     {
         var payment = await _context.Payments
@@ -34,6 +36,10 @@ public sealed class ConfirmPaymentCommandHandler(
         var confirmResult = payment.MarkAsSucceeded();
         if (confirmResult.IsError)
             return confirmResult.Errors;
+
+        // Generate Invoice
+        var invoiceUrl = await _invoiceService.GenerateInvoicePdfAsync(payment.Id, cancellationToken);
+        payment.SetInvoiceUrl(invoiceUrl);
 
         _logger.LogInformation("Payment with ID {PaymentId} marked as succeeded", request.PaymentId);
         payment.AddDomainEvent(new PaymentSucceededEvent(payment.Id, payment.CompanyId,payment.SubscriptionId,payment.Subscription.Company.OwnerId.ToString(), payment.Amount, payment.Currency));

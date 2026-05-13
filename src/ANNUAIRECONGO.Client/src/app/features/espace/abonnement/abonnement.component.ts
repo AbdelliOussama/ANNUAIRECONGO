@@ -8,7 +8,6 @@ import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { Plan, PlanName, Subscription, Company } from '@core/models/company.model';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
-import { PaymentMethodStripComponent } from '@shared/components/payment-method-strip/payment-method-strip.component';
 import { ToastService } from '@shared/services/toast.service';
 import { ModalService } from '@shared/services/modal.service';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
@@ -23,7 +22,6 @@ import { DatePipe } from '@angular/common';
   imports: [
     ButtonComponent,
     SkeletonComponent,
-    PaymentMethodStripComponent,
     XafPipe,
     DatePipe,
   ],
@@ -141,7 +139,21 @@ import { DatePipe } from '@angular/common';
             <h2>Moyens de paiement</h2>
             <p class="muted">Activation immédiate après confirmation de paiement.</p>
           </header>
-          <ac-payment-method-strip [methods]="['mtn', 'airtel', 'stripe']" />
+          <div class="payment-methods-grid">
+            <button class="method-btn" [class.selected]="selectedMethod() === 0" (click)="selectedMethod.set(0)">
+              <div class="badge-icon" style="background: #d5e3fc; color: #0d3a8a;"><span class="material-symbols-outlined">credit_card</span></div>
+              <span class="label">Carte bancaire (Stripe)</span>
+            </button>
+            <button class="method-btn" [class.selected]="selectedMethod() === 1" (click)="selectedMethod.set(1)">
+              <div class="badge-icon" style="background: #fff3c4; color: #7a5800;"><span class="material-symbols-outlined">smartphone</span></div>
+              <span class="label">MTN Mobile Money</span>
+            </button>
+            <button class="method-btn" [class.selected]="selectedMethod() === 2" (click)="selectedMethod.set(2)">
+              <div class="badge-icon" style="background: #ffd6d4; color: #9b1a14;"><span class="material-symbols-outlined">smartphone</span></div>
+              <span class="label">Airtel Money</span>
+            </button>
+          </div>
+          <p class="caption">Paiement sécurisé. Activation immédiate.</p>
         </section>
       }
     </div>
@@ -222,6 +234,50 @@ import { DatePipe } from '@angular/common';
       border-radius: var(--radius-2xl);
       padding: 24px;
     }
+
+    .payment-methods-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+    .method-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--color-surface-container-lowest);
+      border: 2px solid var(--color-outline-variant);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .method-btn:hover {
+      border-color: var(--color-primary-fixed);
+      background: var(--color-surface-container-low);
+    }
+    .method-btn.selected {
+      border-color: var(--color-primary);
+      background: var(--color-surface-container-low);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .badge-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-full);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .badge-icon .material-symbols-outlined { font-size: 18px; }
+    .label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-on-surface);
+    }
+    .caption {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--color-on-surface-variant);
+    }
   `],
 })
 export class EspaceAbonnementComponent {
@@ -233,6 +289,8 @@ export class EspaceAbonnementComponent {
   private readonly toast  = inject(ToastService);
   private readonly modal  = inject(ModalService);
   private readonly router = inject(Router);
+
+  protected readonly selectedMethod = signal<number>(0);
 
   private readonly company = toSignal<Company | null>(
     this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
@@ -289,11 +347,11 @@ export class EspaceAbonnementComponent {
     });
     if (!confirmed) return;
 
-    // Use Stripe by default for now in this flow
+    // Use selected method
     this.subService.createSubscription({
       companyId: c.id,
       planId: plan.id,
-      method: 0 // Stripe
+      method: this.selectedMethod()
     }).subscribe({
       next: (res: any) => {
         this.toast.success('Demande d\'abonnement créée.');

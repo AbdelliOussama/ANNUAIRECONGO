@@ -96,6 +96,8 @@ public static class DependencyInjection
 
         services.AddHostedService<AnalyticsAggregationBackgroundService>();
 
+        services.AddScoped<IInvoiceService, InvoiceService>();
+
         return services;
     }
 }
