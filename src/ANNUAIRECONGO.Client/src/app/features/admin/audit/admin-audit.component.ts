@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { DatePipe } from '@angular/common';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'ac-admin-audit',
@@ -85,14 +87,33 @@ import { DatePipe } from '@angular/common';
 })
 export class AdminAuditComponent {
   private readonly adminService = inject(AdminService);
+  private readonly route = inject(ActivatedRoute);
+  
   protected readonly query = signal('');
+  
+  private readonly targetParams = toSignal(this.route.queryParams);
 
-  private readonly entries = toSignal(this.adminService.getAuditLogs(1, 100), { initialValue: { items: [] as any[] } });
-  protected readonly loading = computed(() => this.entries().items.length === 0 && this.query() === '');
+  private readonly entries = toSignal(
+    toObservable(this.targetParams).pipe(
+      switchMap(params => {
+        if (params && params['targetType'] && params['targetId']) {
+          return this.adminService.getEntityAuditLogs(params['targetType'], params['targetId'], 1, 100);
+        }
+        return this.adminService.getAuditLogs(1, 100);
+      })
+    ),
+    { initialValue: { items: [] as any[] } }
+  );
+
+  protected readonly loading = computed(() => {
+    const data = this.entries();
+    return (!data || (data.items && data.items.length === 0)) && this.query() === '';
+  });
 
   protected readonly rows = computed(() => {
     const q = this.query().trim().toLowerCase();
-    const items = this.entries().items;
+    const data = this.entries();
+    const items = data && data.items ? data.items : [];
     if (!q) return items;
     return items.filter((e: any) =>
       [e.actorName, e.action, e.entityName].some((v) => v?.toLowerCase().includes(q))

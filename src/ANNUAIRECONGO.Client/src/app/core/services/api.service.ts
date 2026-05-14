@@ -23,6 +23,19 @@ export class ApiService {
     return this.http.get<T>(`${this.baseUrl}${endpoint}`, { params: httpParams });
   }
 
+  getBlob(endpoint: string, params?: Record<string, string | number | boolean>): Observable<Blob> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          httpParams = httpParams.set(key, String(params[key]));
+        }
+      });
+    }
+    
+    return this.http.get(`${this.baseUrl}${endpoint}`, { params: httpParams, responseType: 'blob' });
+  }
+
   post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http.post<T>(`${this.baseUrl}${endpoint}`, body);
   }

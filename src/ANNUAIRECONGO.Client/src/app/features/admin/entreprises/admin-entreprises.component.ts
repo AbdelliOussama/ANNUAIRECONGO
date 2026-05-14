@@ -71,17 +71,18 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                     }
                   </td>
                   <td class="actions-col">
-                    <div class="actions-group">
-                      <a [routerLink]="['/annuaire', c.slug]" class="link">Voir</a>
-                      @if (c.status === 2) {
-                        <button (click)="suspend(c)" class="btn-action warn">Suspendre</button>
-                      } @else if (c.status === 4) {
-                        <button (click)="reactivate(c)" class="btn-action ok">Réactiver</button>
-                      }
-                      @if (c.status === 1) {
-                        <button (click)="reject(c)" class="btn-action danger">Rejeter</button>
-                      }
-                    </div>
+                      <div class="actions-group">
+                        <a [routerLink]="['/annuaire', c.slug]" class="link">Voir</a>
+                        <a [routerLink]="['/admin/audit']" [queryParams]="{targetType: 'Company', targetId: c.id}" class="link" style="font-weight: normal; font-size: 11px;">Logs</a>
+                        @if (c.status === 2) {
+                          <button (click)="suspend(c)" class="btn-action warn">Suspendre</button>
+                        } @else if (c.status === 4) {
+                          <button (click)="reactivate(c)" class="btn-action ok">Réactiver</button>
+                        }
+                        @if (c.status === 1) {
+                          <button (click)="reject(c)" class="btn-action danger">Rejeter</button>
+                        }
+                      </div>
                   </td>
                 </tr>
               }

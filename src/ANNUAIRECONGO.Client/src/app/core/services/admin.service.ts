@@ -31,6 +31,10 @@ export class AdminService {
     return this.api.get<any>('/api/v1/admin/logs', params);
   }
 
+  getEntityAuditLogs(targetType: string, targetId: string, pageNumber: number = 1, pageSize: number = 20): Observable<any> {
+    return this.api.get<any>(`/api/v1/admin/logs/${targetType}/${targetId}`, { pageNumber, pageSize });
+  }
+
   // Plans
   getPlans(): Observable<any[]> {
     return this.api.get<any[]>('/api/v1/plans');

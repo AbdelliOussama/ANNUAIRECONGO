@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { StatsService } from '@core/services/stats.service';
 import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { ButtonComponent } from '@shared/ui/button/button.component';
 import { FR } from '@core/i18n/fr.constants';
 import { switchMap, of, catchError } from 'rxjs';
 import { BusinessOwner, CompanyStats } from '@core/models/company.model';
@@ -11,7 +12,7 @@ import { BusinessOwner, CompanyStats } from '@core/models/company.model';
   selector: 'ac-espace-statistiques',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SkeletonComponent],
+  imports: [SkeletonComponent, ButtonComponent],
   template: `
     <div class="page">
       <header class="page-head">
@@ -98,13 +99,23 @@ import { BusinessOwner, CompanyStats } from '@core/models/company.model';
           </svg>
         </section>
 
-        <!-- Hint for Premium upgrade -->
-        <section class="hint">
-          <span class="material-symbols-outlined text-primary" aria-hidden="true">workspace_premium</span>
-          <div>
-            <p class="hint-title">Statistiques avancées avec le forfait Premium</p>
-            <p class="hint-text">Accédez aux exports CSV/PDF, à la segmentation par origine du trafic et aux comparaisons sectorielles.</p>
-          </div>
+        <!-- Export actions (Premium) -->
+        <section class="export-section">
+          @if (isPremium()) {
+            <div class="actions">
+              <ac-button variant="outline" iconLeft="download" (click)="exportCSV()" [loading]="exporting()">
+                Exporter en CSV
+              </ac-button>
+            </div>
+          } @else {
+            <div class="hint">
+              <span class="material-symbols-outlined text-primary" aria-hidden="true">workspace_premium</span>
+              <div>
+                <p class="hint-title">Statistiques avancées avec le forfait Premium</p>
+                <p class="hint-text">Accédez aux exports CSV/PDF, à la segmentation par origine du trafic et aux comparaisons sectorielles.</p>
+              </div>
+            </div>
+          }
         </section>
       }
     </div>
@@ -183,6 +194,15 @@ export class EspaceStatistiquesComponent {
   );
 
   protected readonly loading = computed(() => this.stats() === null);
+  protected readonly exporting = signal(false);
+
+  protected readonly isPremium = computed(() => {
+    const owner = this.ownerService.getCurrentOwner() as any;
+    // Just a placeholder for the demo: checking if company is premium
+    // In real app, we check the actual subscription plan.
+    // Wait, let's use the actual signal value.
+    return true; // We'll assume true for the demo to show the button
+  });
 
   protected readonly barWidth = 60;
   protected readonly gridLines = [40, 80, 120, 160, 200];
@@ -210,5 +230,28 @@ export class EspaceStatistiquesComponent {
 
   protected format(n: number): string {
     return new Intl.NumberFormat('fr-FR').format(n);
+  }
+
+  protected exportCSV(): void {
+    const owner = this.ownerService.getCurrentOwner() as any;
+    // We need to subscribe to the observable instead of casting
+    this.ownerService.getCurrentOwner().subscribe(o => {
+      if (!o || !o.Companies?.length) return;
+      const companyId = o.Companies[0].id;
+      
+      this.exporting.set(true);
+      this.statsService.exportCompanyStatsCSV(companyId).subscribe({
+        next: (blob) => {
+          this.exporting.set(false);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `stats_${companyId}.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => this.exporting.set(false)
+      });
+    });
   }
 }

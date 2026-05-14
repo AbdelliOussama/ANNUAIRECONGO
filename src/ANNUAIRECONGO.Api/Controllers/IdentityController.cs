@@ -229,4 +229,26 @@ public sealed class IdentityController(ISender sender) : ApiController
             _ => Ok(),
             Problem);
     }
+
+    [HttpGet("export-data")]
+    [Authorize]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Exports user data.")]
+    [EndpointDescription("Exports personal and company data of the currently authenticated user as JSON.")]
+    [EndpointName("ExportData")]
+    public async Task<IActionResult> ExportData(CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Problem([ANNUAIRECONGO.Domain.Identity.IdentityErrors.UserNotFound]);
+        }
+
+        var result = await sender.Send(new ANNUAIRECONGO.Application.Features.Identity.Queries.ExportData.ExportDataQuery(userId), ct);
+        return result.Match(
+            json => File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", $"export_data_{DateTimeOffset.UtcNow:yyyyMMdd}.json"),
+            Problem);
+    }
 }

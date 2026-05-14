@@ -81,4 +81,22 @@ public sealed class StatsController(ISender sender, IUser user) : ApiController
             response => Ok(response),
             Problem);
     }
+
+    [HttpGet("companies/{companyId:guid}/export")]
+    [Authorize]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [EndpointSummary("Export analytics for one company as CSV.")]
+    [EndpointDescription("Owner-scoped. Returns a CSV file of the daily analytics data.")]
+    [EndpointName("ExportCompanyStats")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> ExportCompanyStats([FromRoute] Guid companyId, CancellationToken ct)
+    {
+        var result = await sender.Send(new ANNUAIRECONGO.Application.Features.Stats.Queries.GetCompanyStatsExport.GetCompanyStatsExportQuery(companyId, user.Id), ct);
+        return result.Match(
+            bytes => File(bytes, "text/csv", $"stats_{companyId}_{DateTimeOffset.UtcNow:yyyyMMdd}.csv"),
+            Problem);
+    }
 }

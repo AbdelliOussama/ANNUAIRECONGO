@@ -123,6 +123,10 @@ export class AuthService {
      return this.api.delete<void>('/identity/delete-account');
    }
 
+   exportData(): Observable<Blob> {
+     return this.api.getBlob('/identity/export-data');
+   }
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   }

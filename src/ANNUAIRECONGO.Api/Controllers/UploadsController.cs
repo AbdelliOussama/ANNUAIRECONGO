@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using ANNUAIRECONGO.Infrastructure;
+using SixLabors.ImageSharp.Processing;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -32,12 +33,6 @@ public sealed class UploadsController(
 {
     private readonly long _maxSize = settings.Value.MaxFileSizeBytes;
 
-    // ── POST /api/v1/uploads/image ────────────────────────────────────────────
-    /// <summary>
-    /// Upload a company image (logo, cover photo, gallery).
-    /// Accepted: .jpg .jpeg .png .webp .gif — max size from StorageSettings.
-    /// Returns a JSON object with the public URL.
-    /// </summary>
     [HttpPost("image")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(UploadResponse), StatusCodes.Status200OK)]
@@ -49,8 +44,40 @@ public sealed class UploadsController(
         var validation = ValidateFile(file, "images");
         if (validation is not null) return validation;
 
+        using var memoryStream = new MemoryStream();
         await using var stream = file.OpenReadStream();
-        var url = await storage.UploadAsync(stream, file.FileName, "images", cancellationToken);
+        
+        // Optimizing with ImageSharp
+        try
+        {
+            using var image = await SixLabors.ImageSharp.Image.LoadAsync(stream, cancellationToken);
+            var encoder = new SixLabors.ImageSharp.Formats.Webp.WebpEncoder { Quality = 80 };
+            
+            // Resize if too large (e.g. max 1920x1080)
+            const int MaxWidth = 1920;
+            const int MaxHeight = 1080;
+            if (image.Width > MaxWidth || image.Height > MaxHeight)
+            {
+                image.Mutate(x => x.Resize(new SixLabors.ImageSharp.Processing.ResizeOptions
+                {
+                    Mode = SixLabors.ImageSharp.Processing.ResizeMode.Max,
+                    Size = new SixLabors.ImageSharp.Size(MaxWidth, MaxHeight)
+                }));
+            }
+            
+            await image.SaveAsync(memoryStream, encoder, cancellationToken);
+            memoryStream.Position = 0;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Image processing failed. Using original file.");
+            stream.Position = 0;
+            await stream.CopyToAsync(memoryStream, cancellationToken);
+            memoryStream.Position = 0;
+        }
+
+        var fileName = Path.GetFileNameWithoutExtension(file.FileName) + ".webp";
+        var url = await storage.UploadAsync(memoryStream, fileName, "images", cancellationToken);
 
         logger.LogInformation("Image uploaded → {Url}", url);
         return Ok(new UploadResponse(url));

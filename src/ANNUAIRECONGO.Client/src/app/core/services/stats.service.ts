@@ -24,4 +24,8 @@ export class StatsService {
   getCompanyStats(companyId: string): Observable<CompanyStats> {
     return this.api.get<CompanyStats>(`/api/v1/stats/companies/${companyId}`);
   }
+
+  exportCompanyStatsCSV(companyId: string): Observable<Blob> {
+    return this.api.getBlob(`/api/v1/stats/companies/${companyId}/export`);
+  }
 }

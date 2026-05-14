@@ -61,9 +61,18 @@ import { FR } from '@core/i18n/fr.constants';
         </form>
       </fieldset>
 
-      <!-- Suppression de compte -->
+      <!-- Suppression de compte & Export RGPD -->
       <fieldset class="card danger">
-        <legend>Zone sensible</legend>
+        <legend>Zone sensible & RGPD</legend>
+        <p class="danger-text">
+          Vous avez le droit de demander l'exportation de l'intégralité de vos données personnelles (RGPD).
+        </p>
+        <div class="actions" style="margin-bottom: 16px;">
+          <ac-button variant="outline" (click)="exportMyData()" [loading]="exportingData()" iconLeft="download">
+            Exporter mes données
+          </ac-button>
+        </div>
+
         <p class="danger-text">
           La suppression définitive de votre compte entraînera l'archivage de votre fiche
           entreprise et la résiliation de votre abonnement. Les données personnelles seront
@@ -159,6 +168,7 @@ export class EspaceCompteComponent {
 
   protected readonly savingProfile  = signal(false);
   protected readonly savingPassword = signal(false);
+  protected readonly exportingData  = signal(false);
 
   protected profileError(name: string): string | null {
     return commonError(this.profileForm.get(name), name);
@@ -205,6 +215,25 @@ export class EspaceCompteComponent {
         this.toast.success('Mot de passe modifié.');
       },
       error: () => this.savingPassword.set(false)
+    });
+  }
+
+  protected exportMyData(): void {
+    this.exportingData.set(true);
+    this.auth.exportData().subscribe({
+      next: (blob) => {
+        this.exportingData.set(false);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rgpd_export_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.exportingData.set(false);
+        this.toast.error('Erreur lors de l\'export des données.');
+      }
     });
   }
 
