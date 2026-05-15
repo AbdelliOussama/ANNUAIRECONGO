@@ -237,6 +237,19 @@ public class ApplicationDbContextInitialiser(
         // Seed companies, subscriptions, payments, and notifications
         await CompanySeeder.SeedCompaniesAsync(_context, _userManager, _logger);
 
+        if (!_context.AdminLogs.Any())
+        {
+            var adminId = admins.First().Id;
+            var logs = new List<ANNUAIRECONGO.Domain.Logs.AdminLog>
+            {
+                ANNUAIRECONGO.Domain.Logs.AdminLog.Create(adminId, "Validated Company", "Company", Guid.NewGuid(), "Validated company details.").Value,
+                ANNUAIRECONGO.Domain.Logs.AdminLog.Create(adminId, "Created Plan", "Plan", Guid.NewGuid(), "Created a new premium plan.").Value,
+                ANNUAIRECONGO.Domain.Logs.AdminLog.Create(adminId, "Suspended User", "User", Guid.NewGuid(), "Suspended user due to spam.").Value
+            };
+            _context.AdminLogs.AddRange(logs);
+            await _context.SaveChangesAsync();
+        }
+
         await _context.SaveChangesAsync();
     }
 }

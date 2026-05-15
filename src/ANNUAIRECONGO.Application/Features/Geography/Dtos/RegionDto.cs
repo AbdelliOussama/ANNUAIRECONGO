@@ -4,5 +4,5 @@ public sealed record RegionDto
 {
     public Guid Id { get; set;}
     public required string Name{ get; set;}
-
+    public List<CityDto> Cities { get; set; } = new();
 }

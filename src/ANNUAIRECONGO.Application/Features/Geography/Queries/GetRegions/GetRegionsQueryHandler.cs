@@ -19,6 +19,7 @@ public sealed class GetRegionsQueryHandler(
     public async Task<Result<List<RegionDto>>> Handle(GetRegionsQuery request, CancellationToken cancellationToken)
     {
         var regions = await _context.Regions
+            .Include(r => r.Cities)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
         return regions.ToDtoList();

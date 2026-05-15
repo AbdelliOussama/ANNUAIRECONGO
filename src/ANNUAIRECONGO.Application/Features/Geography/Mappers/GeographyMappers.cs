@@ -23,7 +23,8 @@ public static class GeographyMappers
         return new RegionDto
         {
             Id = region.Id,
-            Name = region.Name
+            Name = region.Name,
+            Cities = region.Cities?.Select(c => c.ToDto()).ToList() ?? new List<CityDto>()
         };
     }
     public static List<RegionDto> ToDtoList(this IEnumerable<Region> regions)
