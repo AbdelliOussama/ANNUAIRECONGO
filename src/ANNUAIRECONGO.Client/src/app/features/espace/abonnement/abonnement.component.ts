@@ -369,9 +369,8 @@ export class EspaceAbonnementComponent {
     if (typeof name === 'string') return name;
     switch (name) {
       case PlanName.Free: return 'Gratuit';
-      case PlanName.Basic: return 'Basique';
+      case PlanName.Pro: return 'Pro';
       case PlanName.Premium: return 'Premium';
-      case PlanName.Enterprise: return 'Entreprise';
       default: return 'Standard';
     }
   }

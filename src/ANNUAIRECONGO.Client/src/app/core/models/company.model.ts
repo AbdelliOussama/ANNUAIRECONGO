@@ -129,9 +129,8 @@ export interface Subscription {
 
 export enum PlanName {
   Free = 0,
-  Basic = 1,
-  Premium = 2,
-  Enterprise = 3
+  Pro = 1,
+  Premium = 2
 }
 
 export enum PaymentMethod {
