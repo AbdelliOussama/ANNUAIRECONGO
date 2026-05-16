@@ -17,19 +17,18 @@ public class Sector : AuditableEntity
     public IEnumerable<CompanySector> CompanySectors =>_companySectors.AsReadOnly();
     private Sector() { }
 
-    private Sector(Guid id,string name, string? description, string? iconUrl):base(id)
+    private Sector(Guid id, string name, string? description, string? iconUrl, string? slug = null) : base(id)
     {
         Name = name;
-        Slug = SlugHelper.GenerateSlug(name);
+        Slug = string.IsNullOrWhiteSpace(slug) ? SlugHelper.GenerateSlug(name) : slug;
         Description = description;
         IconUrl = iconUrl;
         IsActive = true;
     }
 
-
-    public static Result<Sector> Create(Guid id, string name, string? description = null, string? iconUrl = null)
+    public static Result<Sector> Create(Guid id, string name, string? description = null, string? iconUrl = null, string? slug = null)
     {
-        if(id == Guid.Empty)
+        if (id == Guid.Empty)
         {
             return SectorErrors.IdRequired;
         }
@@ -37,17 +36,17 @@ public class Sector : AuditableEntity
         {
             return SectorErrors.NameIsRequired;
         }
-        return new Sector(id, name, description, iconUrl);
+        return new Sector(id, name, description, iconUrl, slug);
     }
 
-    public Result<Updated> Update(string name, string? description, string? iconUrl)
+    public Result<Updated> Update(string name, string? description, string? iconUrl, string? slug = null)
     {
         if (name == null)
         {
             return SectorErrors.NameIsRequired;
         }
         Name = name;
-        Slug = SlugHelper.GenerateSlug(name);
+        Slug = string.IsNullOrWhiteSpace(slug) ? SlugHelper.GenerateSlug(name) : slug;
         Description = description;
         IconUrl = iconUrl;
         return Result.Updated;

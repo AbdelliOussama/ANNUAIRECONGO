@@ -13,7 +13,7 @@ import { combineLatest, map } from 'rxjs';
   selector: 'ac-admin-secteurs',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SkeletonComponent, ButtonComponent, RouterLink],
+  imports: [SkeletonComponent, RouterLink],
   template: `
     <div class="page">
       <header class="page-head">

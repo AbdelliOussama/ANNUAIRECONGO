@@ -70,7 +70,7 @@ interface Filters {
           <select
             id="filter-sector"
             class="form-input"
-            [value]="filters().sectorId"
+            [value]="activeSectorId()"
             (change)="onSector($event)"
           >
             <option value="">Tous les secteurs</option>
@@ -373,6 +373,17 @@ export class AnnuaireListComponent {
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
   protected readonly regions = toSignal(this.geoService.getRegions(), { initialValue: [] as Region[] });
 
+  // UI Helper for the sector select
+  protected readonly activeSectorId = computed(() => {
+    const f = this.filters();
+    if (f.sectorId) return f.sectorId;
+    if (f.sectorSlug) {
+      const found = this.sectors().find(s => s.slug === f.sectorSlug);
+      return found?.id || '';
+    }
+    return '';
+  });
+
   // Resolved filters for the API
   private readonly resolvedParams = computed(() => {
     const f = this.filters();
@@ -506,6 +517,7 @@ export class AnnuaireListComponent {
     this.filters.set({ query: '', sectorId: '', sectorSlug: '', regionId: '', verifiedOnly: false });
     this.page.set(1);
     this.syncToUrl();
+    this.closeFilters();
   }
 
   protected openFilters(): void  { this.filtersOpen.set(true); }

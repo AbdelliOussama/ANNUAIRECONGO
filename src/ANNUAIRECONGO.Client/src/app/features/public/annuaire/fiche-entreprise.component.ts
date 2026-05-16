@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, AfterViewInit, computed, inject, signal, effect } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -28,14 +29,14 @@ const iconDefault = L.icon({
 L.Marker.prototype.options.icon = iconDefault;
 
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  'Brazzaville':  { lat: -4.2634,  lng: 15.2429 },
-  'Pointe-Noire': { lat: -4.7761,  lng: 11.8636 },
-  'Dolisie':      { lat: -4.1990,  lng: 12.6702 },
-  'Oyo':          { lat: -1.2500,  lng: 15.7167 },
-  'Ouesso':       { lat:  1.6136,  lng: 16.0517 },
-  'Owando':       { lat: -0.4819,  lng: 15.8999 },
-  'Impfondo':     { lat:  1.6373,  lng: 18.0667 },
-  'Madingou':     { lat: -4.1536,  lng: 13.5500 },
+  'Brazzaville': { lat: -4.2634, lng: 15.2429 },
+  'Pointe-Noire': { lat: -4.7761, lng: 11.8636 },
+  'Dolisie': { lat: -4.1990, lng: 12.6702 },
+  'Oyo': { lat: -1.2500, lng: 15.7167 },
+  'Ouesso': { lat: 1.6136, lng: 16.0517 },
+  'Owando': { lat: -0.4819, lng: 15.8999 },
+  'Impfondo': { lat: 1.6373, lng: 18.0667 },
+  'Madingou': { lat: -4.1536, lng: 13.5500 },
 };
 
 type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
@@ -49,6 +50,7 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     TabsComponent,
     EmptyStateComponent,
     SkeletonComponent,
+    FormsModule,
   ],
   template: `
     @if (loading()) {
@@ -232,6 +234,54 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
           }
         </section>
       </article>
+
+      <!-- Report Modal -->
+      @if (showReportModal()) {
+        <div class="modal-scrim" (click)="closeReportModal()">
+          <div class="modal-card glass" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div class="modal-icon-wrap">
+                <span class="material-symbols-outlined text-error">flag</span>
+              </div>
+              <div>
+                <h3 class="modal-title">Signaler cette entreprise</h3>
+                <p class="modal-subtitle">Aidez-nous à maintenir la qualité des informations.</p>
+              </div>
+              <button class="modal-close" (click)="closeReportModal()">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <label for="report-reason" class="modal-label">Motif du signalement</label>
+              <textarea
+                id="report-reason"
+                class="modal-textarea"
+                placeholder="Ex: Informations obsolètes, doublon, contenu inapproprié..."
+                [(ngModel)]="reportReason"
+                [disabled]="isReporting()"
+              ></textarea>
+              <p class="modal-hint">Votre signalement sera examiné manuellement par notre équipe de modération.</p>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-ghost" (click)="closeReportModal()" [disabled]="isReporting()">Annuler</button>
+              <button
+                class="btn btn-primary"
+                [disabled]="!reportReason().trim() || isReporting()"
+                (click)="submitReport()"
+              >
+                @if (isReporting()) {
+                  <span class="material-symbols-outlined animate-spin">sync</span>
+                  Envoi...
+                } @else {
+                  Confirmer le signalement
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     }
   `,
   styles: [`
@@ -368,27 +418,107 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     .map-el { width: 100%; height: 100%; }
 
     @keyframes ac-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Modal Styles */
+    .modal-scrim {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(25, 28, 30, 0.6);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: ac-fade-in 0.2s ease-out;
+    }
+    .modal-card {
+      width: 100%; max-width: 500px;
+      background: var(--color-surface-container-lowest);
+      border-radius: var(--radius-2xl);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 24px; display: flex; align-items: flex-start; gap: 16px;
+      border-bottom: 1px solid var(--color-outline-variant);
+    }
+    .modal-icon-wrap {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--color-error-container);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-title { font-family: var(--font-headline); font-size: 20px; font-weight: 700; margin: 0; }
+    .modal-subtitle { font-size: 13px; color: var(--color-on-surface-variant); margin: 4px 0 0; }
+    .modal-close {
+      margin-left: auto; border: none; background: transparent; cursor: pointer;
+      color: var(--color-outline); border-radius: 8px; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--color-surface-container-low); }
+
+    .modal-body { padding: 24px; }
+    .modal-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--color-on-surface); }
+    .modal-textarea {
+      width: 100%; height: 120px; padding: 16px;
+      border-radius: var(--radius-lg); border: 1px solid var(--color-outline-variant);
+      background: var(--color-surface-container-low);
+      font-size: 14px; line-height: 1.5; resize: none;
+      transition: border-color 0.2s, ring 0.2s;
+    }
+    .modal-textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 4px var(--color-primary-container); }
+    .modal-hint { font-size: 12px; color: var(--color-outline); margin-top: 12px; }
+
+    .modal-footer {
+      padding: 16px 24px; background: var(--color-surface-container-low);
+      display: flex; justify-content: flex-end; gap: 12px;
+      border-top: 1px solid var(--color-outline-variant);
+    }
+    .animate-spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   `],
 })
 export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
-  private readonly route          = inject(ActivatedRoute);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly titleService   = inject(Title);
-  private readonly metaService    = inject(Meta);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
+
+  protected readonly showReportModal = signal(false);
+  protected readonly reportReason = signal('');
+  protected readonly isReporting = signal(false);
 
   report() {
-    const reason = window.prompt('Veuillez indiquer le motif du signalement (ex: Informations fausses, Contenu inapproprié, etc.) :');
-    if (reason && reason.trim() !== '') {
-      const id = this.route.snapshot.paramMap.get('id');
-      if (id) {
-        this.companyService.reportCompany(id, reason.trim()).subscribe({
-          next: () => window.alert('Merci. Votre signalement a bien été pris en compte par nos équipes.'),
-          error: () => window.alert('Une erreur est survenue lors du signalement.')
-        });
-      }
+    this.reportReason.set('');
+    this.showReportModal.set(true);
+  }
+
+  closeReportModal() {
+    if (!this.isReporting()) {
+      this.showReportModal.set(false);
     }
+  }
+
+  submitReport() {
+    const reason = this.reportReason().trim();
+    if (!reason) return;
+
+    const id = this.fiche()?.id;
+    if (!id) return;
+
+    this.isReporting.set(true);
+    this.companyService.reportCompany(id, reason).subscribe({
+      next: () => {
+        this.isReporting.set(false);
+        this.showReportModal.set(false);
+        // We could use a toast service here, but for now alert is okay since it's a modal context
+        window.alert('Merci. Votre signalement a bien été pris en compte par nos équipes.');
+      },
+      error: () => {
+        this.isReporting.set(false);
+        window.alert('Une erreur est survenue lors du signalement.');
+      }
+    });
   }
 
   @ViewChild('mapContainer') private mapEl?: ElementRef<HTMLElement>;
@@ -396,13 +526,13 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   private marker?: L.Marker;
 
   protected readonly tabs: TabDescriptor[] = [
-    { id: 'apropos',     label: 'À propos',    icon: 'description' },
-    { id: 'services',    label: 'Services',    icon: 'category' },
-    { id: 'contacts',    label: 'Contacts',    icon: 'contact_page' },
-    { id: 'galerie',     label: 'Galerie',     icon: 'photo_library' },
-    { id: 'localisation',label: 'Localisation',icon: 'location_on' },
-    { id: 'documents',   label: 'Documents',   icon: 'folder' },
-    { id: 'dirigeants',  label: 'Dirigeants',  icon: 'badge' },
+    { id: 'apropos', label: 'À propos', icon: 'description' },
+    { id: 'services', label: 'Services', icon: 'category' },
+    { id: 'contacts', label: 'Contacts', icon: 'contact_page' },
+    { id: 'galerie', label: 'Galerie', icon: 'photo_library' },
+    { id: 'localisation', label: 'Localisation', icon: 'location_on' },
+    { id: 'documents', label: 'Documents', icon: 'folder' },
+    { id: 'dirigeants', label: 'Dirigeants', icon: 'badge' },
   ];
   protected readonly activeTab = signal<FicheTab>('apropos');
   protected readonly loading = signal(true);
@@ -416,14 +546,14 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
     ),
     { initialValue: null }
   );
-  
+
   constructor() {
     effect(() => {
       const f = this.fiche();
       if (f) {
         const title = `${f.name} - ${f.sectorLabel} à ${f.city} | Annuaire Congo`;
-        const desc  = `${f.name} à ${f.city} (${f.region}). ${f.description.slice(0, 150)}... Retrouvez les contacts, services et documents officiels sur Annuaire Congo.`;
-        
+        const desc = `${f.name} à ${f.city} (${f.region}). ${f.description.slice(0, 150)}... Retrouvez les contacts, services et documents officiels sur Annuaire Congo.`;
+
         this.titleService.setTitle(title);
         this.metaService.updateTag({ name: 'description', content: desc });
         this.metaService.updateTag({ property: 'og:title', content: title });
@@ -472,7 +602,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   }
 
   protected getContactIcon(type: number): string {
-    switch(type) {
+    switch (type) {
       case ContactType.Phone: return 'call';
       case ContactType.Email: return 'mail';
       case ContactType.Website: return 'language';
@@ -486,7 +616,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   }
 
   protected getDocLabel(type: number): string {
-    switch(type) {
+    switch (type) {
       case DocTypeEnum.RCCM: return 'RCCM';
       case DocTypeEnum.NIF: return 'NIU / NIF';
       case DocTypeEnum.Patent: return 'Brevet';

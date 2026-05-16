@@ -21,9 +21,15 @@ public sealed record SubscribeCommandHandler(
     public async Task<Result<SubscriptionWithPaymentDto>> Handle(
         SubscribeCommand request, CancellationToken ct)
     {
+        if (!Guid.TryParse(currentUser.Id, out var ownerGuid))
+        {
+            logger.LogWarning("Invalid User ID format: {UserId}", currentUser.Id);
+            return CompanyErrors.NotOwner;
+        }
+
         // 1. Validate company exists and belongs to current user
         var company = await context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == currentUser.Id, ct);
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, ct);
         
         if (company is null)
         {

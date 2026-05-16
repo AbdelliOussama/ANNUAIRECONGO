@@ -31,7 +31,7 @@ public sealed record RejectPaymentCommandHandler(IAppDbContext context, ILogger<
             _logger.LogWarning("Failed to reject payment with id {PaymentId}: {ErrorMessage}", request.PaymentId, rejectionResult.Errors.First().Description);
             return rejectionResult.Errors.First();
         }
-        payment.AddDomainEvent(new PaymentFailedEvent(payment.Id, payment.CompanyId, payment.Company.OwnerId.ToString(),request.reason));
+        payment.AddDomainEvent(new PaymentFailedEvent(payment.Id, payment.CompanyId, payment.Company.OwnerId?.ToString() ?? string.Empty,request.reason));
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("payment", cancellationToken);
         _logger.LogInformation("Payment with id {PaymentId} rejected successfully", request.PaymentId);

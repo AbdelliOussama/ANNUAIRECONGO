@@ -12,20 +12,23 @@ interface CityPin {
   cityName: string;
   regionName: string;
   count: number;
+  population: number;
   lat: number;
   lng: number;
 }
 
-// Approx coordinates for the cities our seed data references.
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  'Brazzaville':  { lat: -4.2634,  lng: 15.2429 },
-  'Pointe-Noire': { lat: -4.7761,  lng: 11.8636 },
-  'Dolisie':      { lat: -4.1990,  lng: 12.6702 },
-  'Oyo':          { lat: -1.2500,  lng: 15.7167 },
-  'Ouesso':       { lat:  1.6136,  lng: 16.0517 },
-  'Owando':       { lat: -0.4819,  lng: 15.8999 },
-  'Impfondo':     { lat:  1.6373,  lng: 18.0667 },
-  'Madingou':     { lat: -4.1536,  lng: 13.5500 },
+// Approx coordinates and population (2026 estimates) for Congolese cities.
+const CITY_COORDS: Record<string, { lat: number; lng: number; pop: number }> = {
+  'Brazzaville':  { lat: -4.2634,  lng: 15.2429, pop: 2500000 },
+  'Pointe-Noire': { lat: -4.7761,  lng: 11.8636, pop: 1300000 },
+  'Dolisie':      { lat: -4.1990,  lng: 12.6702, pop: 110000, },
+  'Nkayi':        { lat: -4.1856,  lng: 13.2856, pop: 100000, },
+  'Oyo':          { lat: -1.2500,  lng: 15.7167, pop: 15000,  },
+  'Ouesso':       { lat:  1.6136,  lng: 16.0517, pop: 40000,  },
+  'Owando':       { lat: -0.4819,  lng: 15.8999, pop: 35000,  },
+  'Impfondo':     { lat:  1.6373,  lng: 18.0667, pop: 30000,  },
+  'Sibiti':       { lat: -3.6819,  lng: 13.3499, pop: 25000,  },
+  'Madingou':     { lat: -4.1536,  lng: 13.5500, pop: 22000,  },
 };
 
 @Component({
@@ -161,7 +164,9 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
           cityName: c.cityName,
           regionName: c.regionName || 'Congo',
           count: 1,
-          ...coords
+          population: coords.pop,
+          lat: coords.lat,
+          lng: coords.lng
         });
       }
     }
@@ -216,15 +221,41 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
   }
 
   private popupHtml(p: CityPin): string {
+    const density = (p.count / p.population) * 10000;
+    const densityFixed = density.toFixed(2);
     const queryParams = new URLSearchParams({ region: p.regionName, city: p.cityName }).toString();
+    
     return `
-      <div style="font-family: 'DM Sans', sans-serif; min-width: 180px;">
-        <strong style="font-family:'DM Serif Display', serif; font-size:16px;">${p.cityName}</strong>
-        <div style="font-size:12px; color:#515f74; margin-top:4px;">Département : ${p.regionName}</div>
-        <div style="font-size:13px; margin:8px 0;">${p.count} entreprise${p.count > 1 ? 's' : ''} inscrite${p.count > 1 ? 's' : ''}</div>
+      <div style="font-family: 'Inter', sans-serif; min-width: 200px; padding: 4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-family:'DM Serif Display', serif; font-size:18px; color:#004e34;">${p.cityName}</strong>
+          <span style="font-size:10px; font-weight:700; background:#f0f4f8; padding:2px 6px; border-radius:4px; color:#515f74; text-transform:uppercase;">${p.regionName}</span>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div style="background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+            <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Entreprises</div>
+            <div style="font-size:16px; font-weight:800; color:#0f172a;">${p.count}</div>
+          </div>
+          <div style="background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+            <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Population</div>
+            <div style="font-size:16px; font-weight:800; color:#0f172a;">${(p.population / 1000).toFixed(0)}k</div>
+          </div>
+        </div>
+
+        <div style="font-size:12px; color:#515f74; margin-bottom:16px; padding:0 4px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span>Densité eco :</span>
+            <span style="font-weight:700; color:#004e34;">${densityFixed} / 10k hab.</span>
+          </div>
+          <div style="height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden;">
+            <div style="height:100%; width:${Math.min(density * 10, 100)}%; background:#004e34;"></div>
+          </div>
+        </div>
+
         <a href="/annuaire?${queryParams}"
-           style="display:inline-block; padding:6px 12px; background:#004e34; color:#fff; border-radius:8px; font-size:12px; text-decoration:none; font-weight:600;">
-          Voir l'annuaire
+           style="display:block; text-align:center; padding:10px; background:#004e34; color:#fff; border-radius:10px; font-size:13px; text-decoration:none; font-weight:600; transition: background 0.2s;">
+          Explorer les entreprises
         </a>
       </div>
     `;

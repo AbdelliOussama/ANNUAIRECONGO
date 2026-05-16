@@ -6,6 +6,8 @@ import { SubscriptionService } from '@core/services/subscription.service';
 import { Payment } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
+import { ToastService } from '@shared/services/toast.service';
+import { ModalService } from '@shared/services/modal.service';
 
 @Component({
   selector: 'ac-admin-payments',
@@ -80,6 +82,8 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 })
 export class AdminPaymentsComponent {
   private readonly subService = inject(SubscriptionService);
+  private readonly toast = inject(ToastService);
+  private readonly modal = inject(ModalService);
   private readonly refreshTrigger$ = new BehaviorSubject<void>(undefined);
   
   protected readonly payments = toSignal(
@@ -92,35 +96,52 @@ export class AdminPaymentsComponent {
   protected readonly loading = signal(false);
 
   confirm(p: Payment) {
-    if (!confirm(`Confirmer le paiement ${p.reference} pour ${p.companyName} ?`)) return;
-    
-    this.loading.set(true);
-    this.subService.confirmPayment(p.id).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.refreshTrigger$.next();
-      },
-      error: (err) => {
-        this.loading.set(false);
-        alert('Erreur lors de la confirmation: ' + (err.error?.detail || err.message));
-      }
+    this.modal.confirm({
+      title: 'Confirmer le paiement',
+      body: `Voulez-vous valider le paiement ${p.reference} de ${p.amount} XAF pour ${p.companyName} ?`,
+      tone: 'confirm',
+      confirmLabel: 'Valider le paiement'
+    }).then(({ confirmed }) => {
+      if (!confirmed) return;
+      
+      this.loading.set(true);
+      this.subService.confirmPayment(p.id).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.toast.success('Paiement validé avec succès.');
+          this.refreshTrigger$.next();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.toast.error('Erreur lors de la confirmation: ' + (err.error?.detail || err.message));
+        }
+      });
     });
   }
 
   reject(p: Payment) {
-    const reason = prompt('Raison du rejet ?');
-    if (!reason) return;
-    
-    this.loading.set(true);
-    this.subService.rejectPayment(p.id, reason).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.refreshTrigger$.next();
-      },
-      error: (err) => {
-        this.loading.set(false);
-        alert('Erreur lors du rejet: ' + (err.error?.detail || err.message));
-      }
+    this.modal.confirm({
+      title: 'Rejeter le paiement',
+      body: `Expliquez pourquoi le paiement ${p.reference} est rejeté. L'utilisateur recevra une notification.`,
+      tone: 'danger',
+      confirmLabel: 'Rejeter définitivement',
+      reasonLabel: 'Motif du rejet',
+      reasonRequired: true
+    }).then(({ confirmed, reason }) => {
+      if (!confirmed || !reason) return;
+      
+      this.loading.set(true);
+      this.subService.rejectPayment(p.id, reason).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.toast.success('Paiement rejeté.');
+          this.refreshTrigger$.next();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.toast.error('Erreur lors du rejet: ' + (err.error?.detail || err.message));
+        }
+      });
     });
   }
 

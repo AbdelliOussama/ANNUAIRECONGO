@@ -12,4 +12,6 @@ public class CreateCompanyRequest
     public string? Rccm { get; set; }
     public string? Niu { get; set; }
     public int? YearFounded { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? CoverUrl { get; set; }
 }

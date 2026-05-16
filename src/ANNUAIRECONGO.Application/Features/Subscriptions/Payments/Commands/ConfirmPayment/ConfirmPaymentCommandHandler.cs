@@ -42,7 +42,7 @@ public sealed class ConfirmPaymentCommandHandler(
         payment.SetInvoiceUrl(invoiceUrl);
 
         _logger.LogInformation("Payment with ID {PaymentId} marked as succeeded", request.PaymentId);
-        payment.AddDomainEvent(new PaymentSucceededEvent(payment.Id, payment.CompanyId,payment.SubscriptionId,payment.Subscription.Company.OwnerId.ToString(), payment.Amount, payment.Currency));
+        payment.AddDomainEvent(new PaymentSucceededEvent(payment.Id, payment.CompanyId,payment.SubscriptionId,payment.Subscription.Company.OwnerId?.ToString() ?? string.Empty, payment.Amount, payment.Currency));
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("payments", cancellationToken);
         return payment.ToDto();

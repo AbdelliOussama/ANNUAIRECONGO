@@ -7,7 +7,8 @@ public sealed class UpdateMediaCommandValidator : AbstractValidator<UpdateMediaC
     public UpdateMediaCommandValidator()
     {
         RuleFor(x => x.id).NotEmpty().WithMessage("Id is required.");
-        RuleFor(x => x.logoUrl).NotEmpty().WithMessage("Logo URL is required.");
-        RuleFor(x => x.coverUrl).NotEmpty().WithMessage("Cover URL is required.");
+        // Both are optional now, only validate if provided
+        RuleFor(x => x.logoUrl).MaximumLength(500);
+        RuleFor(x => x.coverUrl).MaximumLength(500);
     }
 }

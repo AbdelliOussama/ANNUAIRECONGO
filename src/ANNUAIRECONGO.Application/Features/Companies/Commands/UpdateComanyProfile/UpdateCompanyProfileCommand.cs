@@ -15,5 +15,7 @@ public sealed record UpdateCompanyProfileCommand(
         IEnumerable<Guid> sectorIds,
         string? rccm,
         string? niu,
-        int? yearFounded
+        int? yearFounded,
+        string? logoUrl = null,
+        string? coverUrl = null
 ): IRequest<Result<Updated>>;

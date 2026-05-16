@@ -31,9 +31,10 @@ public sealed class CancelSubscriptionCommandHandler(ILogger<CancelSubscriptionC
             logger.LogWarning("Subscription with ID {SubscriptionId} not found for cancellation.", request.SubscriptionId);
             return SubscriptionErrors.NotFound(request.SubscriptionId);
         }
-        var IsUserCompanyOwner = subscription.Company.OwnerId.ToString() == _user.Id;
+        var IsUserCompanyOwner = subscription.Company.IsOwnedBy(_user.Id);
         if (!IsUserCompanyOwner)
-        {            logger.LogWarning("User with ID {UserId} is not authorized to cancel subscription with ID {SubscriptionId}.", _user.Id, request.SubscriptionId);
+        {
+            _logger.LogWarning("User with ID {UserId} is not authorized to cancel subscription with ID {SubscriptionId}.", _user.Id, request.SubscriptionId);
             return CompanyErrors.NotOwner;
         }
 

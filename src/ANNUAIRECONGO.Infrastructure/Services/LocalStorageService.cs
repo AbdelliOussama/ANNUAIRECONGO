@@ -29,7 +29,7 @@ public sealed class LocalStorageService : IStorageService
         [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"];
 
     private static readonly HashSet<string> AllowedFolders = 
-        ["logos", "covers", "documents", "services", "images"];
+        ["logos", "covers", "documents", "services", "images", "invoices"];
 
     public LocalStorageService(
         IWebHostEnvironment env,
@@ -103,7 +103,7 @@ public sealed class LocalStorageService : IStorageService
         if (!AllowedFolders.Contains(folder.ToLowerInvariant()))
             throw new InvalidOperationException($"Target folder '{folder}' is not permitted.");
 
-        var allowed = folder == "documents"
+        var allowed = (folder == "documents" || folder == "invoices")
             ? AllowedDocumentExtensions
             : AllowedImageExtensions;
 

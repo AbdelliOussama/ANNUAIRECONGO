@@ -12,7 +12,7 @@ import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
 import { Sector, City, CreateCompanyRequest, UpdateCompanyProfileRequest, Company, CompanyImage, CompanyDocument } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
-import { catchError, map, of, switchMap, forkJoin } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, forkJoin } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 
 @Component({
@@ -353,21 +353,22 @@ export class FicheFormComponent {
   protected readonly FR = FR;
   readonly mode = input<'create' | 'edit'>('edit');
 
-  private readonly fb        = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
-  private readonly sectorService  = inject(SectorService);
-  private readonly geoService     = inject(GeographyService);
-  private readonly uploadService  = inject(UploadService);
-  private readonly boService      = inject(BusinessOwnerService);
-  private readonly authService    = inject(AuthService);
-  private readonly toast     = inject(ToastService);
-  private readonly router    = inject(Router);
+  private readonly sectorService = inject(SectorService);
+  private readonly geoService = inject(GeographyService);
+  private readonly uploadService = inject(UploadService);
+  private readonly boService = inject(BusinessOwnerService);
+  private readonly authService = inject(AuthService);
+  private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
-  protected readonly logoUrl    = signal<string | null>(null);
-  protected readonly gallery    = signal<string[]>([]);
-  protected readonly documents  = signal<string[]>([]);
-  
+  protected readonly logoUrl = signal<string | null>(null);
+  protected readonly coverUrl = signal<string | null>(null);
+  protected readonly gallery = signal<string[]>([]);
+  protected readonly documents = signal<string[]>([]);
+
   protected readonly contactTypes = [
     { value: 2, label: 'WhatsApp' },
     { value: 3, label: 'Facebook' },
@@ -382,7 +383,7 @@ export class FicheFormComponent {
   protected readonly originalDocs = signal<any[]>([]);
 
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
-  protected readonly cities  = toSignal(this.geoService.getRegions().pipe(
+  protected readonly cities = toSignal(this.geoService.getRegions().pipe(
     switchMap(regions => {
       if (regions.length > 0) {
         // For simplicity, fetch cities of the first region, or use a better strategy
@@ -393,18 +394,18 @@ export class FicheFormComponent {
   ), { initialValue: [] as City[] });
 
   protected readonly form = this.fb.nonNullable.group({
-    name:        ['', [Validators.required, Validators.minLength(2)]],
+    name: ['', [Validators.required, Validators.minLength(2)]],
     description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(300)]],
-    rccm:        ['', [Validators.required, Validators.pattern(/^[A-Z]{2,3}-[A-Z]{2,4}-\d{4}-[A-Z]-\d{3,5}$/)]],
-    niu:         ['', [Validators.required, Validators.minLength(8)]],
-    sectorIds:   [[] as string[], [Validators.required, Validators.minLength(1)]],
-    cityId:      ['', Validators.required],
-    address:     ['', [Validators.required, Validators.minLength(4)]],
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^\+?242\s?0?[567]\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/)]],
-    email:       ['', [Validators.required, Validators.email]],
-    websiteUrl:  ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
-    services:    this.fb.array([]),
-    contacts:    this.fb.array([]),
+    rccm: ['', [Validators.required, Validators.minLength(5)]],
+    niu: ['', [Validators.required, Validators.minLength(8)]],
+    sectorIds: [[] as string[], [Validators.required, Validators.minLength(1)]],
+    cityId: ['', Validators.required],
+    address: ['', [Validators.required, Validators.minLength(4)]],
+    phoneNumber: ['', [Validators.required, Validators.pattern(/^[+\d\s]{9,18}$/)]],
+    email: ['', [Validators.required, Validators.email]],
+    websiteUrl: ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
+    services: this.fb.array([]),
+    contacts: this.fb.array([]),
   });
 
   get servicesFormArray() {
@@ -479,7 +480,7 @@ export class FicheFormComponent {
       this.logoUrl.set(c.logoUrl || null);
       this.gallery.set(c.images?.map((i: CompanyImage) => i.imageUrl) || []);
       this.documents.set(c.documents?.map((d: CompanyDocument) => d.documentUrl || d.fileUrl) || []);
-      
+
       this.originalServices.set(c.services || []);
       this.originalContacts.set(c.contacts || []);
       this.originalImages.set(c.images || []);
@@ -498,23 +499,23 @@ export class FicheFormComponent {
 
   constructor() {
     effect(() => {
-        this.hydrate();
+      this.hydrate();
     });
   }
 
   protected errorFor(name: string): string | null {
     const c: AbstractControl | null = this.form.get(name);
     if (!c || !c.touched || !c.errors) return null;
-    if (c.errors['required'])  return FR.errors.required;
-    if (c.errors['email'])     return FR.errors.email;
+    if (c.errors['required']) return FR.errors.required;
+    if (c.errors['email']) return FR.errors.email;
     if (c.errors['minlength']) {
       if (name === 'sectorIds') return 'Veuillez sélectionner au moins un secteur.';
       return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
     }
     if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} caractères.`;
-    if (c.errors['pattern'])   {
-      if (name === 'phoneNumber') return FR.errors.phoneCG;
-      if (name === 'rccm')  return 'Format attendu : CG-BZV-2025-A-1234';
+    if (c.errors['pattern']) {
+      if (name === 'phoneNumber') return 'Numéro de téléphone invalide.';
+      if (name === 'rccm') return 'Format attendu : CG-BZV-2025-A-1234';
       if (name === 'websiteUrl') return 'URL invalide. Exemple : https://exemple.cg';
       return FR.errors.pattern;
     }
@@ -556,24 +557,37 @@ export class FicheFormComponent {
   protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      // Debug log to identify exactly which field is blocking
+      Object.keys(this.form.controls).forEach(key => {
+        const control = this.form.get(key);
+        if (control?.invalid) {
+          console.warn(`Form Validation Error: field '${key}' is invalid. Errors:`, control.errors);
+        }
+      });
       this.toast.error(FR.errors.validation);
       return;
     }
 
     this.submitting.set(true);
     const value = this.form.getRawValue();
-    
-    const obs$ = this.mode() === 'create' 
-      ? this.companyService.createCompany({ ...value })
-      : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, { ...value });
+
+    const payload = {
+      ...value,
+      logoUrl: this.logoUrl(),
+      coverUrl: this.coverUrl()
+    };
+
+    const obs$ = this.mode() === 'create'
+      ? this.companyService.createCompany(payload as any)
+      : this.companyService.updateCompanyProfile(this.companyToEdit()!.id, payload as any);
 
     obs$.pipe(
       switchMap((result: any) => {
         // If we're editing, updateCompanyProfile returns 'Updated' which doesn't have an id.
         // We use the ID from the companyToEdit signal.
         // If we're creating, createCompany returns the CompanyDto which HAS an id.
-        const companyId = this.mode() === 'edit' ? this.companyToEdit()!.id : result.id;
-        
+        const companyId = this.mode() === 'edit' ? this.companyToEdit()!.id : (result.id || result.Id);
+
         if (!companyId) {
           console.error('FicheForm: No companyId found after submission', result);
           return of(null);
@@ -582,23 +596,21 @@ export class FicheFormComponent {
         // For checking existing items, use the company from create response OR the one we're editing
         const companyData = this.mode() === 'edit' ? this.companyToEdit() : result;
 
-        const tasks = [];
+        const tasks: Observable<any>[] = [];
 
-        // 1. Update Media (Logo)
-        if (this.logoUrl()) {
-          tasks.push(this.companyService.updateCompanyMedia(companyId, this.logoUrl()!));
-        }
+        // 1. Logo and Cover are now handled atomically in create/updateProfile.
+
 
         // 2. Sync Images
         this.gallery().forEach(url => {
-           if (!companyData?.images?.some((i: any) => i.imageUrl === url)) {
-             tasks.push(this.companyService.addImage(companyId, url));
-           }
+          if (!companyData?.images?.some((i: any) => i.imageUrl === url)) {
+            tasks.push(this.companyService.addImage(companyId, url).pipe(catchError(() => of(null))));
+          }
         });
 
         this.documents().forEach(url => {
           if (!companyData?.documents?.some((d: any) => (d.documentUrl || d.fileUrl) === url)) {
-             tasks.push(this.companyService.addDocument(companyId, url, 'Other')); 
+            tasks.push(this.companyService.addDocument(companyId, url, 'Other').pipe(catchError(() => of(null))));
           }
         });
 
@@ -610,14 +622,14 @@ export class FicheFormComponent {
         // Remove services that are no longer in the form
         oldServices.forEach(old => {
           if (!currentServices.some((curr: any) => curr.title === old.title)) {
-            tasks.push(this.companyService.removeService(companyId, old.id));
+            tasks.push(this.companyService.removeService(companyId, old.id).pipe(catchError(() => of(null))));
           }
         });
 
         // Add new services
         currentServices.forEach((curr: any) => {
           if (!oldServices.some(old => old.title === curr.title)) {
-            tasks.push(this.companyService.addService(companyId, curr.title, curr.description));
+            tasks.push(this.companyService.addService(companyId, curr.title, curr.description).pipe(catchError(() => of(null))));
           }
         });
 
@@ -627,23 +639,23 @@ export class FicheFormComponent {
 
         oldContacts.forEach(old => {
           if (!currentContacts.some((curr: any) => curr.type == old.type && curr.value === old.value)) {
-            tasks.push(this.companyService.removeContact(companyId, old.id));
+            tasks.push(this.companyService.removeContact(companyId, old.id).pipe(catchError(() => of(null))));
           }
         });
 
         currentContacts.forEach((curr: any) => {
           if (!oldContacts.some(old => old.type == curr.type && old.value === curr.value)) {
-            tasks.push(this.companyService.addContact(companyId, Number(curr.type), curr.value, false));
+            tasks.push(this.companyService.addContact(companyId, Number(curr.type), curr.value, false).pipe(catchError(() => of(null))));
           }
         });
 
-        return tasks.length > 0 
+        return tasks.length > 0
           ? forkJoin(tasks).pipe(
-              catchError(err => {
-                console.error('FicheForm: Error in post-submission tasks', err);
-                return of(null);
-              })
-            )
+            catchError(err => {
+              console.error('FicheForm: Error in post-submission tasks', err);
+              return of(null);
+            })
+          )
           : of(null);
       })
     ).subscribe({

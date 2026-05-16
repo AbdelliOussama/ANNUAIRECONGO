@@ -32,6 +32,7 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
             _logger.LogError("Error updating company profile: {Error}", companyUpdateProfileResult.Errors);
             return companyUpdateProfileResult.Errors;
         }
+        company.UpdateMedia(request.logoUrl, request.coverUrl);
         await _context.SaveChangesAsync(cancellationToken);
         await _cache.RemoveByTagAsync("company");
         return Result.Updated;

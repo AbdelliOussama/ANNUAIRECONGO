@@ -32,6 +32,7 @@ public sealed record CreateCompanyCommandHandler(ILogger<CreateCompanyCommandHan
             return CompanyCreateResult.Errors;
         }
         var company = CompanyCreateResult.Value;
+        company.UpdateMedia(request.LogoUrl, request.CoverUrl);
         await _context.Companies.AddAsync(company);
 
         company.AddDomainEvent(new CompanyCreatedEvent(company.Id,company.OwnerId?.ToString() ?? string.Empty, company.Name));

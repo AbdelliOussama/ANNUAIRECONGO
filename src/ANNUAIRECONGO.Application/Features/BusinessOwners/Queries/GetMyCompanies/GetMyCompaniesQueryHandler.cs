@@ -17,11 +17,12 @@ public sealed record GetMyCompaniesQueryHandler(IAppDbContext Context, ILogger<G
 
     public async Task<Result<List<CompanyDto>>> Handle(GetMyCompaniesQuery request, CancellationToken cancellationToken)
     {
-        if(string.IsNullOrEmpty(_currentUser.Id))
+        if (!Guid.TryParse(_currentUser.Id, out var ownerGuid))
         {
-            _logger.LogWarning("Current user ID is null or empty. Cannot retrieve companies.");
+            _logger.LogWarning("Invalid User ID format: {UserId}", _currentUser.Id);
             return new List<CompanyDto>();
         }
+
         var companies = await _context.Companies.AsNoTracking()
             .Include(c => c.City)
             .ThenInclude(c => c.Region)
@@ -33,7 +34,7 @@ public sealed record GetMyCompaniesQueryHandler(IAppDbContext Context, ILogger<G
             .Include(c => c.Documents)
             .Include(c => c.Subscriptions)
             .ThenInclude(s => s.Plan)
-            .Where(c => c.OwnerId.ToString() == _currentUser.Id)
+            .Where(c => c.OwnerId == ownerGuid)
             .ToListAsync(cancellationToken);
 
         if(companies is null || !companies.Any())

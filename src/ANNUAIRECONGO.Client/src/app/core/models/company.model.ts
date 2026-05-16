@@ -277,7 +277,8 @@ export interface CreateCompanyRequest {
   address?: string;
   latitude?: number;
   longitude?: number;
-  logoUrl?: string; // added
+  logoUrl?: string;
+  coverUrl?: string;
   rccm?: string;
   niu?: string;
   yearFounded?: number;
@@ -293,7 +294,8 @@ export interface UpdateCompanyProfileRequest {
   address?: string;
   latitude?: number;
   longitude?: number;
-  logoUrl?: string; // added
+  logoUrl?: string;
+  coverUrl?: string;
   sectorIds?: string[];
   rccm?: string;
   niu?: string;

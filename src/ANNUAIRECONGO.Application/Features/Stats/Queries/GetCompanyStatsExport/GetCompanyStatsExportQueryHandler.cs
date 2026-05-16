@@ -22,9 +22,15 @@ public sealed class GetCompanyStatsExportQueryHandler(
     {
         var userId = request.UserId ?? _currentUser.Id;
 
+        if (!Guid.TryParse(userId, out var ownerGuid))
+        {
+            _logger.LogWarning("Invalid User ID format: {UserId}", userId);
+            return CompanyErrors.NotOwner;
+        }
+
         // Ownership check
         var isOwner = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == userId, cancellationToken);
+            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
 
         if (!isOwner)
         {

@@ -217,19 +217,29 @@ public class ApplicationDbContextInitialiser(
             await _context.SaveChangesAsync();
         }
 
-        if (!_context.Sectors.Any())
+        var sectorsToSeed = new List<(string Name, string Desc, string Icon, string Slug)>
         {
-            _context.Sectors.AddRange(
-            [
-                Sector.Create(Guid.NewGuid(), "Maritime & Portuaire", "Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore.").Value,
-                Sector.Create(Guid.NewGuid(), "Logistique & Transport", "Transport routier, ferroviaire, aérien et solutions intégrées.").Value,
-                Sector.Create(Guid.NewGuid(), "Douane & Transit", "Dédouanement, transit et conseil en réglementation des échanges extérieurs.").Value,
-                Sector.Create(Guid.NewGuid(), "Industrie", "Manufacture, transformation industrielle, agro-industrie et production locale à valeur ajoutée.").Value,
-                Sector.Create(Guid.NewGuid(), "Sécurité", "Sociétés de surveillance, gardiennage, protection rapprochée et systèmes de sécurité électroniques.").Value,
-                Sector.Create(Guid.NewGuid(), "Manutention & Entreposage", "Stockage, gestion d'entrepôts, opérations portuaires lourdes et service au navire.").Value
-            ]);
-            await _context.SaveChangesAsync();
+            ("Maritime & Portuaire", "Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore.", "directions_boat", "maritime"),
+            ("Logistique & Transport", "Transport routier, ferroviaire, aérien et solutions intégrées.", "local_shipping", "logistique"),
+            ("Douane & Transit", "Dédouanement, transit et conseil en réglementation des échanges extérieurs.", "inventory_2", "douane"),
+            ("Industrie", "Manufacture, transformation industrielle, agro-industrie et production locale à valeur ajoutée.", "precision_manufacturing", "industrie"),
+            ("Sécurité", "Sociétés de surveillance, gardiennage, protection rapprochée et systèmes de sécurité électroniques.", "security", "securite"),
+            ("Manutention & Entreposage", "Stockage, gestion d'entrepôts, opérations portuaires lourdes et service au navire.", "forklift", "manutention")
+        };
+
+        foreach (var sData in sectorsToSeed)
+        {
+            var existing = await _context.Sectors.FirstOrDefaultAsync(s => s.Name == sData.Name);
+            if (existing != null)
+            {
+                existing.Update(sData.Name, sData.Desc, sData.Icon, sData.Slug);
+            }
+            else
+            {
+                _context.Sectors.Add(Sector.Create(Guid.NewGuid(), sData.Name, sData.Desc, sData.Icon, sData.Slug).Value);
+            }
         }
+        await _context.SaveChangesAsync();
 
          // Seed plans
         await PlanSeeder.SeedPlansAsync(_context);

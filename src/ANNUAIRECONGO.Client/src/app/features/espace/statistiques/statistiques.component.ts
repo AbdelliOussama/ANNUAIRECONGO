@@ -183,10 +183,10 @@ export class EspaceStatistiquesComponent {
   private readonly ownerService = inject(BusinessOwnerService);
 
   protected readonly stats = toSignal(
-    this.ownerService.getCurrentOwner().pipe(
-      switchMap((owner: BusinessOwner) => {
-        if (!owner || !owner.Companies?.length) return of(null);
-        return this.statsService.getCompanyStats(owner.Companies[0].id);
+    this.ownerService.getMyCompanies().pipe(
+      switchMap((companies) => {
+        if (!companies?.length) return of(null);
+        return this.statsService.getCompanyStats(companies[0].id);
       }),
       catchError(() => of(null))
     ),
@@ -233,11 +233,9 @@ export class EspaceStatistiquesComponent {
   }
 
   protected exportCSV(): void {
-    const owner = this.ownerService.getCurrentOwner() as any;
-    // We need to subscribe to the observable instead of casting
-    this.ownerService.getCurrentOwner().subscribe(o => {
-      if (!o || !o.Companies?.length) return;
-      const companyId = o.Companies[0].id;
+    this.ownerService.getMyCompanies().subscribe(companies => {
+      if (!companies?.length) return;
+      const companyId = companies[0].id;
       
       this.exporting.set(true);
       this.statsService.exportCompanyStatsCSV(companyId).subscribe({

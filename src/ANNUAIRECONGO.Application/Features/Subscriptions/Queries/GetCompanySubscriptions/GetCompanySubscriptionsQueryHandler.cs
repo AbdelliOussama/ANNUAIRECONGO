@@ -21,8 +21,14 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
         _logger.LogInformation("GetCompanySubscriptions: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}", 
             request.CompanyId, userId);
 
+        if (!Guid.TryParse(userId, out var ownerGuid))
+        {
+            _logger.LogWarning("Invalid User ID format: {UserId}", userId);
+            return CompanyErrors.NotOwner;
+        }
+
         var isOwner = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId.ToString() == userId, cancellationToken);
+            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
         
         if (!isOwner)
         {
