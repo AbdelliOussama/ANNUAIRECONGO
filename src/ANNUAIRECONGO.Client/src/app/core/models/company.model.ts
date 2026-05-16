@@ -261,6 +261,7 @@ export interface CompanyFilter {
   sectorSlug?: string;
   cityId?: string;
   regionId?: string;
+  regionName?: string;
   ownerId?: string;
   status?: number | null;
   pageNumber?: number;

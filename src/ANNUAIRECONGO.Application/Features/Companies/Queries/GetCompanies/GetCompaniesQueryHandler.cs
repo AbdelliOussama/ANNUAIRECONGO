@@ -46,6 +46,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         bool needNiuFilter = request.Niu != null;
 
 
+        _logger.LogInformation("GetCompanies Query: Search={Search}, SectorId={SectorId}, SectorSlug={SectorSlug}, RegionId={RegionId}, RegionName={RegionName}", 
+            request.SearchTerm, request.SectorId, request.SectorSlug, request.RegionId, request.RegionName);
+
         if (needSectorFilter)
         {
             if (request.SectorId.HasValue)
@@ -54,7 +57,8 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             }
             else if (!string.IsNullOrWhiteSpace(request.SectorSlug))
             {
-                query = query.Where(c => c.CompanySectors.Any(cs => cs.Sector.Slug == request.SectorSlug));
+                var slug = request.SectorSlug.Trim().ToLower();
+                query = query.Where(c => c.CompanySectors.Any(cs => cs.Sector.Slug.ToLower() == slug));
             }
         }
 
@@ -66,6 +70,18 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
         if (needRegionFilter)
         {
             query = query.Where(c => c.City.RegionId == request.RegionId.Value);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.RegionName))
+        {
+            var name = request.RegionName.Trim().ToLower();
+            var region = await _context.Regions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Name.ToLower() == name, cancellationToken);
+            
+            if (region != null)
+            {
+                query = query.Where(c => c.City.RegionId == region.Id);
+            }
         }
 
         if (needStatusFilter)

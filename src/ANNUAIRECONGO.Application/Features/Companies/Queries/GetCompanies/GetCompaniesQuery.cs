@@ -11,6 +11,7 @@ public sealed record GetCompaniesQuery(
     string? SectorSlug,
     Guid? CityId,
     Guid? RegionId,
+    string? RegionName,
     int? Status,
     string? Rccm,
     string? Niu,

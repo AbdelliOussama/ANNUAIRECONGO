@@ -15,8 +15,9 @@ import { switchMap, catchError, of, tap } from 'rxjs';
 interface Filters {
   query: string;
   sectorId: string;
-  sectorSlug: string; // Added to store the slug from URL
+  sectorSlug: string;
   regionId: string;
+  regionName: string; // Added for map deep-linking
   verifiedOnly: boolean;
 }
 
@@ -85,7 +86,7 @@ interface Filters {
           <select
             id="filter-region"
             class="form-input"
-            [value]="filters().regionId"
+            [value]="activeRegionId()"
             (change)="onRegion($event)"
           >
             <option value="">Toutes les régions</option>
@@ -362,12 +363,23 @@ export class AnnuaireListComponent {
     sectorId: '',
     sectorSlug: '',
     regionId: '',
+    regionName: '',
     verifiedOnly: false,
   });
   protected readonly page    = signal(1);
   protected readonly sortBy  = signal('date');
   protected readonly sortOrder = signal('desc');
   protected readonly view    = signal<'grid' | 'list'>('grid');
+  protected readonly activeRegionId = computed(() => {
+    const f = this.filters();
+    if (f.regionId) return f.regionId;
+    if (f.regionName) {
+      const found = this.regions().find(r => r.name.toLowerCase() === f.regionName.toLowerCase());
+      return found ? found.id : '';
+    }
+    return '';
+  });
+
   protected readonly filtersOpen = signal(false);
 
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
@@ -404,14 +416,14 @@ export class AnnuaireListComponent {
     }
 
     return {
-      q:         f.query,
-      sectorId:  sectorId,
+      q:          f.query,
+      sectorId:   sectorId,
       sectorSlug: sectorSlug,
-      regionId:  f.regionId,
-      verifiees: f.verifiedOnly,
-      page:      this.page(),
-      tri:       this.sortBy(),
-      ordre:     this.sortOrder()
+      region:     f.regionId || f.regionName, // Combine into 'region' param
+      verifiees:  f.verifiedOnly,
+      page:       this.page(),
+      tri:        this.sortBy(),
+      ordre:      this.sortOrder()
     };
   });
 
@@ -420,12 +432,16 @@ export class AnnuaireListComponent {
   private readonly result = toSignal<PaginatedResponse<Company> | null>(
     this.params$.pipe(
       tap(() => this.loading.set(true)),
-      switchMap(p => 
-        this.companyService.getCompanies({
+      switchMap(p => {
+        console.log('Annuaire fetch parameters:', p);
+        const isRegionId = /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(p.region || '');
+        
+        return this.companyService.getCompanies({
           searchTerm: p.q || undefined,
           sectorId:   p.sectorId || undefined,
           sectorSlug: p.sectorSlug || undefined,
-          regionId:   p.regionId || undefined,
+          regionId:   isRegionId ? p.region : undefined,
+          regionName: !isRegionId ? p.region : undefined,
           status:     2, // Force Active status
           sortBy:     p.tri,
           sortOrder:  p.ordre,
@@ -439,7 +455,7 @@ export class AnnuaireListComponent {
             return of(null);
           })
         )
-      )
+      })
     ),
     { initialValue: null }
   );
@@ -466,13 +482,16 @@ export class AnnuaireListComponent {
   constructor() {
     this.route.queryParams.subscribe((qp) => {
       const secteurParam = qp['secteur'] ?? '';
-      const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(secteurParam);
+      const regionParam = qp['region'] ?? '';
+      const isSecteurGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(secteurParam);
+      const isRegionGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(regionParam);
 
       this.filters.set({
         query:        qp['q']        ?? '',
-        sectorId:     isGuid ? secteurParam : '',
-        sectorSlug:   !isGuid ? secteurParam : '',
-        regionId:     qp['region']   ?? '',
+        sectorId:     isSecteurGuid ? secteurParam : '',
+        sectorSlug:   !isSecteurGuid ? secteurParam : '',
+        regionId:     isRegionGuid ? regionParam : '',
+        regionName:   !isRegionGuid ? regionParam : '',
         verifiedOnly: qp['verifiees'] === '1',
       });
       this.page.set(qp['page'] ? Math.max(1, Number(qp['page'])) : 1);
@@ -494,8 +513,10 @@ export class AnnuaireListComponent {
     this.syncToUrl();
   }
   protected onRegion(e: Event): void {
-    this.filters.update((f) => ({ ...f, regionId: (e.target as HTMLSelectElement).value }));
-    this.page.set(1); this.syncToUrl();
+    const val = (e.target as HTMLSelectElement).value;
+    this.filters.update((f) => ({ ...f, regionId: val, regionName: '' }));
+    this.page.set(1); 
+    this.syncToUrl();
   }
   protected onVerifiedOnly(e: Event): void {
     this.filters.update((f) => ({ ...f, verifiedOnly: (e.target as HTMLInputElement).checked }));
@@ -514,7 +535,7 @@ export class AnnuaireListComponent {
   protected onPage(p: number): void { this.page.set(p); this.syncToUrl(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   protected reset(): void {
-    this.filters.set({ query: '', sectorId: '', sectorSlug: '', regionId: '', verifiedOnly: false });
+    this.filters.set({ query: '', sectorId: '', sectorSlug: '', regionId: '', regionName: '', verifiedOnly: false });
     this.page.set(1);
     this.syncToUrl();
     this.closeFilters();
@@ -528,7 +549,7 @@ export class AnnuaireListComponent {
     const queryParams: Record<string, string | undefined> = {
       q:         p.q  || undefined,
       secteur:   p.sectorSlug || p.sectorId || undefined,
-      region:    p.regionId || undefined,
+      region:    p.region || undefined,
       verifiees: p.verifiees ? '1' : undefined,
       tri:       this.sortBy() !== 'date' ? this.sortBy() : undefined,
       ordre:     this.sortOrder() !== 'desc' ? this.sortOrder() : undefined,

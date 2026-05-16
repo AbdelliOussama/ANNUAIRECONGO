@@ -25,8 +25,10 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
       
       if (filter.searchTerm) params['searchTerm'] = filter.searchTerm;
       if (filter.sectorId) params['sectorId'] = filter.sectorId;
+      if (filter.sectorSlug) params['sectorSlug'] = filter.sectorSlug;
       if (filter.cityId) params['cityId'] = filter.cityId;
       if (filter.regionId) params['regionId'] = filter.regionId;
+      if (filter.regionName) params['regionName'] = filter.regionName;
       if (filter.status !== null && filter.status !== undefined) params['status'] = filter.status;
       if (filter.pageNumber) params['pageNumber'] = filter.pageNumber;
       if (filter.pageSize) params['pageSize'] = filter.pageSize;
