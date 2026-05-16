@@ -184,7 +184,11 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.SectorIds,
             request.Rccm,
             request.Niu,
-            request.YearFounded
+            request.YearFounded,
+            request.LogoUrl,
+            request.CoverUrl,
+            request.PhoneNumber,
+            request.Email
         ), ct);
         return result.Match(
             response => Ok(response),

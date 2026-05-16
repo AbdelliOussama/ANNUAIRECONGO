@@ -381,14 +381,13 @@ export class EspaceConsoleComponent {
   }
 
   protected getPlanLabel(name: number | string | undefined): string {
-    if (typeof name === 'string') return name;
     if (name === undefined) return 'N/A';
-    switch (name) {
+    const val = Number(name);
+    switch (val) {
       case PlanName.Free: return 'Gratuit';
-      case PlanName.Basic: return 'Basique';
+      case PlanName.Pro: return 'Pro';
       case PlanName.Premium: return 'Premium';
-      case PlanName.Enterprise: return 'Entreprise';
-      default: return 'Standard';
+      default: return typeof name === 'string' ? name : 'Standard';
     }
   }
 

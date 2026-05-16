@@ -48,7 +48,7 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
             _logger.LogWarning("Company with id {CompanyId} already has an image with url {ImageUrl}", request.CompanyId, request.ImageUrl);
             return CompanyErrors.ImagewithTheSameUrlExists;
         }
-        var imageResult = CompanyImage.Create(request.CompanyId,request.ImageUrl,request.DisplayOrder,request.Caption);
+        var imageResult = CompanyImage.Create(request.CompanyId,request.ImageUrl, request.DisplayOrder ?? 0, request.Caption);
         if(imageResult.IsError)
         {
             _logger.LogWarning("Failed to create image for company with id {CompanyId}. Reason: {Reason}", request.CompanyId, imageResult.Errors.First().Description);

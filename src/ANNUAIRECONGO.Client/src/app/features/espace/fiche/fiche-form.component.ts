@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CompanyService } from '@core/services/company.service';
 import { SectorService } from '@core/services/sector.service';
 import { GeographyService } from '@core/services/geography.service';
@@ -67,7 +67,7 @@ import { AuthService } from '@core/services/auth.service';
             @if (errorFor('description')) {
               <p class="form-error" role="alert">{{ errorFor('description') }}</p>
             } @else {
-              <p class="text-xs text-outline">300 caractères maximum.</p>
+              <p class="text-xs text-outline">2000 caractères maximum (min. 20).</p>
             }
           </div>
 
@@ -165,7 +165,7 @@ import { AuthService } from '@core/services/auth.service';
                   </select>
                 </div>
                 <div class="flex-grow-2">
-                  <ac-input formControlName="value" label="Lien ou numéro" placeholder="Ex: @username ou lien..." />
+                  <ac-input formControlName="value" label="Lien ou numéro" placeholder="Ex: @username ou lien..." [error]="errorFor('contacts.'+i+'.value')" />
                 </div>
                 <button type="button" class="btn-icon text-error mb-1" (click)="removeContact(i)" aria-label="Supprimer">
                   <span class="material-symbols-outlined">delete</span>
@@ -189,12 +189,12 @@ import { AuthService } from '@core/services/auth.service';
             @for (s of servicesFormArray.controls; track $index; let i = $index) {
               <div [formGroupName]="i" class="service-item card-sub">
                 <div class="service-row">
-                  <ac-input formControlName="title" label="Nom du service" placeholder="Ex: Transit Maritime" class="flex-1" />
+                  <ac-input formControlName="title" label="Nom du service" placeholder="Ex: Transit Maritime" class="flex-1" [error]="errorFor('services.'+i+'.title')" />
                   <button type="button" class="btn-icon text-error" (click)="removeService(i)" aria-label="Supprimer">
                     <span class="material-symbols-outlined">delete</span>
                   </button>
                 </div>
-                <ac-input formControlName="description" label="Description courte" placeholder="Détails du service..." />
+                <ac-input formControlName="description" label="Description courte" placeholder="Détails du service..." [error]="errorFor('services.'+i+'.description')" />
               </div>
             }
           </div>
@@ -213,7 +213,12 @@ import { AuthService } from '@core/services/auth.service';
               <span class="material-symbols-outlined" aria-hidden="true">image</span>
               <p class="upload-title">Logo</p>
               @if (logoUrl()) {
-                <img [src]="logoUrl()" class="preview-thumb" alt="Logo preview" />
+                <div class="relative w-fit mx-auto">
+                  <img [src]="logoUrl()" class="preview-thumb" alt="Logo preview" />
+                  <button type="button" class="btn-icon text-error" (click)="logoUrl.set(null)">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
               }
               <button type="button" class="btn btn-ghost btn-sm" (click)="logoInput.click()">
                 {{ logoUrl() ? 'Changer' : 'Choisir' }}
@@ -227,6 +232,19 @@ import { AuthService } from '@core/services/auth.service';
               <p class="upload-hint">{{ gallery().length }} image(s)</p>
               <button type="button" class="btn btn-ghost btn-sm" (click)="galleryInput.click()">Ajouter</button>
               <input #galleryInput type="file" hidden (change)="onUploadGallery($event)" accept="image/*" multiple />
+              
+              @if (gallery().length > 0) {
+                <div class="flex flex-wrap gap-2 justify-center mt-3">
+                  @for (img of gallery(); track img; let i = $index) {
+                    <div class="relative flex items-start">
+                      <img [src]="img" class="preview-thumb" alt="Gallery preview" />
+                      <button type="button" class="btn-icon text-error" (click)="removeGalleryImage(i)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
             </div>
 
             <div class="upload">
@@ -235,6 +253,19 @@ import { AuthService } from '@core/services/auth.service';
               <p class="upload-hint">{{ documents().length }} document(s)</p>
               <button type="button" class="btn btn-ghost btn-sm" (click)="docInput.click()">Téléverser</button>
               <input #docInput type="file" hidden (change)="onUploadDoc($event)" accept=".pdf,.doc,.docx" multiple />
+              
+              @if (documents().length > 0) {
+                <div class="flex flex-col gap-2 mt-3 w-full text-left">
+                  @for (doc of documents(); track doc; let i = $index) {
+                    <div class="flex items-center justify-between bg-surface-container-high p-2 rounded text-xs border border-outline-variant">
+                      <a [href]="doc" target="_blank" class="truncate text-primary hover:underline">Document {{ i + 1 }}</a>
+                      <button type="button" class="btn-icon text-error" (click)="removeDocument(i)">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </div>
         </fieldset>
@@ -383,25 +414,17 @@ export class FicheFormComponent {
   protected readonly originalDocs = signal<any[]>([]);
 
   protected readonly sectors = toSignal(this.sectorService.getSectors(), { initialValue: [] as Sector[] });
-  protected readonly cities = toSignal(this.geoService.getRegions().pipe(
-    switchMap(regions => {
-      if (regions.length > 0) {
-        // For simplicity, fetch cities of the first region, or use a better strategy
-        return this.geoService.getCitiesByRegion(regions[0].id);
-      }
-      return of([] as City[]);
-    })
-  ), { initialValue: [] as City[] });
+  protected readonly cities = toSignal(this.geoService.getCities(), { initialValue: [] as City[] });
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(300)]],
-    rccm: ['', [Validators.required, Validators.minLength(5)]],
-    niu: ['', [Validators.required, Validators.minLength(8)]],
+    description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(2000)]],
+    rccm: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+    niu: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     sectorIds: [[] as string[], [Validators.required, Validators.minLength(1)]],
     cityId: ['', Validators.required],
     address: ['', [Validators.required, Validators.minLength(4)]],
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^[+\d\s]{9,18}$/)]],
+    phoneNumber: ['', [Validators.required, Validators.pattern(/^[+\d\s\(\).]{9,20}$/)]],
     email: ['', [Validators.required, Validators.email]],
     websiteUrl: ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
     services: this.fb.array([]),
@@ -446,7 +469,7 @@ export class FicheFormComponent {
   addService(title = '', description = '') {
     this.servicesFormArray.push(this.fb.group({
       title: [title, [Validators.required, Validators.minLength(3)]],
-      description: [description, [Validators.maxLength(200)]],
+      description: [description, [Validators.maxLength(1000)]],
     }));
   }
 
@@ -462,64 +485,62 @@ export class FicheFormComponent {
     { initialValue: null as Company | null }
   );
 
-  private readonly hydrate = computed(() => {
-    const c = this.companyToEdit();
-    if (this.mode() === 'edit' && c) {
-      this.form.patchValue({
-        name: c.name,
-        description: c.description || '',
-        rccm: c.rccm || '',
-        niu: c.niu || '',
-        sectorIds: c.sectors?.map((s: any) => s.id || s.sectorId) || [],
-        cityId: c.cityId || '',
-        address: c.address || '',
-        phoneNumber: c.phoneNumber || '',
-        email: c.email || '',
-        websiteUrl: c.websiteUrl || '',
-      });
-      this.logoUrl.set(c.logoUrl || null);
-      this.gallery.set(c.images?.map((i: CompanyImage) => i.imageUrl) || []);
-      this.documents.set(c.documents?.map((d: CompanyDocument) => d.documentUrl || d.fileUrl) || []);
-
-      this.originalServices.set(c.services || []);
-      this.originalContacts.set(c.contacts || []);
-      this.originalImages.set(c.images || []);
-      this.originalDocs.set(c.documents || []);
-
-      // Populate services FormArray
-      this.servicesFormArray.clear();
-      (c.services || []).forEach((s: any) => this.addService(s.title, s.description));
-
-      // Populate extra contacts FormArray
-      this.contactsFormArray.clear();
-      (c.contacts || []).filter((con: any) => con.type > 1).forEach((con: any) => this.addContact(con.type, con.value));
-    }
-    return null;
-  });
-
   constructor() {
     effect(() => {
-      this.hydrate();
+      const c = this.companyToEdit();
+      if (this.mode() === 'edit' && c) {
+        // Extract primary phone and email from contacts array (type 0=Phone, 1=Email)
+        const primaryPhone = c.contacts?.find((con: any) => con.type === 0)?.value || '';
+        const primaryEmail = c.contacts?.find((con: any) => con.type === 1)?.value || '';
+
+        this.form.patchValue({
+          name: c.name,
+          description: c.description || '',
+          rccm: c.rccm || '',
+          niu: c.niu || '',
+          sectorIds: c.sectors?.map((s: any) => s.id || s.sectorId) || [],
+          cityId: c.cityId || '',
+          address: c.address || '',
+          phoneNumber: primaryPhone,
+          email: primaryEmail,
+          websiteUrl: c.websiteUrl || '',
+        });
+        this.logoUrl.set(c.logoUrl || null);
+        // Map gallery from images array — API returns imageUrl field
+        this.gallery.set((c.images?.map((i: CompanyImage) => i.imageUrl).filter(Boolean) as string[]) || []);
+        // Map documents — API returns fileUrl field (DocumentDto.FileUrl)
+        this.documents.set((c.documents?.map((d: CompanyDocument) => d.fileUrl || d.documentUrl).filter(Boolean) as string[]) || []);
+
+        this.originalServices.set(c.services || []);
+        this.originalContacts.set(c.contacts || []);
+        this.originalImages.set(c.images || []);
+        this.originalDocs.set(c.documents || []);
+
+        // Populate services FormArray
+        this.servicesFormArray.clear();
+        (c.services || []).forEach((s: any) => this.addService(s.title, s.description));
+
+        // Populate extra contacts FormArray (type > 1 = social: WhatsApp=2, Facebook=3, etc.)
+        this.contactsFormArray.clear();
+        (c.contacts || []).filter((con: any) => con.type > 1).forEach((con: any) => this.addContact(con.type, con.value));
+      }
     });
   }
 
-  protected errorFor(name: string): string | null {
-    const c: AbstractControl | null = this.form.get(name);
-    if (!c || !c.touched || !c.errors) return null;
-    if (c.errors['required']) return FR.errors.required;
-    if (c.errors['email']) return FR.errors.email;
-    if (c.errors['minlength']) {
-      if (name === 'sectorIds') return 'Veuillez sélectionner au moins un secteur.';
-      return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
+  protected errorFor(controlName: string | number, parent?: AbstractControl): string | null {
+    const control = parent ? parent.get(controlName.toString()) : this.form.get(controlName.toString());
+    if (!control || (!control.touched && !this.submitting()) || !control.errors) return null;
+
+    if (control.errors['required']) return 'Ce champ est obligatoire.';
+    if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} caractères.`;
+    if (control.errors['maxlength']) return `Maximum ${control.errors['maxlength'].requiredLength} caractères.`;
+    if (control.errors['email']) return 'Format d\'e-mail invalide.';
+    if (control.errors['pattern']) {
+      if (controlName === 'phoneNumber') return 'Numéro de téléphone invalide (Ex: +242 06 XXX XX XX).';
+      if (controlName === 'websiteUrl') return 'Lien invalide (Ex: https://entreprise.cg).';
+      return 'Format invalide.';
     }
-    if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} caractères.`;
-    if (c.errors['pattern']) {
-      if (name === 'phoneNumber') return 'Numéro de téléphone invalide.';
-      if (name === 'rccm') return 'Format attendu : CG-BZV-2025-A-1234';
-      if (name === 'websiteUrl') return 'URL invalide. Exemple : https://exemple.cg';
-      return FR.errors.pattern;
-    }
-    return FR.errors.validation;
+    return 'Vérifiez ce champ.';
   }
 
   protected onUploadLogo(event: Event): void {
@@ -554,17 +575,41 @@ export class FicheFormComponent {
     }
   }
 
+  protected removeGalleryImage(index: number): void {
+    this.gallery.update(g => {
+      const copy = [...g];
+      copy.splice(index, 1);
+      return copy;
+    });
+  }
+
+  protected removeDocument(index: number): void {
+    this.documents.update(d => {
+      const copy = [...d];
+      copy.splice(index, 1);
+      return copy;
+    });
+  }
+
   protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      // Debug log to identify exactly which field is blocking
+      this.toast.error('Veuillez vérifier les informations saisies.');
+      
+      console.group('Form Validation Failures');
       Object.keys(this.form.controls).forEach(key => {
         const control = this.form.get(key);
         if (control?.invalid) {
-          console.warn(`Form Validation Error: field '${key}' is invalid. Errors:`, control.errors);
+          console.warn(`[${key}] is invalid:`, control.errors, 'Current value:', control.value);
+          
+          if (control instanceof FormArray) {
+            (control as FormArray).controls.forEach((c: AbstractControl, i: number) => {
+              if (c.invalid) console.warn(`  - Sub-control [${i}] is invalid:`, c.errors, 'Value:', c.value);
+            });
+          }
         }
       });
-      this.toast.error(FR.errors.validation);
+      console.groupEnd();
       return;
     }
 
@@ -602,15 +647,39 @@ export class FicheFormComponent {
 
 
         // 2. Sync Images
-        this.gallery().forEach(url => {
-          if (!companyData?.images?.some((i: any) => i.imageUrl === url)) {
+        const currentGallery = this.gallery();
+        const originalImageUrls = this.originalImages().map((i: any) => i.imageUrl).filter(Boolean);
+        
+        // Remove deleted images
+        this.originalImages().forEach((old: any) => {
+          if (!currentGallery.includes(old.imageUrl)) {
+            tasks.push(this.companyService.removeImage(companyId, old.id).pipe(catchError(() => of(null))));
+          }
+        });
+
+        // Add new images
+        currentGallery.forEach(url => {
+          if (url && !originalImageUrls.includes(url)) {
             tasks.push(this.companyService.addImage(companyId, url).pipe(catchError(() => of(null))));
           }
         });
 
-        this.documents().forEach(url => {
-          if (!companyData?.documents?.some((d: any) => (d.documentUrl || d.fileUrl) === url)) {
-            tasks.push(this.companyService.addDocument(companyId, url, 'Other').pipe(catchError(() => of(null))));
+        // 3. Sync Documents
+        const currentDocs = this.documents();
+        const originalDocUrls = this.originalDocs().map((d: any) => d.fileUrl || d.documentUrl).filter(Boolean);
+        
+        // Remove deleted documents
+        this.originalDocs().forEach((old: any) => {
+          const url = old.fileUrl || old.documentUrl;
+          if (!currentDocs.includes(url)) {
+            tasks.push(this.companyService.removeDocument(companyId, old.id).pipe(catchError(() => of(null))));
+          }
+        });
+
+        // Add new documents (defaulting to public)
+        currentDocs.forEach(url => {
+          if (url && !originalDocUrls.includes(url)) {
+            tasks.push(this.companyService.addDocument(companyId, url, 'Other', undefined, true).pipe(catchError(() => of(null))));
           }
         });
 

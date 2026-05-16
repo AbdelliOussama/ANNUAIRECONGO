@@ -582,7 +582,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
       region: c.regionName || '',
       phone: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Phone)?.value,
       email: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Email)?.value,
-      website: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Website)?.value,
+      website: c.websiteUrl,
       allContacts: c.contacts || [],
       address: c.address || 'N/A',
       yearFounded: c.yearFounded,
@@ -605,7 +605,6 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
     switch (type) {
       case ContactType.Phone: return 'call';
       case ContactType.Email: return 'mail';
-      case ContactType.Website: return 'language';
       case ContactType.WhatsApp: return 'chat';
       case ContactType.Facebook: return 'facebook';
       case ContactType.LinkedIn: return 'share';

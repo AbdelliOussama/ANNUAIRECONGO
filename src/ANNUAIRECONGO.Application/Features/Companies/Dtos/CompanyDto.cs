@@ -31,6 +31,7 @@ public class CompanyDto
     // Media
     public string? LogoUrl { get; set; }
     public string? CoverUrl { get; set; }
+    [JsonPropertyName("websiteUrl")]
     public string? Website { get; set; }
 
     // Location — keep flat fields for backwards-compatible binding AND

@@ -3,6 +3,10 @@ import { RouterLink } from '@angular/router';
 import { PaymentMethodStripComponent } from '@shared/components/payment-method-strip/payment-method-strip.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 import { FR } from '@core/i18n/fr.constants';
+import { PlanService } from '@core/services/plan.service';
+import { Plan, PlanName } from '@core/models/company.model';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { inject } from '@angular/core';
 
 interface PlanView {
   id: 'free' | 'pro' | 'premium';
@@ -327,53 +331,69 @@ export class TarifsComponent {
   protected readonly FR = FR;
   protected readonly billing = signal<'monthly' | 'annual'>('monthly');
 
-  private readonly basePlans: ReadonlyArray<PlanView> = [
-    {
-      id: 'free',
-      name: 'Free',
-      monthly: 0,
-      features: [
-        'Fiche entreprise basique',
-        'Visibilité dans l\'annuaire public',
-        'Recherche par nom et secteur',
-        '1 photo et 1 document',
-      ],
-      cta: 'S\'inscrire',
-      ctaLink: '/auth/inscription',
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      monthly: 25_000,
-      highlight: 'Le plus choisi',
-      primary: true,
-      features: [
-        'Tout du forfait Free',
-        'Badge « Vérifiée » mis en avant',
-        'Photos et documents illimités',
-        'Statistiques mensuelles',
-        'Réponse aux appels d\'offres',
-      ],
-      cta: 'Choisir Pro',
-      ctaLink: '/auth/inscription',
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      monthly: 75_000,
-      features: [
-        'Tout du forfait Pro',
-        'Badge Premium et mise en avant cartographie',
-        'Statistiques avancées et exports',
-        'Accès API et intégrations',
-        'Support dédié sous 4 h ouvrées',
-      ],
-      cta: 'Contacter les ventes',
-      ctaLink: '/contact',
-    },
-  ];
+  private readonly planService = inject(PlanService);
+  private readonly plansData = toSignal(this.planService.getPlans(), { initialValue: [] as Plan[] });
 
-  protected readonly plans = computed<PlanView[]>(() => this.basePlans.map((p) => ({ ...p })));
+  protected readonly plans = computed<PlanView[]>(() => {
+    const raw = this.plansData() || [];
+    return raw
+      .filter(p => p.isActive)
+      .sort((a, b) => {
+        // Sort by SearchPriority or hardcoded order
+        const order = [PlanName.Free, PlanName.Pro, PlanName.Premium];
+        return order.indexOf(Number(a.name)) - order.indexOf(Number(b.name));
+      })
+      .map(p => {
+        const nameVal = Number(p.name);
+        return {
+          id: nameVal === 0 ? 'free' : nameVal === 1 ? 'pro' : 'premium',
+          name: this.getPlanLabel(nameVal),
+          monthly: p.price,
+          highlight: nameVal === 1 ? 'Le plus choisi' : undefined,
+          primary: nameVal === 1,
+          features: this.getPlanFeatures(p),
+          cta: nameVal === 0 ? 'S\'inscrire' : nameVal === 1 ? 'Choisir Pro' : 'Contacter les ventes',
+          ctaLink: nameVal === 2 ? '/contact' : '/auth/inscription',
+        } as PlanView;
+      });
+  });
+
+  protected getPlanLabel(name: number): string {
+    switch (name) {
+      case PlanName.Free: return 'Gratuit';
+      case PlanName.Pro: return 'Pro';
+      case PlanName.Premium: return 'Premium';
+      default: return 'Standard';
+    }
+  }
+
+  protected getPlanFeatures(plan: Plan): string[] {
+    const nameVal = Number(plan.name);
+    switch (nameVal) {
+      case PlanName.Free:
+        return [
+          'Fiche entreprise basique',
+          'Visibilité dans l\'annuaire public',
+          '3 photos et 1 document',
+        ];
+      case PlanName.Pro:
+        return [
+          'Badge « Vérifiée » mis en avant',
+          '10 photos et 5 documents',
+          'Statistiques mensuelles',
+          'Réponse aux appels d\'offres',
+        ];
+      case PlanName.Premium:
+        return [
+          'Mise en avant cartographie',
+          '50 photos et 20 documents',
+          'Statistiques avancées et exports',
+          'Accès API et support dédié',
+        ];
+      default:
+        return [];
+    }
+  }
 
   protected priceFor(plan: PlanView): number {
     if (plan.monthly === 0) return 0;
@@ -384,8 +404,8 @@ export class TarifsComponent {
 
   protected readonly comparison = [
     { label: 'Visibilité annuaire',          free: 'Standard',         pro: 'Mise en avant',     premium: 'Premium' },
-    { label: 'Photos sur la fiche',          free: '1',                pro: 'Illimitées',        premium: 'Illimitées' },
-    { label: 'Documents (RCCM, NIU, etc.)',  free: '1',                pro: 'Illimités',         premium: 'Illimités' },
+    { label: 'Photos sur la fiche',          free: '3',                pro: '10',                premium: '50' },
+    { label: 'Documents (RCCM, NIU, etc.)',  free: '1',                pro: '5',                 premium: '20' },
     { label: 'Badge officiel',               free: '—',                pro: 'Vérifiée',          premium: 'Premium' },
     { label: 'Statistiques de la fiche',     free: '—',                pro: 'Mensuelles',        premium: 'Avancées + exports' },
     { label: 'Mise en avant cartographie',   free: '—',                pro: '—',                 premium: 'Oui' },

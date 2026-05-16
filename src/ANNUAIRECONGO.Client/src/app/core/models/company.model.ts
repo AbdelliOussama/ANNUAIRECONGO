@@ -8,12 +8,11 @@ export interface CompanyContact {
 export enum ContactType {
   Phone = 0,
   Email = 1,
-  Website = 2,
+  WhatsApp = 2,
   Facebook = 3,
-  Instagram = 4,
-  LinkedIn = 5,
-  WhatsApp = 6,
-  Twitter = 7
+  LinkedIn = 4,
+  Instagram = 5,
+  Twitter = 6
 }
 
 export enum DocumentType {
@@ -290,6 +289,7 @@ export interface UpdateCompanyProfileRequest {
   name?: string;
   description?: string;
   website?: string;
+  websiteUrl?: string;
   cityId?: string;
   address?: string;
   latitude?: number;
@@ -300,6 +300,8 @@ export interface UpdateCompanyProfileRequest {
   rccm?: string;
   niu?: string;
   yearFounded?: number;
+  phoneNumber?: string;
+  email?: string;
   isVerified?: boolean;
   isPremium?: boolean;
 }

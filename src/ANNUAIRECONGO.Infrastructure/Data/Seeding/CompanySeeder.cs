@@ -104,6 +104,17 @@ public static class CompanySeeder
                 var company = companyResult.Value;
                 company.UpdateMedia(data.Logo, "https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=1200&q=80");
                 
+                // Seed primary and social contacts
+                var phoneResult = CompanyContact.Create(company.Id, ContactType.Phone, $"+242 06 {random.Next(100, 999)} {random.Next(1000, 9999)}", true);
+                if(phoneResult.IsSuccess) context.CompanyContacts.Add(phoneResult.Value);
+                
+                var cleanName = new string(data.Name.Where(c => char.IsLetterOrDigit(c)).ToArray()).ToLower();
+                var emailResult = CompanyContact.Create(company.Id, ContactType.Email, $"contact@{cleanName}.cg", true);
+                if(emailResult.IsSuccess) context.CompanyContacts.Add(emailResult.Value);
+
+                var facebookResult = CompanyContact.Create(company.Id, ContactType.Facebook, $"https://facebook.com/{cleanName}", false);
+                if(facebookResult.IsSuccess) context.CompanyContacts.Add(facebookResult.Value);
+
                 // Submit and Validate
                 company.Submit();
                 company.Validate();

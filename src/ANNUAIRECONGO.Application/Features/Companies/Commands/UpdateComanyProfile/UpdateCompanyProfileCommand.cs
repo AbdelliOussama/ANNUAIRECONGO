@@ -17,5 +17,7 @@ public sealed record UpdateCompanyProfileCommand(
         string? niu,
         int? yearFounded,
         string? logoUrl = null,
-        string? coverUrl = null
+        string? coverUrl = null,
+        string? phoneNumber = null,
+        string? email = null
 ): IRequest<Result<Updated>>;

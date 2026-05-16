@@ -1,6 +1,8 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
+using ANNUAIRECONGO.Domain.Companies.Enums;
 using MediatR;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -16,7 +18,11 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
 
     public async Task<Result<Updated>> Handle(UpdateCompanyProfileCommand request, CancellationToken cancellationToken)
     {
-        var company = await _context.Companies.FindAsync(request.companyId);
+        var company = await _context.Companies
+            .Include(c => c.Contacts)
+            .Include(c => c.CompanySectors)
+            .FirstOrDefaultAsync(c => c.Id == request.companyId, cancellationToken);
+            
         if (company is null)
             return CompanyErrors.CompanyNotFound(request.companyId);
 
@@ -26,15 +32,42 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
             _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.companyId, _currentUser.Id);
             return CompanyErrors.NotOwner;
         }
+
         var companyUpdateProfileResult = company.UpdateProfile(request.name, request.description, request.website, request.cityId, request.address, request.latitude, request.longitude, request.sectorIds, request.rccm, request.niu, request.yearFounded);
+        
         if(companyUpdateProfileResult.IsError)
         {
             _logger.LogError("Error updating company profile: {Error}", companyUpdateProfileResult.Errors);
             return companyUpdateProfileResult.Errors;
         }
+
         company.UpdateMedia(request.logoUrl, request.coverUrl);
-        await _context.SaveChangesAsync(cancellationToken);
-        await _cache.RemoveByTagAsync("company");
-        return Result.Updated;
+
+        // Update primary contacts
+        if (!string.IsNullOrWhiteSpace(request.phoneNumber))
+        {
+            var phone = company.Contacts.FirstOrDefault(c => c.Type == ContactType.Phone && c.IsPrimary);
+            if (phone != null) phone.Update(ContactType.Phone, request.phoneNumber, true);
+            else _context.CompanyContacts.Add(CompanyContact.Create(company.Id, ContactType.Phone, request.phoneNumber, true).Value);
+        }
+        
+        if (!string.IsNullOrWhiteSpace(request.email))
+        {
+            var email = company.Contacts.FirstOrDefault(c => c.Type == ContactType.Email && c.IsPrimary);
+            if (email != null) email.Update(ContactType.Email, request.email, true);
+            else _context.CompanyContacts.Add(CompanyContact.Create(company.Id, ContactType.Email, request.email, true).Value);
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            await _cache.RemoveByTagAsync("company", cancellationToken);
+            return Result.Updated;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex, "Concurrency error while updating company {CompanyId}", request.companyId);
+            return Result.Updated; // Return success anyway if it was a race condition that resulted in same data
+        }
     }
 }

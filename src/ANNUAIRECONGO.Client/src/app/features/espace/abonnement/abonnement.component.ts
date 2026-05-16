@@ -90,7 +90,14 @@ import { DatePipe } from '@angular/common';
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @for (plan of allPlans(); track plan.id) {
-              <article class="plan" [class.is-current]="plan.id === subscription()?.planId">
+              <article class="plan" 
+                       [class.is-current]="plan.id === subscription()?.planId"
+                       [class.is-primary]="+plan.name === 1">
+                
+                @if (+plan.name === 1) {
+                  <span class="plan-highlight">Le plus choisi</span>
+                }
+
                 <h3>{{ getPlanLabel(plan.name) }}</h3>
                 <p class="plan-price">
                   @if (plan.price === 0) {
@@ -100,33 +107,23 @@ import { DatePipe } from '@angular/common';
                   }
                 </p>
                 <ul class="features">
-                  <li>
-                    <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
-                    <span>{{ plan.maxImages }} images max.</span>
-                  </li>
-                  <li>
-                    <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
-                    <span>{{ plan.maxDocuments }} documents max.</span>
-                  </li>
-                  @if (plan.hasAnalytics) {
+                  @for (f of getPlanFeatures(plan); track f) {
                     <li>
                       <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
-                      <span>Statistiques avancées</span>
-                    </li>
-                  }
-                  @if (plan.hasFeaturedBadge) {
-                    <li>
-                      <span class="material-symbols-outlined text-primary icon-filled" aria-hidden="true">check_circle</span>
-                      <span>Badge "À la une"</span>
+                      <span>{{ f }}</span>
                     </li>
                   }
                 </ul>
                 @if (plan.id === subscription()?.planId) {
-                  <span class="badge badge-verified">Forfait actuel</span>
+                  <div class="mt-auto">
+                    <span class="badge badge-verified w-full justify-center py-2">Forfait actuel</span>
+                  </div>
                 } @else {
-                  <ac-button [variant]="+plan.name >= 2 ? 'primary' : 'outline'" (click)="changePlan(plan)">
-                    Choisir {{ getPlanLabel(plan.name) }}
-                  </ac-button>
+                  <div class="mt-auto">
+                    <ac-button [variant]="+plan.name >= 1 ? 'primary' : 'outline'" class="w-full justify-center" (click)="changePlan(plan)">
+                      Choisir {{ getPlanLabel(plan.name) }}
+                    </ac-button>
+                  </div>
                 }
               </article>
             }
@@ -205,28 +202,54 @@ import { DatePipe } from '@angular/common';
     .section-head .muted { color: var(--color-on-surface-variant); font-size: 14px; margin: 0; }
 
     .plan {
+      position: relative;
       background: var(--color-surface-container-lowest);
       border: 1px solid var(--color-outline-variant);
       border-radius: var(--radius-2xl);
-      padding: 24px;
+      padding: 32px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .plan.is-current { border-color: var(--color-primary); box-shadow: 0 8px 24px rgba(0, 78, 52, 0.10); }
+    .plan:hover { transform: translateY(-2px); box-shadow: var(--shadow-editorial); }
+    .plan.is-primary {
+      border-color: var(--color-primary);
+      box-shadow: 0 8px 32px rgba(0, 78, 52, 0.10);
+    }
+    .plan.is-current { border-width: 2px; }
+
+    .plan-highlight {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
 
     .plan h3 {
       font-family: var(--font-headline);
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       margin: 0;
     }
     .plan-price { display: flex; align-items: baseline; gap: 6px; margin: 0; }
-    .plan-price .amount { font-family: var(--font-headline); font-size: 32px; font-weight: 900; color: var(--color-primary); }
+    .plan-price .amount { font-family: var(--font-headline); font-size: 36px; font-weight: 900; color: var(--color-primary); }
     .plan-price .suffix { color: var(--color-on-surface-variant); font-size: 14px; }
-    .features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-    .features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--color-on-surface); }
-    .features .material-symbols-outlined { font-size: 16px; margin-top: 2px; }
+    .features { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-direction: column; gap: 12px; }
+    .features li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--color-on-surface); }
+    .features .material-symbols-outlined { font-size: 18px; margin-top: 2px; }
+    .mt-auto { margin-top: auto; }
+    .w-full { width: 100%; }
+    .justify-center { justify-content: center; }
 
     .panel {
       background: var(--color-surface-container-lowest);
@@ -366,12 +389,42 @@ export class EspaceAbonnementComponent {
   }
 
   protected getPlanLabel(name: number | string | undefined): string {
-    if (typeof name === 'string') return name;
-    switch (name) {
+    if (name === undefined) return 'Standard';
+    const val = Number(name);
+    switch (val) {
       case PlanName.Free: return 'Gratuit';
       case PlanName.Pro: return 'Pro';
       case PlanName.Premium: return 'Premium';
-      default: return 'Standard';
+      default: return typeof name === 'string' ? name : 'Standard';
+    }
+  }
+
+  protected getPlanFeatures(plan: Plan): string[] {
+    // Cast to any then number to handle string/number flexibility from API
+    const nameVal = Number(plan.name);
+    switch (nameVal) {
+      case PlanName.Free:
+        return [
+          'Fiche entreprise basique',
+          'Visibilité dans l\'annuaire public',
+          '3 photos et 1 document',
+        ];
+      case PlanName.Pro:
+        return [
+          'Badge « Vérifiée » mis en avant',
+          '10 photos et 5 documents',
+          'Statistiques mensuelles',
+          'Réponse aux appels d\'offres',
+        ];
+      case PlanName.Premium:
+        return [
+          'Mise en avant cartographie',
+          '50 photos et 20 documents',
+          'Statistiques avancées et exports',
+          'Accès API et support dédié',
+        ];
+      default:
+        return [];
     }
   }
 }

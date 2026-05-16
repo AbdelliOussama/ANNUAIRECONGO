@@ -8,17 +8,29 @@ public static class PlanSeeder
 {
     public static async Task SeedPlansAsync(AppDbContext context)
     {
-        if (await context.Plans.AnyAsync())
-            return;
-
-        var plans = new[]
+        var existingPlans = await context.Plans.ToListAsync();
+        
+        var targetPlans = new[]
         {
-            Plan.Create(Guid.NewGuid(),PlanName.Free,      0,      365, 3,  1,  false, false, 3).Value,
-            Plan.Create(Guid.NewGuid(),PlanName.Pro,   5000,      30, 5,  2,  false, false, 2).Value,
-            Plan.Create(Guid.NewGuid(),PlanName.Premium, 15000,     30, 15, 5,  true,  true,  1).Value,
+            (Name: PlanName.Free,    Price: 0m,     Days: 365, Img: 3,  Doc: 1,  Stats: false, Featured: false, Priority: 3),
+            (Name: PlanName.Pro,     Price: 25000m, Days: 30,  Img: 10, Doc: 5,  Stats: true,  Featured: false, Priority: 2),
+            (Name: PlanName.Premium, Price: 75000m, Days: 30,  Img: 50, Doc: 20, Stats: true,  Featured: true,  Priority: 1),
         };
 
-        context.Plans.AddRange(plans);
+        foreach (var target in targetPlans)
+        {
+            var plan = existingPlans.FirstOrDefault(p => p.Name == target.Name);
+            if (plan == null)
+            {
+                var newPlan = Plan.Create(Guid.NewGuid(), target.Name, target.Price, target.Days, target.Img, target.Doc, target.Stats, target.Featured, target.Priority).Value;
+                context.Plans.Add(newPlan);
+            }
+            else
+            {
+                plan.Update(target.Name, target.Price, target.Days, target.Img, target.Doc, target.Stats, target.Featured, target.Priority);
+            }
+        }
+
         await context.SaveChangesAsync();
     }
 }
