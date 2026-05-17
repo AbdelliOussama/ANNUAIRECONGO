@@ -116,7 +116,7 @@ public class ApplicationDbContextInitialiser(
                 }
                 
                 // Add to list to create domain entities
-                newBusinessOwners.Add(BusinessOwner.Create(Guid.Parse(bo.Id), bo.FirstName, bo.LastName, "06" + new Random().Next(10000000, 99999999).ToString(), "Directeur", Role.EntrepriseOwner).Value);
+                newBusinessOwners.Add(BusinessOwner.Create(Guid.Parse(bo.Id), bo.FirstName, bo.LastName, bo.Email, "06" + new Random().Next(10000000, 99999999).ToString(), "Directeur", Role.EntrepriseOwner).Value);
             }
         }
 

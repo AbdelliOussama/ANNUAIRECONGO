@@ -10,7 +10,7 @@ import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
-import { Sector, City, CreateCompanyRequest, UpdateCompanyProfileRequest, Company, CompanyImage, CompanyDocument } from '@core/models/company.model';
+import { Sector, City, CreateCompanyRequest, UpdateCompanyProfileRequest, Company, CompanyImage, CompanyDocument, ContactType } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import { Observable, catchError, map, of, switchMap, forkJoin } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
@@ -131,13 +131,13 @@ import { AuthService } from '@core/services/auth.service';
               [error]="errorFor('phoneNumber')"
             />
             <ac-input
-              formControlName="email"
-              type="email"
+              formControlName="contactEmail"
+              type="text"
               label="E-mail public"
               leadingIcon="mail"
               placeholder="contact@entreprise.cg"
               [required]="true"
-              [error]="errorFor('email')"
+              [error]="errorFor('contactEmail')"
             />
           </div>
 
@@ -425,7 +425,7 @@ export class FicheFormComponent {
     cityId: ['', Validators.required],
     address: ['', [Validators.required, Validators.minLength(4)]],
     phoneNumber: ['', [Validators.required, Validators.pattern(/^[+\d\s\(\).]{9,20}$/)]],
-    email: ['', [Validators.required, Validators.email]],
+    contactEmail: ['', [Validators.required]],
     websiteUrl: ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
     services: this.fb.array([]),
     contacts: this.fb.array([]),
@@ -490,8 +490,8 @@ export class FicheFormComponent {
       const c = this.companyToEdit();
       if (this.mode() === 'edit' && c) {
         // Extract primary phone and email from contacts array (type 0=Phone, 1=Email)
-        const primaryPhone = c.contacts?.find((con: any) => con.type === 0)?.value || '';
-        const primaryEmail = c.contacts?.find((con: any) => con.type === 1)?.value || '';
+        const primaryPhone = c.contacts?.find((con: any) => con.type === ContactType.Phone || con.type === 'Phone')?.value || '';
+        const primaryEmail = c.contacts?.find((con: any) => con.type === ContactType.Email || con.type === 'Email')?.value || '';
 
         this.form.patchValue({
           name: c.name,
@@ -502,7 +502,7 @@ export class FicheFormComponent {
           cityId: c.cityId || '',
           address: c.address || '',
           phoneNumber: primaryPhone,
-          email: primaryEmail,
+          contactEmail: primaryEmail,
           websiteUrl: c.websiteUrl || '',
         });
         this.logoUrl.set(c.logoUrl || null);
@@ -522,7 +522,9 @@ export class FicheFormComponent {
 
         // Populate extra contacts FormArray (type > 1 = social: WhatsApp=2, Facebook=3, etc.)
         this.contactsFormArray.clear();
-        (c.contacts || []).filter((con: any) => con.type > 1).forEach((con: any) => this.addContact(con.type, con.value));
+        (c.contacts || [])
+          .filter((con: any) => con.type > 1 || (typeof con.type === 'string' && con.type !== 'Phone' && con.type !== 'Email'))
+          .forEach((con: any) => this.addContact(con.type, con.value));
       }
     });
   }
@@ -538,6 +540,7 @@ export class FicheFormComponent {
     if (control.errors['pattern']) {
       if (controlName === 'phoneNumber') return 'Numéro de téléphone invalide (Ex: +242 06 XXX XX XX).';
       if (controlName === 'websiteUrl') return 'Lien invalide (Ex: https://entreprise.cg).';
+      if (controlName === 'contactEmail') return 'Format d\'email invalide.';
       return 'Format invalide.';
     }
     return 'Vérifiez ce champ.';
@@ -714,7 +717,9 @@ export class FicheFormComponent {
 
         currentContacts.forEach((curr: any) => {
           if (!oldContacts.some(old => old.type == curr.type && old.value === curr.value)) {
-            tasks.push(this.companyService.addContact(companyId, Number(curr.type), curr.value, false).pipe(catchError(() => of(null))));
+            // Send enum as string name to match backend JsonStringEnumConverter
+            const typeName = ContactType[curr.type as keyof typeof ContactType] || curr.type;
+            tasks.push(this.companyService.addContact(companyId, typeName as any, curr.value, false).pipe(catchError(() => of(null))));
           }
         });
 

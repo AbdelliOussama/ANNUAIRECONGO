@@ -44,4 +44,7 @@ public interface IIdentityService
 
     /// <summary>Updates the personal and professional info of the user.</summary>
     Task<Result<Success>> UpdateProfileAsync(string userId, string firstName, string lastName, string phoneNumber, string? companyPosition, CancellationToken cancellationToken);
+
+    /// <summary>Retrieves all users with their roles and basic profile info.</summary>
+    Task<Result<List<AppUserDto>>> GetAllUsersAsync(CancellationToken cancellationToken = default);
 }

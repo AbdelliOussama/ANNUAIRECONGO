@@ -19,5 +19,5 @@ public sealed record UpdateCompanyProfileCommand(
         string? logoUrl = null,
         string? coverUrl = null,
         string? phoneNumber = null,
-        string? email = null
+        string? contactEmail = null
 ): IRequest<Result<Updated>>;

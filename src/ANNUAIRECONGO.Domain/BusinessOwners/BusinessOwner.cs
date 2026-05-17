@@ -11,6 +11,7 @@ public sealed class BusinessOwner : AuditableEntity
     public string LastName { get;private set; }
     public string FullName => $"{FirstName} {LastName}";
     public Role Role { get; private set; }
+    public string Email { get; private set; } = string.Empty;
     public string Phone { get; private set; }
     public string? CompanyPosition { get; private set; }
     public bool IsVerified { get; private set; } = default; // KYC verification
@@ -20,16 +21,17 @@ public sealed class BusinessOwner : AuditableEntity
     private BusinessOwner()
     {
     }
-    private BusinessOwner(Guid id,string firstName, string lastName, string phone, string? companyPosition, Role role) : base(id)
+    private BusinessOwner(Guid id,string firstName, string lastName, string email, string phone, string? companyPosition, Role role) : base(id)
     {
         FirstName = firstName;
         LastName = lastName;
+        Email = email;
         Phone = phone;
         CompanyPosition = companyPosition;
         Role = role;
     }
 
-    public static Result<BusinessOwner> Create(Guid id,string firstName, string lastName, string phone, string? companyPosition, Role role)
+    public static Result<BusinessOwner> Create(Guid id,string firstName, string lastName, string email, string phone, string? companyPosition, Role role)
     {
         if(id == Guid.Empty)
         {
@@ -43,7 +45,11 @@ public sealed class BusinessOwner : AuditableEntity
         {
             return BusinessOwnerErrors.LastNameRequired;
         }
-        return new BusinessOwner(id,firstName, lastName, phone, companyPosition, role);
+        if(string.IsNullOrWhiteSpace(email))
+        {
+            return BusinessOwnerErrors.EmailRequired;
+        }
+        return new BusinessOwner(id,firstName, lastName, email, phone, companyPosition, role);
     }
     public Result<Updated> UpdateProfile(string firstName, string lastName, string phone, string? companyPosition)
     {

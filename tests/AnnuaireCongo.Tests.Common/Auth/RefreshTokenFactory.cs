@@ -1,10 +1,11 @@
-using System.IO.Pipelines;
+using ANNUAIRECONGO.Domain.Common.Results;
+using ANNUAIRECONGO.Domain.Identity;
 
 namespace AnnuaireCongo.Tests.Common.Auth;
 
 public static class RefreshTokenFactory
 {
-    public static ReadResult<RefreshToken> CreateRefreshToken(Guid? id = null, string? token = null, string? userId = null, DateTimeOffset? expiresOnUtc = null)
+    public static Result<RefreshToken> CreateRefreshToken(Guid? id = null, string? token = null, string? userId = null, DateTimeOffset? expiresOnUtc = null)
     {
         return RefreshToken.Create(
             id ?? Guid.NewGuid(),

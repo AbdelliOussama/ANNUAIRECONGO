@@ -6,6 +6,7 @@ public class BusinessOwnerDto
     public required string LastName { get; set; }
     public string FullName => $"{FirstName} {LastName}";
     public required string Phone { get; set; }
+    public required string Email { get; set; }
     public string? CompanyPosition{get;set;}
 
 }

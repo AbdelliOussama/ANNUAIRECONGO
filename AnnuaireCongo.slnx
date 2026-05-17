@@ -6,4 +6,11 @@
     <Project Path="src/ANNUAIRECONGO.Domain/ANNUAIRECONGO.Domain.csproj" />
     <Project Path="src/ANNUAIRECONGO.Infrastructure/ANNUAIRECONGO.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AnnuaireCongo.Api.IntegrationTests/AnnuaireCongo.Api.IntegrationTests.csproj" />
+    <Project Path="tests/AnnuaireCongo.Application.SubcutaneousTests/AnnuaireCongo.Application.SubcutaneousTests.csproj" />
+    <Project Path="tests/AnnuaireCongo.Application.UnitTests/AnnuaireCongo.Application.UnitTests.csproj" />
+    <Project Path="tests/AnnuaireCongo.Domain.UnitTests/AnnuaireCongo.Domain.UnitTests.csproj" />
+    <Project Path="tests/AnnuaireCongo.Tests.Common/AnnuaireCongo.Tests.Common.csproj" />
+  </Folder>
 </Solution>

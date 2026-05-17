@@ -19,9 +19,13 @@ export class AdminService {
     return this.api.get<PaginatedResponse<Company>>('/api/v1/companies', { pageNumber: page, pageSize });
   }
 
-  // Users (Business Owners list for admin)
+  // Users (Full list for admin)
   getUsers(): Observable<any[]> {
-    return this.api.get<any[]>('/api/v1/business-owners');
+    return this.api.get<any[]>('/api/v1/admin/users');
+  }
+
+  deleteUser(userId: string): Observable<any> {
+    return this.api.delete(`/api/v1/admin/users/${userId}`);
   }
 
   // Audit Logs
@@ -38,6 +42,10 @@ export class AdminService {
   // Plans
   getPlans(): Observable<any[]> {
     return this.api.get<any[]>('/api/v1/plans');
+  }
+
+  updatePlan(id: string, data: any): Observable<any> {
+    return this.api.put(`/api/v1/plans/${id}`, data);
   }
 
   getSettings(): Observable<any> {

@@ -13,6 +13,9 @@ public static class BusinessOwnerErrors
     public static Error LastNameRequired =>
         Error.Validation("Employee.LastName.Required", "Last name is required.");
 
+    public static Error EmailRequired =>
+        Error.Validation("BusinessOwner.Email.Required", "Email is required.");
+
     public static Error RoleInvalid =>
         Error.Validation("Employee.Role.Invalid", "Invalid role assigned to employee.");
 

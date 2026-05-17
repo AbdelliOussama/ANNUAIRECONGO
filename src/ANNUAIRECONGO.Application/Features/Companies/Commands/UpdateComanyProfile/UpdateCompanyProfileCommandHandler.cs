@@ -18,6 +18,7 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
 
     public async Task<Result<Updated>> Handle(UpdateCompanyProfileCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Updating company profile. Request: {@Request}", request);
         var company = await _context.Companies
             .Include(c => c.Contacts)
             .Include(c => c.CompanySectors)
@@ -51,11 +52,11 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
             else _context.CompanyContacts.Add(CompanyContact.Create(company.Id, ContactType.Phone, request.phoneNumber, true).Value);
         }
         
-        if (!string.IsNullOrWhiteSpace(request.email))
+        if (!string.IsNullOrWhiteSpace(request.contactEmail))
         {
             var email = company.Contacts.FirstOrDefault(c => c.Type == ContactType.Email && c.IsPrimary);
-            if (email != null) email.Update(ContactType.Email, request.email, true);
-            else _context.CompanyContacts.Add(CompanyContact.Create(company.Id, ContactType.Email, request.email, true).Value);
+            if (email != null) email.Update(ContactType.Email, request.contactEmail, true);
+            else _context.CompanyContacts.Add(CompanyContact.Create(company.Id, ContactType.Email, request.contactEmail, true).Value);
         }
 
         try

@@ -102,8 +102,12 @@ export class AdminDirigeantsComponent {
     const q = this.query().trim().toLowerCase();
     const items = this.users();
     return items
-      .filter((u: any) => u.roles?.includes('BusinessOwner') || u.roles?.includes('entreprise'))
-      .map((u: any) => ({ fullName: u.fullName, email: u.email, position: 'Responsable', status: u.status }))
+      .map((u: any) => ({ 
+        fullName: u.fullName, 
+        email: u.email, 
+        position: u.companyPosition || 'Responsable', 
+        status: 'Active' 
+      }))
       .filter((r: any) => !q || [r.fullName, r.email].some((v) => (v || '').toLowerCase().includes(q)));
   });
 

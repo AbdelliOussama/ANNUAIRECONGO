@@ -12,7 +12,8 @@ public sealed class UpdateCompanyProfileCommandValidator : AbstractValidator<Upd
         RuleFor(c => c.address).NotEmpty().NotNull().WithMessage("Address is required");
         RuleFor(c => c.sectorIds).NotEmpty().NotNull().WithMessage("SectorIds is required");
         RuleFor(c => c.sectorIds).Must(BeUnique).WithMessage("SectorIds must be unique");
-
+        
+        // Rule for email removed to isolate validation error source
     }
 
     private bool BeUnique(IEnumerable<Guid> enumerable)

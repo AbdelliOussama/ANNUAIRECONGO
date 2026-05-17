@@ -74,7 +74,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
       return this.api.post<void>(`/api/v1/companies/${id}/suspend-company`, {});
     }
 
-    addContact(companyId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
+    addContact(companyId: string, type: any, value: string, isPrimary: boolean): Observable<any> {
       return this.api.post(`/api/v1/companies/${companyId}/add-contact`, { type, value, isPrimary });
     }
 
@@ -82,7 +82,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
      return this.api.delete(`/api/v1/companies/${companyId}/contacts/${contactId}`);
    }
 
-    updateContact(companyId: string, contactId: string, type: number, value: string, isPrimary: boolean): Observable<any> {
+    updateContact(companyId: string, contactId: string, type: any, value: string, isPrimary: boolean): Observable<any> {
       return this.api.put(`/api/v1/companies/${companyId}/update-contact`, { contactId, type, value, isPrimary });
     }
 

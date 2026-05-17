@@ -155,6 +155,7 @@ public class IdentityService : IIdentityService
             Guid.Parse(appUser.Id),
             firstName,
             lastName,
+            email,
             phoneNumber,
             companyPosition,
             Role.EntrepriseOwner);
@@ -335,5 +336,28 @@ public class IdentityService : IIdentityService
 
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Success;
+    }
+    public async Task<Result<List<AppUserDto>>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _userManager.Users.ToListAsync(cancellationToken);
+        var result = new List<AppUserDto>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var bo = await _context.BusinessOwners.AsNoTracking().FirstOrDefaultAsync(b => b.Id == Guid.Parse(user.Id), cancellationToken);
+
+            result.Add(new AppUserDto(
+                user.Id,
+                user.Email!,
+                roles,
+                bo?.FirstName,
+                bo?.LastName,
+                bo?.Phone,
+                bo?.CompanyPosition
+            ));
+        }
+
+        return result;
     }
 }

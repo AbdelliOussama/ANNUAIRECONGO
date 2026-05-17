@@ -172,6 +172,22 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> UpdateCompanyProfile(Guid id, [FromBody] UpdateCompanyProfileRequest request, CancellationToken ct)
     {
+        if (!ModelState.IsValid || request == null)
+        {
+            Console.WriteLine("--- UpdateCompanyProfile ModelState Invalid ---");
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key]?.Errors;
+                if (errors != null)
+                {
+                    foreach (var error in errors)
+                    {
+                        Console.WriteLine($"Key: {key}, Error: {error.ErrorMessage}");
+                    }
+                }
+            }
+            return ValidationProblem(ModelState);
+        }
         var result = await sender.Send(new UpdateCompanyProfileCommand(
             id,
             request.Name,
@@ -188,7 +204,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
             request.LogoUrl,
             request.CoverUrl,
             request.PhoneNumber,
-            request.Email
+            request.ContactEmail
         ), ct);
         return result.Match(
             response => Ok(response),
@@ -369,6 +385,22 @@ public sealed class CompaniesController(ISender sender) : ApiController
 [Authorize(Roles ="EntrepriseOwner")]
 public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactRequest commandRequest, CancellationToken ct)
 {
+        if (!ModelState.IsValid || commandRequest == null)
+        {
+            Console.WriteLine("--- AddContact ModelState Invalid ---");
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key]?.Errors;
+                if (errors != null)
+                {
+                    foreach (var error in errors)
+                    {
+                        Console.WriteLine($"Key: {key}, Error: {error.ErrorMessage}");
+                    }
+                }
+            }
+            return ValidationProblem(ModelState);
+        }
     var command = new AddContactCommand(id,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
     var result = await sender.Send(command, ct);
     return result.Match(

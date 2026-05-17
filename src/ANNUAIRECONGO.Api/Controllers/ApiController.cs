@@ -41,7 +41,12 @@ public class ApiController : ControllerBase
     {
         var modelStateDictionary = new ModelStateDictionary();
 
-        errors.ForEach(error => modelStateDictionary.AddModelError(error.Code, error.Description));
+        Console.WriteLine("--- Validation Failures Detected ---");
+        errors.ForEach(error => {
+            Console.WriteLine($"Field: {error.Code}, Error: {error.Description}");
+            modelStateDictionary.AddModelError(error.Code, error.Description);
+        });
+        Console.WriteLine("------------------------------------");
 
         return ValidationProblem(modelStateDictionary);
     }

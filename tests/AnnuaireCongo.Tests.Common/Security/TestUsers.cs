@@ -1,3 +1,5 @@
+using ANNUAIRECONGO.Infrastructure.Identity;
+
 namespace AnnuaireCongo.Tests.Common.Security;
 public static class TestUsers
 {

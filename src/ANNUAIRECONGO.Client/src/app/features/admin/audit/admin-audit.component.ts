@@ -46,13 +46,12 @@ import { switchMap } from 'rxjs';
             <tbody>
               @for (e of rows(); track e.id) {
                 <tr>
-                  <td class="mono">{{ e.timestamp | date:'short' }}</td>
+                  <td class="mono">{{ e.createdAt | date:'short' }}</td>
                   <td>
-                    <p class="actor">{{ e.actorName }}</p>
-                    <p class="role">{{ e.actorId }}</p>
+                    <p class="actor">{{ e.adminId }}</p>
                   </td>
                   <td>{{ e.action }}</td>
-                  <td class="target">{{ e.entityName }} ({{ e.entityId }})</td>
+                  <td class="target">{{ e.targetType }} ({{ e.targetId }})</td>
                 </tr>
               }
               @if (rows().length === 0) {
@@ -116,7 +115,7 @@ export class AdminAuditComponent {
     const items = data && data.items ? data.items : [];
     if (!q) return items;
     return items.filter((e: any) =>
-      [e.actorName, e.action, e.entityName].some((v) => v?.toLowerCase().includes(q))
+      [e.adminId, e.action, e.targetType].some((v) => v?.toLowerCase().includes(q))
     );
   });
 

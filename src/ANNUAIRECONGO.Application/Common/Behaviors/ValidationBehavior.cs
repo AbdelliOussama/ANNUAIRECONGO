@@ -2,14 +2,17 @@ using ANNUAIRECONGO.Domain.Common.Results;
 using FluentValidation;
 using MediatR;
 
+using Microsoft.Extensions.Logging;
+
 namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
-public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators, ILogger<ValidationBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
         where TResponse : IResult
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators = validators;
+    private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger = logger;
 
     public async Task<TResponse> Handle(
         TRequest request,
@@ -35,6 +38,11 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
         {
             return await next(ct);
         }
+
+        // Log validation failures for debugging
+        _logger.LogWarning("Validation failed for {RequestType}: {Failures}", 
+            typeof(TRequest).Name, 
+            string.Join(", ", failures.Select(f => $"{f.PropertyName}: {f.ErrorMessage}")));
 
         var errors = failures
             .ConvertAll(error => Error.Validation(

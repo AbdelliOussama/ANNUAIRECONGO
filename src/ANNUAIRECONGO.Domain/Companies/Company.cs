@@ -160,9 +160,21 @@ public class Company : AuditableEntity
             SubmittedAt = DateTime.UtcNow;
         }
 
-        _companySectors.Clear();
+        // Update sectors: only add/remove changed ones to avoid concurrency issues
+        var currentSectorIds = _companySectors.Select(s => s.SectorId).ToList();
+        
+        // Remove sectors no longer in the list
+        var sectorsToRemove = _companySectors.Where(s => !sectorIds.Contains(s.SectorId)).ToList();
+        foreach (var s in sectorsToRemove) _companySectors.Remove(s);
+        
+        // Add new sectors
         foreach (var sectorId in sectorIds)
-            _companySectors.Add(CompanySector.Create(Id, sectorId).Value);
+        {
+            if (!currentSectorIds.Contains(sectorId))
+            {
+                _companySectors.Add(CompanySector.Create(Id, sectorId).Value);
+            }
+        }
             
         return Result.Updated;
     }

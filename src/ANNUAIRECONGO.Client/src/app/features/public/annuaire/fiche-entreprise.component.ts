@@ -580,8 +580,8 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
       sectorIcon: c.sectors?.[0]?.iconUrl || 'business',
       city: c.cityName || 'N/A',
       region: c.regionName || '',
-      phone: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Phone)?.value,
-      email: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Email)?.value,
+      phone: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Phone || (x.type as any) === 'Phone')?.value,
+      email: c.contacts?.find((x: CompanyContact) => x.type === ContactType.Email || (x.type as any) === 'Email')?.value,
       website: c.websiteUrl,
       allContacts: c.contacts || [],
       address: c.address || 'N/A',
@@ -601,32 +601,36 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
     this.activeTab.set(id as FicheTab);
   }
 
-  protected getContactIcon(type: number): string {
-    switch (type) {
-      case ContactType.Phone: return 'call';
-      case ContactType.Email: return 'mail';
-      case ContactType.WhatsApp: return 'chat';
-      case ContactType.Facebook: return 'facebook';
-      case ContactType.LinkedIn: return 'share';
-      case ContactType.Instagram: return 'photo_camera';
-      case ContactType.Twitter: return 'alternate_email';
+  protected getContactIcon(type: number | string): string {
+    const t = typeof type === 'string' ? type : (ContactType as any)[type];
+    switch (t) {
+      case 'Phone': return 'call';
+      case 'Email': return 'mail';
+      case 'WhatsApp': return 'chat';
+      case 'Facebook': return 'facebook';
+      case 'LinkedIn': return 'share';
+      case 'Instagram': return 'photo_camera';
+      case 'Twitter': return 'alternate_email';
       default: return 'link';
     }
   }
 
-  protected getDocLabel(type: number): string {
-    switch (type) {
-      case DocTypeEnum.RCCM: return 'RCCM';
-      case DocTypeEnum.NIF: return 'NIU / NIF';
-      case DocTypeEnum.Patent: return 'Brevet';
+  protected getDocLabel(type: number | string): string {
+    const t = typeof type === 'string' ? type : (DocTypeEnum as any)[type];
+    switch (t) {
+      case 'RCCM': return 'RCCM';
+      case 'NIF': return 'NIU / NIF';
+      case 'Patent': return 'Brevet';
       default: return 'Document';
     }
   }
 
-  protected trackClick(type: number): void {
+  protected trackClick(type: number | string): void {
     const id = this.fiche()?.id;
     if (id) {
-      this.companyService.trackContactClick(id, type).subscribe();
+      // Ensure we send a number if it's a string from the API
+      const typeNum = typeof type === 'number' ? type : (ContactType as any)[type];
+      this.companyService.trackContactClick(id, typeNum).subscribe();
     }
   }
 

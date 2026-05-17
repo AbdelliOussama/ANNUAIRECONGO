@@ -5,6 +5,7 @@ import { AdminService } from '@core/services/admin.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { ToastService } from '@shared/services/toast.service';
+import { BehaviorSubject, switchMap } from 'rxjs';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
 
 @Component({
@@ -39,17 +40,17 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
               </header>
 
               <div class="current">
-                Prix actuel : <strong>{{ plan.monthlyPriceXAF | xaf }}</strong> / mois
+                Prix actuel : <strong>{{ plan.price | xaf }}</strong> / {{ plan.durationDays }} jours
               </div>
 
               <div class="form-group">
-                <label class="form-label" [attr.for]="'price-' + plan.id">Prix mensuel (XAF)</label>
+                <label class="form-label" [attr.for]="'price-' + plan.id">Prix (XAF)</label>
                 <input
                   [id]="'price-' + plan.id"
                   type="number"
                   min="0"
                   step="500"
-                  formControlName="monthlyPriceXAF"
+                  formControlName="price"
                   class="form-input"
                 />
               </div>
@@ -65,10 +66,31 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
                 </div>
               </div>
 
-              <label class="check">
-                <input type="checkbox" formControlName="isActive" />
-                <span>Forfait disponible publiquement</span>
-              </label>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label" [attr.for]="'duration-' + plan.id">Durée (jours)</label>
+                  <input [id]="'duration-' + plan.id" type="number" min="1" formControlName="durationDays" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" [attr.for]="'priority-' + plan.id">Priorité (1-3)</label>
+                  <input [id]="'priority-' + plan.id" type="number" min="1" max="3" formControlName="searchPriority" class="form-input" />
+                </div>
+              </div>
+
+              <div class="options">
+                <label class="check">
+                  <input type="checkbox" formControlName="hasAnalytics" />
+                  <span>Statistiques & Analytics</span>
+                </label>
+                <label class="check">
+                  <input type="checkbox" formControlName="hasFeaturedBadge" />
+                  <span>Badge 'Mis en avant'</span>
+                </label>
+                <label class="check">
+                  <input type="checkbox" formControlName="isActive" />
+                  <span>Forfait disponible</span>
+                </label>
+              </div>
 
               <ac-button type="submit" [loading]="saving() === plan.id" [fullWidth]="true">
                 Enregistrer
@@ -104,6 +126,7 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
 
     .check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
     .check input { width: 16px; height: 16px; accent-color: var(--color-primary); }
+    .options { display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
 
     .badge-verified { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
     .badge-pending  { background: var(--color-error-container); color: var(--color-on-error-container); }
@@ -114,7 +137,11 @@ export class AdminForfaitsComponent {
   private readonly fb    = inject(FormBuilder);
   private readonly toast = inject(ToastService);
 
-  protected readonly plans = toSignal(this.adminService.getPlans(), { initialValue: [] as any[] });
+  private readonly trigger = new BehaviorSubject<void>(undefined);
+  protected readonly plans = toSignal(
+    this.trigger.pipe(switchMap(() => this.adminService.getPlans())),
+    { initialValue: [] as any[] }
+  );
   protected readonly loading = computed(() => this.plans().length === 0);
 
   protected readonly saving = signal<string | null>(null);
@@ -134,18 +161,38 @@ export class AdminForfaitsComponent {
 
   private makeForm() {
     return this.fb.nonNullable.group({
-      monthlyPriceXAF: [0,    [Validators.required, Validators.min(0)]],
-      maxImages:       [0,    [Validators.required, Validators.min(0)]],
-      maxDocuments:    [0,    [Validators.required, Validators.min(0)]],
-      isActive:        [true],
+      price:            [0,    [Validators.required, Validators.min(0)]],
+      maxImages:        [0,    [Validators.required, Validators.min(0)]],
+      maxDocuments:     [0,    [Validators.required, Validators.min(0)]],
+      durationDays:     [30,   [Validators.required, Validators.min(1)]],
+      searchPriority:   [3,    [Validators.required, Validators.min(1), Validators.max(3)]],
+      hasAnalytics:     [false],
+      hasFeaturedBadge: [false],
+      isActive:         [true],
     });
   }
 
-  protected save(id: string): void {
-    const f = this.forms.get(id);
-    if (!f || f.invalid) return;
-    this.saving.set(id);
-    this.toast.info('La mise à jour des forfaits sera disponible en v2.0.');
-    setTimeout(() => this.saving.set(null), 500);
+  protected save(plan: any): void {
+    const form = this.forms.get(plan.id);
+    if (!form || form.invalid) return;
+
+    this.saving.set(plan.id);
+    const data = {
+      ...form.getRawValue(),
+      name: plan.name
+    };
+
+    this.adminService.updatePlan(plan.id, data).subscribe({
+      next: () => {
+        this.toast.success('Forfait mis à jour avec succès.');
+        this.saving.set(null);
+        this.trigger.next();
+      },
+      error: (err) => {
+        console.error('Update failed', err);
+        this.toast.error('Erreur lors de la mise à jour du forfait.');
+        this.saving.set(null);
+      }
+    });
   }
 }

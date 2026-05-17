@@ -163,7 +163,20 @@ export class AdminUtilisateursComponent {
   protected readonly rows = computed(() => {
     const q = this.query().toLowerCase();
     const r = this.role();
-    return this.result().filter(u => 
+    return this.result().map(u => {
+      // Resolve primary role for display
+      let displayRole = 'User';
+      if (u.roles?.includes('SuperAdmin')) displayRole = 'SuperAdmin';
+      else if (u.roles?.includes('Admin')) displayRole = 'Admin';
+      else if (u.roles?.includes('BusinessOwner') || u.roles?.includes('EntrepriseOwner')) displayRole = 'BusinessOwner';
+
+      return {
+        ...u,
+        id: u.userId, // Map userId to id
+        role: displayRole,
+        emailConfirmed: true // IdentityUser has this, but we'll assume true for seeded
+      };
+    }).filter(u => 
       (r === 'all' || u.role === r) &&
       (u.firstName?.toLowerCase().includes(q) || u.lastName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
     );
@@ -182,8 +195,19 @@ export class AdminUtilisateursComponent {
   }
 
   protected async toggle(u: any): Promise<void> {
-    // Implement user management actions (e.g. suspend)
-    this.toast.info('Fonctionnalité en cours de déploiement sur le backend Identity.');
+    const ok = window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement le compte de ${u.firstName} ${u.lastName} ? Cette action est irréversible.`);
+    if (!ok) return;
+
+    this.adminService.deleteUser(u.id).subscribe({
+      next: () => {
+        this.toast.success('Utilisateur supprimé avec succès.');
+        this.trigger.next(); // Refresh list
+      },
+      error: (err) => {
+        console.error('Delete failed', err);
+        this.toast.error('Erreur lors de la suppression de l\'utilisateur.');
+      }
+    });
   }
 
   protected roleClass(r: string): string { return `role role-${r}`; }

@@ -13,6 +13,7 @@ public static class BusinessOwnerMapper
             FirstName = businessOwner.FirstName,
             LastName = businessOwner.LastName,
             Phone = businessOwner.Phone,
+            Email = businessOwner.Email,
             CompanyPosition = businessOwner.CompanyPosition
         };
     }

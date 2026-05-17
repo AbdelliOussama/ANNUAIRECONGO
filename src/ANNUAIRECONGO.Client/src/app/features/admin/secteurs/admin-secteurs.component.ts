@@ -39,7 +39,7 @@ import { combineLatest, map } from 'rxjs';
               <h3>{{ s.sectorName }}</h3>
               <p class="count">{{ s.companyCount }} entreprise(s) inscrite(s)</p>
               <div class="actions">
-                <a class="btn btn-outline" [routerLink]="['/annuaire']" [queryParams]="{ sector: s.sectorId }" style="width: 100%;">
+                <a class="btn btn-outline" [routerLink]="['/annuaire']" [queryParams]="{ secteur: s.sectorId }" style="width: 100%;">
                   <span class="material-symbols-outlined" aria-hidden="true" style="margin-right: 8px; font-size: 20px;">visibility</span>
                   Voir entreprises
                 </a>

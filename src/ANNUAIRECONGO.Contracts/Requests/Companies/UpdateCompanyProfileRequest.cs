@@ -18,5 +18,5 @@ public class UpdateCompanyProfileRequest
     public string? LogoUrl { get; set; }
     public string? CoverUrl { get; set; }
     public string? PhoneNumber { get; set; }
-    public string? Email { get; set; }
+    public string? ContactEmail { get; set; }
 }
