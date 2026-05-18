@@ -13,7 +13,7 @@ public class RefreshTokenTests
         const string tokenValue = "sample_refresh_token";
         var expiresOnUtc = DateTimeOffset.UtcNow.AddDays(7);
 
-        var result = RefreshTokenFactory.CreateRefreshToken(id, UserId, tokenValue, expiresOnUtc);
+        var result = RefreshTokenFactory.CreateRefreshToken(id: id, token: tokenValue, userId: UserId, expiresOnUtc: expiresOnUtc);
 
         Assert.True(result.IsSuccess);
         var token = result.Value;
@@ -30,7 +30,7 @@ public class RefreshTokenTests
     {
         var result = RefreshTokenFactory.CreateRefreshToken(id: Guid.Empty);
         Assert.True(result.IsError);
-        Assert.Equal("Id cannot be empty.", result.Errors.First().Code);
+        Assert.Equal("RefreshToken_Id_Required", result.Errors.First().Code);
     }
 
     [Theory]
@@ -40,7 +40,7 @@ public class RefreshTokenTests
     {
         var result = RefreshTokenFactory.CreateRefreshToken(token: InvalidToken);
         Assert.True(result.IsError);
-        Assert.Equal("Token cannot be empty.", result.Errors.First().Code);
+        Assert.Equal("RefreshToken_Token_Required", result.Errors.First().Code);
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class RefreshTokenTests
     {
         var result = RefreshTokenFactory.CreateRefreshToken(userId: InvalidUserId);
         Assert.True(result.IsError);
-        Assert.Equal("UserId cannot be empty.", result.Errors.First().Code);
+        Assert.Equal("RefreshToken_UserId_Required", result.Errors.First().Code);
     }
     [Fact]
     public void CreateRefreshToken_ShouldFail_WhenExpiresOnUtcIsInThePast()
@@ -58,6 +58,6 @@ public class RefreshTokenTests
         var pastDate = DateTimeOffset.UtcNow.AddDays(-1);
         var result = RefreshTokenFactory.CreateRefreshToken(expiresOnUtc: pastDate);
         Assert.True(result.IsError);
-        Assert.Equal("ExpiresOnUtc must be a future date.", result.Errors.First().Code);
+        Assert.Equal("RefreshToken_Expiry_Invalid", result.Errors.First().Code);
     }
 }

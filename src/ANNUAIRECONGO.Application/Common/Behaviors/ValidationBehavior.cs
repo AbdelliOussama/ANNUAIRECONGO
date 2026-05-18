@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Common.Behaviors;
 
-public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators, ILogger<ValidationBehavior<TRequest, TResponse>> logger)
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>>? validators = null, ILogger<ValidationBehavior<TRequest, TResponse>>? logger = null)
     : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
         where TResponse : IResult
 {
-    private readonly IEnumerable<IValidator<TRequest>> _validators = validators;
+    private readonly IEnumerable<IValidator<TRequest>> _validators = validators ?? Enumerable.Empty<IValidator<TRequest>>();
     private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger = logger;
 
     public async Task<TResponse> Handle(
@@ -25,7 +25,6 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
         }
 
         var context = new ValidationContext<TRequest>(request);
-        
         var validationResults = await Task.WhenAll(
             _validators.Select(v => v.ValidateAsync(context, ct)));
 
