@@ -1,0 +1,86 @@
+services:
+  annuairecongo-api:
+  container_name: annuairecongo-api
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: final
+  ports:
+    - "5001:80"
+  environment:
+    ASPNETCORE_ENVIRONMENT: Development
+    ASPNETCORE_URLS: http://+:5000
+    ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ANNUAIRECONGOdb;User Id=sa;Password=YourStrong@Password1;TrustServerCertificate=True;MultipleActiveResultSets=True"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://seq:5341/ingest/otlp"
+    OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+  depends_on:
+    - sqlserver
+    - seq
+  networks:
+    - annuairecongo-net
+  restart: on-failure
+
+  sqlserver:
+    container_name: annuairecongo-sql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Password1"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - annuairecongo-net
+    restart: always
+
+  seq:
+    container_name: seq
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    volumes:
+      - ./containers/seq:/data
+    ports:
+      - "5341:5341" # OTLP ingestion
+      - "8081:80"   # Seq UI
+    networks:
+      - annuairecongo-net
+    restart: unless-stopped
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./containers/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - annuairecongo-api
+    networks:
+      - annuairecongo-net
+    restart: unless-stopped
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "YourStrongPwd"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - annuairecongo-net
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
+  grafana-data:
+
+networks:
+  annuairecongo-net:
+    driver: bridge
