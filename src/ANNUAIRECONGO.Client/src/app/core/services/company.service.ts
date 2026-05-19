@@ -24,6 +24,7 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
       const params: Record<string, string | number> = {};
       
       if (filter.searchTerm) params['searchTerm'] = filter.searchTerm;
+      if (filter.smartSearch) params['smartSearch'] = filter.smartSearch;
       if (filter.sectorId) params['sectorId'] = filter.sectorId;
       if (filter.sectorSlug) params['sectorSlug'] = filter.sectorSlug;
       if (filter.cityId) params['cityId'] = filter.cityId;

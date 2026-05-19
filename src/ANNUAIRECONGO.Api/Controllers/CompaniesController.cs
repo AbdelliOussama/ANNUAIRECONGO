@@ -127,6 +127,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     [AllowAnonymous]
     public async Task<IActionResult> GetAllCompanies(
         [FromQuery] string? searchTerm = null,
+        [FromQuery] string? smartSearch = null,
         [FromQuery] Guid? sectorId = null,
         [FromQuery] string? sectorSlug = null,
         [FromQuery] Guid? cityId = null,
@@ -143,6 +144,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
     {
         var result = await sender.Send(new GetCompaniesQuery(
             searchTerm,
+            smartSearch,
             sectorId,
             sectorSlug,
             cityId,

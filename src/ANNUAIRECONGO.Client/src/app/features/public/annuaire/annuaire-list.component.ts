@@ -55,15 +55,38 @@ interface Filters {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="filter-search">Recherche libre</label>
-          <input
-            id="filter-search"
-            type="search"
-            class="form-input"
-            placeholder="Nom, RCCM, NIU…"
-            [value]="filters().query"
-            (input)="onQuery($event)"
-          />
+          <div class="flex items-center justify-between mb-2">
+            <label class="form-label mb-0" for="filter-search">Recherche</label>
+            <button
+              type="button"
+              class="btn-ai-toggle"
+              [class.is-active]="isSmartSearch()"
+              (click)="toggleSmartSearch()"
+            >
+              <span class="material-symbols-outlined text-sm mr-1">auto_awesome</span>
+              Recherche IA
+            </button>
+          </div>
+          <div class="relative search-wrapper" [class.ai-glow]="isSmartSearch()">
+            <input
+              id="filter-search"
+              type="search"
+              class="form-input search-input"
+              [class.ai-input]="isSmartSearch()"
+              [placeholder]="isSmartSearch() ? 'Ex: entreprise de logistique à Pointe-Noire…' : 'Nom, RCCM, NIU…'"
+              [value]="filters().query"
+              (input)="onQuery($event)"
+            />
+            @if (isSmartSearch()) {
+              <span class="ai-sparkle material-symbols-outlined">magic_button</span>
+            }
+          </div>
+          @if (isSmartSearch()) {
+            <p class="text-xs text-ai-info mt-1.5 flex items-center">
+              <span class="material-symbols-outlined text-xs mr-1">info</span>
+              L'IA extrait automatiquement la ville, le secteur et les mots-clés.
+            </p>
+          }
         </div>
 
         <div class="form-group">
@@ -348,6 +371,75 @@ interface Filters {
     }
 
     .pagination-wrap { display: flex; justify-content: center; margin-top: 32px; }
+
+    /* AI Smart Search Premium Styling */
+    .btn-ai-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--color-outline-variant);
+      background: transparent;
+      color: var(--color-on-surface-variant);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-ai-toggle:hover {
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .btn-ai-toggle.is-active {
+      background: linear-gradient(135deg, #7F00FF, #E100FF);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(225, 0, 255, 0.3);
+      animation: pulse-glow 2s infinite alternate;
+    }
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 4px 12px rgba(225, 0, 255, 0.2); }
+      100% { box-shadow: 0 4px 20px rgba(225, 0, 255, 0.5); }
+    }
+    .relative { position: relative; }
+    .search-wrapper {
+      transition: all 0.3s ease;
+      border-radius: var(--radius-md);
+    }
+    .ai-glow {
+      box-shadow: 0 0 12px rgba(225, 0, 255, 0.2);
+    }
+    .form-input.search-input {
+      padding-right: 36px;
+    }
+    .form-input.ai-input {
+      border-color: #E100FF;
+      background: linear-gradient(to right, var(--color-surface), rgba(225, 0, 255, 0.02));
+    }
+    .form-input.ai-input:focus {
+      border-color: #7F00FF;
+      box-shadow: 0 0 0 3px rgba(127, 0, 255, 0.2);
+    }
+    .ai-sparkle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #E100FF;
+      pointer-events: none;
+      font-size: 18px;
+      animation: spin-sparkle 3s infinite linear;
+    }
+    @keyframes spin-sparkle {
+      0% { transform: translateY(-50%) rotate(0deg); opacity: 0.8; }
+      50% { transform: translateY(-50%) rotate(180deg); opacity: 1; scale: 1.1; }
+      100% { transform: translateY(-50%) rotate(360deg); opacity: 0.8; }
+    }
+    .text-xs.text-ai-info {
+      color: #7F00FF;
+      font-size: 11px;
+    }
   `],
 })
 export class AnnuaireListComponent {
@@ -366,6 +458,12 @@ export class AnnuaireListComponent {
     regionName: '',
     verifiedOnly: false,
   });
+  protected readonly isSmartSearch = signal(false);
+  protected toggleSmartSearch(): void {
+    this.isSmartSearch.update(v => !v);
+    this.page.set(1);
+    this.syncToUrl();
+  }
   protected readonly page    = signal(1);
   protected readonly sortBy  = signal('date');
   protected readonly sortOrder = signal('desc');
@@ -416,7 +514,8 @@ export class AnnuaireListComponent {
     }
 
     return {
-      q:          f.query,
+      q:          this.isSmartSearch() ? '' : f.query,
+      smartSearch: this.isSmartSearch() ? f.query : '',
       sectorId:   sectorId,
       sectorSlug: sectorSlug,
       region:     f.regionId || f.regionName, // Combine into 'region' param
@@ -438,6 +537,7 @@ export class AnnuaireListComponent {
         
         return this.companyService.getCompanies({
           searchTerm: p.q || undefined,
+          smartSearch: p.smartSearch || undefined,
           sectorId:   p.sectorId || undefined,
           sectorSlug: p.sectorSlug || undefined,
           regionId:   isRegionId ? p.region : undefined,
@@ -485,9 +585,12 @@ export class AnnuaireListComponent {
       const regionParam = qp['region'] ?? '';
       const isSecteurGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(secteurParam);
       const isRegionGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(regionParam);
+      
+      const smartParam = qp['smart'] ?? '';
+      this.isSmartSearch.set(!!smartParam);
 
       this.filters.set({
-        query:        qp['q']        ?? '',
+        query:        smartParam || (qp['q'] ?? ''),
         sectorId:     isSecteurGuid ? secteurParam : '',
         sectorSlug:   !isSecteurGuid ? secteurParam : '',
         regionId:     isRegionGuid ? regionParam : '',
@@ -547,7 +650,8 @@ export class AnnuaireListComponent {
   private syncToUrl(): void {
     const p = this.resolvedParams();
     const queryParams: Record<string, string | undefined> = {
-      q:         p.q  || undefined,
+      q:         this.isSmartSearch() ? undefined : (p.q || undefined),
+      smart:     this.isSmartSearch() ? (p.smartSearch || undefined) : undefined,
       secteur:   p.sectorSlug || p.sectorId || undefined,
       region:    p.region || undefined,
       verifiees: p.verifiees ? '1' : undefined,

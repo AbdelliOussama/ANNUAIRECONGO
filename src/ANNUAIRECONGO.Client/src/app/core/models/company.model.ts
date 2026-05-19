@@ -255,6 +255,7 @@ export interface PaginatedResponse<T> {
 
 export interface CompanyFilter {
   searchTerm?: string;
+  smartSearch?: string;
   sectorId?: string;
   sectorSlug?: string;
   cityId?: string;
