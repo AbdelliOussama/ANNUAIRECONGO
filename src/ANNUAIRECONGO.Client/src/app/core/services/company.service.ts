@@ -125,4 +125,11 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    setFeatured(companyId: string, isFeatured: boolean): Observable<void> {
      return this.api.post<void>(`/api/v1/companies/${companyId}/set-featured`, isFeatured);
    }
+
+   generateDescription(
+     companyId: string,
+     data: { name: string; sectors: string[]; city: string; services: string[] }
+   ): Observable<{ description: string }> {
+     return this.api.post<{ description: string }>(`/api/v1/companies/${companyId}/generate-description`, data);
+   }
 }

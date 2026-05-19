@@ -55,7 +55,23 @@ import { AuthService } from '@core/services/auth.service';
           />
 
           <div class="form-group">
-            <label class="form-label" for="fiche-description">Description *</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="form-label mb-0" for="fiche-description">Description *</label>
+              <button
+                type="button"
+                class="btn-ai-generate"
+                [disabled]="generatingAiDescription()"
+                (click)="generateAiDescription()"
+              >
+                @if (generatingAiDescription()) {
+                  <span class="spinner-ai"></span>
+                  Génération...
+                } @else {
+                  <span class="material-symbols-outlined text-sm mr-1">bolt</span>
+                  Générer avec l'IA
+                }
+              </button>
+            </div>
             <textarea
               id="fiche-description"
               formControlName="description"
@@ -68,6 +84,26 @@ import { AuthService } from '@core/services/auth.service';
               <p class="form-error" role="alert">{{ errorFor('description') }}</p>
             } @else {
               <p class="text-xs text-outline">2000 caractères maximum (min. 20).</p>
+            }
+
+            @if (aiGeneratedDescriptionProposal()) {
+              <div class="ai-proposal-card">
+                <div class="ai-proposal-header">
+                  <span class="material-symbols-outlined text-primary text-base mr-2">auto_awesome</span>
+                  <span class="font-bold text-xs text-primary uppercase tracking-wider">Proposition de l'IA</span>
+                </div>
+                <p class="ai-proposal-text">{{ aiGeneratedDescriptionProposal() }}</p>
+                <div class="ai-proposal-actions">
+                  <button type="button" class="btn-proposal-accept" (click)="acceptAiProposal()">
+                    <span class="material-symbols-outlined text-sm mr-1">check</span>
+                    Accepter
+                  </button>
+                  <button type="button" class="btn-proposal-regenerate" (click)="generateAiDescription()">
+                    <span class="material-symbols-outlined text-sm mr-1">refresh</span>
+                    Régénérer
+                  </button>
+                </div>
+              </div>
             }
           </div>
 
@@ -378,6 +414,131 @@ import { AuthService } from '@core/services/auth.service';
       flex-wrap: wrap;
       padding-top: 8px;
     }
+
+    .justify-between { justify-content: space-between; }
+    .items-center { align-items: center; }
+    .mb-0 { margin-bottom: 0; }
+    .mr-1 { margin-right: 4px; }
+    .mr-2 { margin-right: 8px; }
+    .text-sm { font-size: 14px; }
+    .text-base { font-size: 16px; }
+    .text-xs { font-size: 12px; }
+    .font-bold { font-weight: 700; }
+    .text-primary { color: var(--color-primary); }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+
+    .btn-ai-generate {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-ai-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
+      filter: brightness(1.1);
+    }
+    .btn-ai-generate:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .btn-ai-generate:disabled {
+      background: var(--color-surface-container-high);
+      color: var(--color-outline);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .spinner-ai {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin-ai 0.8s linear infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes spin-ai {
+      to { transform: rotate(360deg); }
+    }
+
+    .ai-proposal-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(168, 85, 247, 0.04) 100%);
+      border: 1px dashed var(--color-primary);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      margin-top: 12px;
+      animation: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ai-proposal-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .ai-proposal-text {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--color-on-surface-variant);
+      margin: 0 0 12px 0;
+      white-space: pre-wrap;
+    }
+
+    .ai-proposal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-proposal-accept {
+      display: inline-flex;
+      align-items: center;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-proposal-accept:hover {
+      background: var(--color-primary-hover, #4f46e5);
+      transform: translateY(-1px);
+    }
+
+    .btn-proposal-regenerate {
+      display: inline-flex;
+      align-items: center;
+      background: transparent;
+      color: var(--color-primary);
+      border: 1px solid var(--color-primary);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-proposal-regenerate:hover {
+      background: rgba(99, 102, 241, 0.08);
+      transform: translateY(-1px);
+    }
   `],
 })
 export class FicheFormComponent {
@@ -399,6 +560,8 @@ export class FicheFormComponent {
   protected readonly coverUrl = signal<string | null>(null);
   protected readonly gallery = signal<string[]>([]);
   protected readonly documents = signal<string[]>([]);
+  protected readonly generatingAiDescription = signal(false);
+  protected readonly aiGeneratedDescriptionProposal = signal<string | null>(null);
 
   protected readonly contactTypes = [
     { value: 2, label: 'WhatsApp' },
@@ -451,6 +614,55 @@ export class FicheFormComponent {
       this.form.controls.sectorIds.setValue([...current, id]);
     }
     this.form.controls.sectorIds.markAsTouched();
+  }
+
+  protected generateAiDescription(): void {
+    const name = this.form.controls.name.value;
+    const selectedSectorIds = this.form.controls.sectorIds.value;
+    const selectedCityId = this.form.controls.cityId.value;
+    const services = this.servicesFormArray.value.map((s: any) => s.title).filter(Boolean);
+
+    if (!name || selectedSectorIds.length === 0 || !selectedCityId) {
+      this.toast.error("Veuillez saisir le nom, la ville et au moins un secteur d'activité pour pouvoir générer la description par l'IA.");
+      return;
+    }
+
+    const city = this.cities().find(c => c.id === selectedCityId)?.name || 'Congo';
+    const sectorNames = this.sectors()
+      .filter(s => selectedSectorIds.includes(s.id))
+      .map(s => s.name);
+
+    this.generatingAiDescription.set(true);
+    const companyId = this.mode() === 'edit' && this.companyToEdit() ? this.companyToEdit()!.id : '00000000-0000-0000-0000-000000000000';
+
+    this.companyService.generateDescription(companyId, {
+      name,
+      sectors: sectorNames,
+      city,
+      services
+    }).subscribe({
+      next: (res) => {
+        this.generatingAiDescription.set(false);
+        this.aiGeneratedDescriptionProposal.set(res.description);
+        this.toast.success("Description générée avec succès ! Vous pouvez la relire et l'accepter.");
+      },
+      error: (err) => {
+        this.generatingAiDescription.set(false);
+        console.error("AI Generation Error", err);
+        this.toast.error("Une erreur est survenue lors de la génération de la description. Veuillez réessayer.");
+      }
+    });
+  }
+
+  protected acceptAiProposal(): void {
+    const proposal = this.aiGeneratedDescriptionProposal();
+    if (proposal) {
+      this.form.controls.description.setValue(proposal);
+      this.form.controls.description.markAsDirty();
+      this.form.controls.description.markAsTouched();
+      this.aiGeneratedDescriptionProposal.set(null);
+      this.toast.success("Description mise à jour avec la proposition de l'IA.");
+    }
   }
 
   addContact(type = 2, value = '') {

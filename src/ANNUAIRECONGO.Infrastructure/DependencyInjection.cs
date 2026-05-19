@@ -98,6 +98,11 @@ public static class DependencyInjection
 
         services.AddScoped<IInvoiceService, InvoiceService>();
 
+        services.AddOptions<GrokSettings>()
+            .BindConfiguration(GrokSettings.SectionName);
+
+        services.AddHttpClient<IGrokService, GrokService>();
+
         return services;
     }
 }

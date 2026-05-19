@@ -38,6 +38,7 @@ using ANNUAIRECONGO.Contracts.Requests.Companies.StatusTransitions;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyBySlugQuery;
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetReports;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Reports.ProcessReport;
+using ANNUAIRECONGO.Application.Features.Companies.Commands.GenerateDescription;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -642,6 +643,30 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
         var result = await sender.Send(command, ct);
         return result.Match(
             response => Ok(response),
+            Problem
+        );
+    }
+
+    [HttpPost("{id:guid}/generate-description", Name = "GenerateCompanyDescription")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Generate a professional company description using AI.")]
+    [EndpointDescription("This endpoint generates a professional French description for a company based on its name, sectors, city, and services.")]
+    [EndpointName("GenerateCompanyDescription")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
+    public async Task<IActionResult> GenerateCompanyDescription([FromRoute] Guid id, [FromBody] GenerateCompanyDescriptionRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new GenerateCompanyDescriptionCommand(
+            id,
+            request.Name,
+            request.Sectors,
+            request.City,
+            request.Services
+        ), ct);
+        return result.Match(
+            response => Ok(new { description = response }),
             Problem
         );
     }
