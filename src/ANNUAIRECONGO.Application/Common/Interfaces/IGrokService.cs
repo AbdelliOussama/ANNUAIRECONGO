@@ -1,6 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using ANNUAIRECONGO.Application.Common.Models;
+
+namespace ANNUAIRECONGO.Application.Common.Interfaces;
 
 public record ExtractedSearchFilters(
     string? SearchTerm,
@@ -19,5 +22,12 @@ public interface IGrokService
 
     Task<ExtractedSearchFilters> ExtractSearchFiltersAsync(
         string smartSearchQuery,
+        CancellationToken cancellationToken);
+
+    Task<List<SectorIntelligenceReport>> GetSectorReportsAsync(CancellationToken cancellationToken);
+
+    Task<SectorIntelligenceReport> GenerateSectorReportAsync(
+        string sectorName,
+        string dataJsonContext,
         CancellationToken cancellationToken);
 }

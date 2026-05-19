@@ -2,9 +2,11 @@ using ANNUAIRECONGO.Application.Features.Sectors.Commands;
 using ANNUAIRECONGO.Application.Features.Sectors.Commands.ActivateSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeactivateSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeleteSector;
+using ANNUAIRECONGO.Application.Features.Sectors.Commands.GenerateSectorReport;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorById;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectors;
+using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorReports;
 using ANNUAIRECONGO.Contracts.Requests.Sectors;
 using Asp.Versioning;
 using MediatR;
@@ -139,6 +141,38 @@ public sealed class SectorsController(ISender sender) : ApiController
         var result = await sender.Send(new ActivateSectorCommand(SectorId), ct);
         return result.Match(
             _ => Ok(),
+            Problem);
+    }
+
+    [HttpGet("intelligence-reports")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Retrieves economic sector intelligence reports.")]
+    [EndpointDescription("Returns a list of generated AI sector reports.")]
+    [EndpointName("GetSectorReports")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSectorReports(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetSectorReportsQuery(), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem);
+    }
+
+    [HttpPost("intelligence-reports/generate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Generates an economic intelligence report for a sector using AI.")]
+    [EndpointDescription("Aggregates real company registration data and invokes Groq AI to generate insights.")]
+    [EndpointName("GenerateSectorReport")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GenerateSectorReport([FromBody] GenerateSectorReportCommand command, CancellationToken ct)
+    {
+        var result = await sender.Send(command, ct);
+        return result.Match(
+            response => Ok(response),
             Problem);
     }
 }
