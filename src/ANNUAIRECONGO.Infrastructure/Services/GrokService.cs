@@ -342,4 +342,91 @@ public class GrokService : IGrokService
             }
         };
     }
+
+    public async Task<string> GetChatResponseAsync(
+        string userMessage,
+        IEnumerable<ChatMessage> history,
+        string dbContext,
+        CancellationToken cancellationToken)
+    {
+        var messagesList = new List<object>();
+
+        // System prompt specifying the character and real-world dbContext
+        messagesList.Add(new
+        {
+            role = "system",
+            content = $@"Tu es 'CongoBot 🤖', l'assistant conversationnel intelligent officiel de la plateforme 'Annuaire Congo' (l'annuaire national des entreprises du Congo-Brazzaville).
+Ton rôle est d'aider les utilisateurs en répondant avec expertise, amabilité, concision et précision en français à toutes leurs questions économiques, administratives ou d'aide sur l'annuaire.
+
+Voici le CONTEXTE TEMPS RÉEL extrait directement de notre base de données pour t'aider à répondre précisément :
+{dbContext}
+
+RÈGLES D'OR :
+1. Sois chaleureux, concis, professionnel et direct (répond en 1 ou 2 paragraphes maximum si possible pour garder le chat fluide).
+2. Si l'utilisateur demande des entreprises d'un certain secteur ou d'une certaine ville, réfère-toi STRICTEMENT aux entreprises mentionnées dans le contexte ci-dessus.
+3. IMPORTANT: Quand tu mentionnes une entreprise qui figure dans le contexte ci-dessus avec son ID, ajoute TOUJOURS un lien direct vers son profil sous ce format exact : [Nom de l'Entreprise](/annuaire/ID). Exemple : 'Vous pouvez consulter la fiche de [BGFIBank](/annuaire/7a26f8eb-3294-4364-bbcf-847ef71a2a51)'. N'invente pas d'ID, utilise uniquement les ID présents dans le contexte.
+4. Explique clairement le badge vérifié et le Trust Score si on te le demande :
+   - Trust Score : note sur 5 basée sur la complétude, la validation et les avis clients.
+   - Badge Vérifié : accordé par l'admin après vérification manuelle du RCCM et NIU.
+5. Si tu ne trouves pas d'entreprise correspondante dans ton contexte, suggère-leur d'utiliser la Recherche IA ✨ sur notre page Annuaire pour faire une fouille approfondie.
+6. Ne sors jamais de ton personnage d'assistant officiel de l'Annuaire Congo."
+        });
+
+        // Add historical exchange
+        foreach (var msg in history)
+        {
+            messagesList.Add(new
+            {
+                role = msg.Role.ToLowerInvariant() == "assistant" ? "assistant" : "user",
+                content = msg.Content
+            });
+        }
+
+        // Add user's fresh message
+        messagesList.Add(new
+        {
+            role = "user",
+            content = userMessage
+        });
+
+        var requestBody = new
+        {
+            model = _settings.Model,
+            messages = messagesList,
+            temperature = 0.5
+        };
+
+        var json = JsonSerializer.Serialize(requestBody);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions");
+        request.Content = content;
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Groq API returned status code {response.StatusCode}: {errorContent}");
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        using var doc = JsonDocument.Parse(responseContent);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("choices", out var choices) &&
+            choices.ValueKind == JsonValueKind.Array &&
+            choices.GetArrayLength() > 0)
+        {
+            var firstChoice = choices[0];
+            if (firstChoice.TryGetProperty("message", out var messageProp) &&
+                messageProp.TryGetProperty("content", out var contentProp))
+            {
+                return contentProp.GetString()?.Trim() ?? "Désolé, je ne parviens pas à formuler une réponse pour le moment.";
+            }
+        }
+
+        return "Désolé, je ne parviens pas à formuler une réponse pour le moment.";
+    }
 }

@@ -5,6 +5,7 @@ import { PublicFooterComponent } from './public-footer.component';
 import { ToastHostComponent } from '@shared/ui/toast/toast-host.component';
 import { SkipLinkComponent } from '@shared/ui/skip-link/skip-link.component';
 import { PwaInstallComponent } from '@shared/components/pwa-install/pwa-install.component';
+import { AiChatWidgetComponent } from '@shared/components/ai-chat-widget/ai-chat-widget.component';
 
 /**
  * Layout for every public page (accueil, annuaire, secteurs, cartographie,
@@ -21,6 +22,7 @@ import { PwaInstallComponent } from '@shared/components/pwa-install/pwa-install.
     ToastHostComponent,
     SkipLinkComponent,
     PwaInstallComponent,
+    AiChatWidgetComponent,
   ],
   template: `
     <ac-skip-link />
@@ -31,6 +33,7 @@ import { PwaInstallComponent } from '@shared/components/pwa-install/pwa-install.
     <ac-public-footer />
     <ac-toast-host />
     <ac-pwa-install />
+    <ac-ai-chat-widget />
   `,
   styles: [`
     :host { display: flex; flex-direction: column; min-height: 100vh; }

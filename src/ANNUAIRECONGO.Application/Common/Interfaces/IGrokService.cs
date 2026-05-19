@@ -30,4 +30,10 @@ public interface IGrokService
         string sectorName,
         string dataJsonContext,
         CancellationToken cancellationToken);
+
+    Task<string> GetChatResponseAsync(
+        string userMessage,
+        IEnumerable<ChatMessage> history,
+        string dbContext,
+        CancellationToken cancellationToken);
 }
