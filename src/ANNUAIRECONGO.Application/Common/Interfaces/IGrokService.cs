@@ -36,4 +36,11 @@ public interface IGrokService
         IEnumerable<ChatMessage> history,
         string dbContext,
         CancellationToken cancellationToken);
+
+    Task<List<string>> ExtractSemanticKeywordsAsync(
+        string name,
+        string? description,
+        IEnumerable<string> sectors,
+        IEnumerable<string> services,
+        CancellationToken cancellationToken);
 }

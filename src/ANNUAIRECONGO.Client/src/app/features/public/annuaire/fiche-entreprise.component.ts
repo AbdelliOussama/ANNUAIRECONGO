@@ -235,6 +235,46 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
         </section>
       </article>
 
+      <!-- Similar Companies Section -->
+      @if (recommendations().length > 0) {
+        <section class="container" style="margin-top: 48px; border-top: 1px solid var(--color-outline-variant); padding-top: 48px; padding-bottom: 24px;">
+          <div class="rec-header">
+            <span class="material-symbols-outlined sparkle-icon">sparkles</span>
+            <div>
+              <h2 class="rec-title">Entreprises similaires suggérées par l'IA ✨</h2>
+              <p class="rec-subtitle">Découvrez d'autres entreprises du même secteur ou offrant des services complémentaires.</p>
+            </div>
+          </div>
+          
+          <div class="recommendations-grid">
+            @for (rec of recommendations(); track rec.id) {
+              <a [routerLink]="['/annuaire', rec.slug]" class="rec-card glass">
+                <div class="rec-logo">
+                  @if (rec.logoUrl) {
+                    <img [src]="rec.logoUrl" [alt]="rec.name" />
+                  } @else {
+                    <span class="material-symbols-outlined">{{ rec.sectors?.[0]?.iconUrl || 'business' }}</span>
+                  }
+                </div>
+                <div class="rec-content">
+                  <div class="rec-badges">
+                    @if (rec.isVerified) { <span class="badge badge-verified badge-sm">Vérifiée</span> }
+                    @if (rec.isPremium) { <span class="badge badge-premium badge-sm">Premium</span> }
+                    <span class="badge badge-ai badge-sm">IA ✨</span>
+                  </div>
+                  <h3 class="rec-name">{{ rec.name }}</h3>
+                  <p class="rec-city">
+                    <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+                    {{ rec.cityName || 'Congo' }}
+                  </p>
+                  <p class="rec-excerpt">{{ (rec.description || '').slice(0, 110) }}...</p>
+                </div>
+              </a>
+            }
+          </div>
+        </section>
+      }
+
       <!-- Report Modal -->
       @if (showReportModal()) {
         <div class="modal-scrim" (click)="closeReportModal()">
@@ -419,6 +459,133 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
 
     @keyframes ac-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* Recommendations Section Styles */
+    .rec-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .sparkle-icon {
+      color: var(--color-primary);
+      font-size: 32px;
+      animation: rec-pulse 2s infinite alternate;
+    }
+    .rec-title {
+      font-family: var(--font-headline);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--color-on-surface);
+      margin: 0;
+    }
+    .rec-subtitle {
+      font-size: 14px;
+      color: var(--color-on-surface-variant);
+      margin: 4px 0 0;
+    }
+    .recommendations-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 640px) {
+      .recommendations-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .recommendations-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .rec-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface-container-lowest);
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+    }
+    .rec-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+      background: linear-gradient(var(--color-surface-container-lowest), var(--color-surface-container-lowest)) padding-box,
+                  linear-gradient(135deg, var(--color-primary), #a855f7) border-box;
+      border-color: transparent;
+    }
+    .rec-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--color-surface-container-low);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .rec-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .rec-logo .material-symbols-outlined {
+      color: var(--color-primary);
+      font-size: 24px;
+    }
+    .rec-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    .rec-badges {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .badge-sm {
+      padding: 2px 6px !important;
+      font-size: 10px !important;
+    }
+    .badge-ai {
+      background: rgba(99, 102, 241, 0.15) !important;
+      color: #6366f1 !important;
+      border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    }
+    .rec-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-on-surface);
+      margin: 0 0 6px;
+    }
+    .rec-city {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--color-on-surface-variant);
+      font-size: 12px;
+      margin: 0 0 10px;
+    }
+    .rec-city .material-symbols-outlined {
+      font-size: 14px;
+    }
+    .rec-excerpt {
+      font-size: 13px;
+      color: var(--color-on-surface-variant);
+      line-height: 1.5;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @keyframes rec-pulse {
+      from { transform: scale(1); opacity: 0.8; }
+      to { transform: scale(1.1); opacity: 1; }
+    }
+
     /* Modal Styles */
     .modal-scrim {
       position: fixed; inset: 0; z-index: 100;
@@ -547,6 +714,8 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
     { initialValue: null }
   );
 
+  protected readonly recommendations = signal<Company[]>([]);
+
   constructor() {
     effect(() => {
       const f = this.fiche();
@@ -561,8 +730,16 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
         if (f.logoUrl) {
           this.metaService.updateTag({ property: 'og:image', content: f.logoUrl });
         }
+
+        // Load similar company recommendations dynamically
+        this.companyService.getRecommendations(f.id).subscribe({
+          next: (recs) => this.recommendations.set(recs),
+          error: () => this.recommendations.set([])
+        });
+      } else {
+        this.recommendations.set([]);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   protected readonly fiche = computed(() => {

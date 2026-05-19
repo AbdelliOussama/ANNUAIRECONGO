@@ -133,4 +133,8 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    ): Observable<{ description: string }> {
      return this.api.post<{ description: string }>(`/api/v1/companies/${companyId}/generate-description`, data);
    }
+
+   getRecommendations(companyId: string): Observable<Company[]> {
+     return this.api.get<Company[]>(`/api/v1/companies/${companyId}/recommendations`);
+   }
 }

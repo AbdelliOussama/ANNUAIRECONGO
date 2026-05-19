@@ -429,4 +429,86 @@ RÈGLES D'OR :
 
         return "Désolé, je ne parviens pas à formuler une réponse pour le moment.";
     }
+
+    public async Task<List<string>> ExtractSemanticKeywordsAsync(
+        string name,
+        string? description,
+        IEnumerable<string> sectors,
+        IEnumerable<string> services,
+        CancellationToken cancellationToken)
+    {
+        var sectorsStr = string.Join(", ", sectors);
+        var servicesStr = services != null && services.Any() ? string.Join(", ", services) : "aucun service déclaré";
+
+        var prompt = "Tu es un moteur d'intelligence sémantique B2B pour le Congo. Analyse l'entreprise suivante et extrait précisément une liste de 12 mots-clés sémantiques normalisés en français décrivant ses services, son secteur, son modèle d'affaires, ses technologies ou ses produits.\n\n" +
+                     $"Nom : '{name}'\n" +
+                     $"Secteur(s) : '{sectorsStr}'\n" +
+                     $"Description : '{description}'\n" +
+                     $"Services : '{servicesStr}'\n\n" +
+                     "Règles :\n" +
+                     "1. Retourne UNIQUEMENT un tableau JSON valide de chaînes de caractères en français (ex: [\"transit\", \"logistique\", \"import-export\", \"fret maritime\"]).\n" +
+                     "2. Ne mets aucun texte d'introduction, d'explication ou de bloc de code. Retourne uniquement le JSON brut.";
+
+        var requestBody = new
+        {
+            model = _settings.Model,
+            messages = new[]
+            {
+                new { role = "user", content = prompt }
+            },
+            temperature = 0.2
+        };
+
+        var json = JsonSerializer.Serialize(requestBody);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions");
+        request.Content = content;
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<string>();
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            using var doc = JsonDocument.Parse(responseContent);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("choices", out var choices) &&
+                choices.ValueKind == JsonValueKind.Array &&
+                choices.GetArrayLength() > 0)
+            {
+                var firstChoice = choices[0];
+                if (firstChoice.TryGetProperty("message", out var messageProp) &&
+                    messageProp.TryGetProperty("content", out var contentProp))
+                {
+                    var text = contentProp.GetString()?.Trim();
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        // Clean up markdown block wraps if present
+                        if (text.StartsWith("```"))
+                        {
+                            text = text.Replace("```json", "").Replace("```", "").Trim();
+                        }
+
+                        var list = JsonSerializer.Deserialize<List<string>>(text);
+                        if (list != null)
+                        {
+                            return list.Select(s => s.ToLower().Trim()).ToList();
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fail gracefully
+        }
+
+        return new List<string>();
+    }
 }

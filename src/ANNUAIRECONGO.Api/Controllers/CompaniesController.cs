@@ -39,6 +39,8 @@ using ANNUAIRECONGO.Application.Features.Companies.Queries.GetCompanyBySlugQuery
 using ANNUAIRECONGO.Application.Features.Companies.Queries.GetReports;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.Reports.ProcessReport;
 using ANNUAIRECONGO.Application.Features.Companies.Commands.GenerateDescription;
+using ANNUAIRECONGO.Application.Features.Companies.Queries.GetRecommendations;
+using ANNUAIRECONGO.Application.Features.Companies.Dtos;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -669,6 +671,23 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
         ), ct);
         return result.Match(
             response => Ok(new { description = response }),
+            Problem
+        );
+    }
+
+    [HttpGet("{id:guid}/recommendations")]
+    [ProducesResponseType(typeof(List<CompanyDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [EndpointSummary("Get similar company recommendations for a company.")]
+    [EndpointDescription("This endpoint returns a list of 3-5 similar companies based on sector, city, and Jaccard-tokenized description/services similarity.")]
+    [EndpointName("GetCompanyRecommendations")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCompanyRecommendations([FromRoute] Guid id, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetCompanyRecommendationsQuery(id), ct);
+        return result.Match(
+            Ok,
             Problem
         );
     }
