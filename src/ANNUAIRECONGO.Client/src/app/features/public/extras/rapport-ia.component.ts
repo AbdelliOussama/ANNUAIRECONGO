@@ -11,7 +11,7 @@ import { Sector } from '../../../core/models/company.model';
   template: `
     <!-- Detailed Report Modal Overlay (Placed at the very top for absolute stacking safety) -->
     @if (selectedReport(); as report) {
-      <div class="modal-overlay" (click)="selectedReport.set(null)">
+      <div class="modal-overlay open" (click)="selectedReport.set(null)">
         <div class="modal-container p-8" (click)="$event.stopPropagation()">
           <div class="flex justify-between items-start mb-6">
             <div class="flex items-center gap-4">
@@ -335,6 +335,11 @@ import { Sector } from '../../../core/models/company.model';
       align-items: center !important;
       justify-content: center !important;
       padding: 24px !important;
+      opacity: 0 !important;
+      transition: opacity 0.25s ease-in-out !important;
+    }
+    .modal-overlay.open {
+      opacity: 1 !important;
     }
     .modal-container {
       background: var(--color-surface) !important;
