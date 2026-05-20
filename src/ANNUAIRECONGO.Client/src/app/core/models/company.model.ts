@@ -104,6 +104,8 @@ export interface Company {
   updatedAt: string;
   activeSubscriptionId?: string;
   activeSubscription?: Subscription;
+  trustScore?: number;
+  trustScoreAnalysis?: string;
 }
 
 export enum CompanyStatus {

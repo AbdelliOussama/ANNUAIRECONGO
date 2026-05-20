@@ -382,12 +382,13 @@ export class EspaceConsoleComponent {
 
   protected getPlanLabel(name: number | string | undefined): string {
     if (name === undefined) return 'N/A';
+    if (typeof name === 'string' && isNaN(Number(name))) return name;
     const val = Number(name);
     switch (val) {
       case PlanName.Free: return 'Gratuit';
       case PlanName.Pro: return 'Pro';
       case PlanName.Premium: return 'Premium';
-      default: return typeof name === 'string' ? name : 'Standard';
+      default: return 'Standard';
     }
   }
 

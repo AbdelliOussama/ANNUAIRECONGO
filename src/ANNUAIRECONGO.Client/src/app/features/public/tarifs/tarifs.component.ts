@@ -9,7 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { inject } from '@angular/core';
 
 interface PlanView {
-  id: 'free' | 'pro' | 'premium';
+  id: string;
   name: string;
   monthly: number;
   highlight?: string;
@@ -338,61 +338,57 @@ export class TarifsComponent {
     const raw = this.plansData() || [];
     return raw
       .filter(p => p.isActive)
-      .sort((a, b) => {
-        // Sort by SearchPriority or hardcoded order
-        const order = [PlanName.Free, PlanName.Pro, PlanName.Premium];
-        return order.indexOf(Number(a.name)) - order.indexOf(Number(b.name));
-      })
+      .sort((a, b) => a.price - b.price)
       .map(p => {
-        const nameVal = Number(p.name);
+        const isFree = p.price === 0;
+        const lowerName = p.name ? p.name.toLowerCase() : '';
+        const isPro = lowerName.includes('pro');
+        const isPremium = lowerName.includes('premium');
+
         return {
-          id: nameVal === 0 ? 'free' : nameVal === 1 ? 'pro' : 'premium',
-          name: this.getPlanLabel(nameVal),
+          id: p.id || lowerName,
+          name: p.name,
           monthly: p.price,
-          highlight: nameVal === 1 ? 'Le plus choisi' : undefined,
-          primary: nameVal === 1,
+          highlight: isPro ? 'Le plus choisi' : undefined,
+          primary: isPro || p.searchPriority > 0,
           features: this.getPlanFeatures(p),
-          cta: nameVal === 0 ? 'S\'inscrire' : nameVal === 1 ? 'Choisir Pro' : 'Contacter les ventes',
-          ctaLink: nameVal === 2 ? '/contact' : '/auth/inscription',
+          cta: isFree ? 'S\'inscrire' : (isPremium ? 'Contacter les ventes' : `Choisir ${p.name}`),
+          ctaLink: isPremium ? '/contact' : '/auth/inscription',
         } as PlanView;
       });
   });
 
-  protected getPlanLabel(name: number): string {
-    switch (name) {
-      case PlanName.Free: return 'Gratuit';
-      case PlanName.Pro: return 'Pro';
-      case PlanName.Premium: return 'Premium';
-      default: return 'Standard';
-    }
-  }
-
   protected getPlanFeatures(plan: Plan): string[] {
-    const nameVal = Number(plan.name);
-    switch (nameVal) {
-      case PlanName.Free:
-        return [
-          'Fiche entreprise basique',
-          'Visibilité dans l\'annuaire public',
-          '3 photos et 1 document',
-        ];
-      case PlanName.Pro:
-        return [
-          'Badge « Vérifiée » mis en avant',
-          '10 photos et 5 documents',
-          'Statistiques mensuelles',
-          'Réponse aux appels d\'offres',
-        ];
-      case PlanName.Premium:
-        return [
-          'Mise en avant cartographie',
-          '50 photos et 20 documents',
-          'Statistiques avancées et exports',
-          'Accès API et support dédié',
-        ];
-      default:
-        return [];
+    const features: string[] = [];
+    
+    // Visibilité & Badge
+    if (plan.hasFeaturedBadge) {
+      features.push('Badge « Vérifiée » mis en avant');
+    } else {
+      features.push('Fiche entreprise basique dans l\'annuaire');
     }
+
+    // Medias
+    features.push(`${plan.maxImages} photos et ${plan.maxDocuments} document${plan.maxDocuments > 1 ? 's' : ''}`);
+
+    // Analytics
+    if (plan.hasAnalytics) {
+      features.push('Statistiques détaillées de la fiche');
+    }
+
+    // Priorité de recherche
+    if (plan.searchPriority > 0) {
+      features.push('Priorité d\'affichage dans les résultats');
+    }
+    
+    // Premium specific (hardcoded supplementary features for now)
+    if (plan.name?.toLowerCase().includes('premium')) {
+      features.push('Accès API et support dédié');
+    } else if (plan.name?.toLowerCase().includes('pro')) {
+      features.push('Réponse aux appels d\'offres');
+    }
+
+    return features;
   }
 
   protected priceFor(plan: PlanView): number {

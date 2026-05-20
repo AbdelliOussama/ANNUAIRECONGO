@@ -23,6 +23,8 @@ public class CompanyConfigurations : IEntityTypeConfiguration<Company>
         builder.Property(x => x.YearFounded).IsRequired(false);
         builder.Property(x => x.IsVerified).HasDefaultValue(false);
         builder.Property(x => x.IsPremium).HasDefaultValue(false);
+        builder.Property(x => x.TrustScore).HasDefaultValue(0);
+        builder.Property(x => x.TrustScoreAnalysis).IsRequired(false);
 
         // ── Relationships ─────────────────────────────────────────────
         

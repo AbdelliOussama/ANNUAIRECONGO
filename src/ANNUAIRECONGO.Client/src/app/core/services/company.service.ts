@@ -137,4 +137,8 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
    getRecommendations(companyId: string): Observable<Company[]> {
      return this.api.get<Company[]>(`/api/v1/companies/${companyId}/recommendations`);
    }
+
+   generateTrustScore(companyId: string, manualScore?: number): Observable<Company> {
+     return this.api.post<Company>(`/api/v1/companies/${companyId}/trust-score`, { manualScore: manualScore ?? null });
+   }
 }

@@ -149,6 +149,32 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
                 <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
                 <div><dt>Secteur</dt><dd>{{ fiche()!.sectorLabel }}</dd></div>
               </dl>
+
+              @if (fiche()!.trustScore !== undefined && fiche()!.trustScore !== null) {
+                <div style="margin-top: 32px; padding: 24px; background: var(--color-surface-container-low); border: 1px solid var(--color-outline-variant); border-radius: var(--radius-xl);">
+                  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; background: conic-gradient(var(--color-primary) {{ fiche()!.trustScore }}%, var(--color-surface-container-highest) 0);">
+                      <div style="width: 52px; height: 52px; background: var(--color-surface-container-low); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-on-surface);">
+                        {{ fiche()!.trustScore }}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 style="font-size: 18px; font-weight: 800; font-family: var(--font-headline); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        Score de Fiabilité Économique
+                        <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 18px;">verified_user</span>
+                      </h3>
+                      <p style="font-size: 13px; color: var(--color-secondary); margin: 0;">Évaluation générée par IA basée sur la complétude administrative et opérationnelle.</p>
+                    </div>
+                  </div>
+                  @if (fiche()!.trustScoreAnalysis) {
+                    <div class="markdown-body" style="font-size: 14px; line-height: 1.6; color: var(--color-on-surface-variant); padding-top: 16px; border-top: 1px solid var(--color-outline-variant);">
+                      @for (p of getTrustParagraphs(); track $index) {
+                        <p style="margin-bottom: 12px;">{{ p }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             }
             @case ('services') {
               <h2 class="panel-title">Services & Produits</h2>
@@ -253,7 +279,7 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
                   @if (rec.logoUrl) {
                     <img [src]="rec.logoUrl" [alt]="rec.name" />
                   } @else {
-                    <span class="material-symbols-outlined">{{ rec.sectors?.[0]?.iconUrl || 'business' }}</span>
+                    <span class="material-symbols-outlined">{{ rec.sectors.length > 0 ? rec.sectors[0].iconUrl || 'business' : 'business' }}</span>
                   }
                 </div>
                 <div class="rec-content">
@@ -771,8 +797,16 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
       allSectors: c.sectors || [],
       lat: c.latitude,
       lng: c.longitude,
+      trustScore: c.trustScore,
+      trustScoreAnalysis: c.trustScoreAnalysis
     };
   });
+
+  protected getTrustParagraphs(): string[] {
+    const raw = this.fiche()?.trustScoreAnalysis;
+    if (!raw) return [];
+    return raw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+  }
 
   protected setTab(id: string): void {
     this.activeTab.set(id as FicheTab);

@@ -390,41 +390,41 @@ export class EspaceAbonnementComponent {
 
   protected getPlanLabel(name: number | string | undefined): string {
     if (name === undefined) return 'Standard';
+    if (typeof name === 'string' && isNaN(Number(name))) return name;
     const val = Number(name);
     switch (val) {
       case PlanName.Free: return 'Gratuit';
       case PlanName.Pro: return 'Pro';
       case PlanName.Premium: return 'Premium';
-      default: return typeof name === 'string' ? name : 'Standard';
+      default: return 'Standard';
     }
   }
 
   protected getPlanFeatures(plan: Plan): string[] {
-    // Cast to any then number to handle string/number flexibility from API
-    const nameVal = Number(plan.name);
-    switch (nameVal) {
-      case PlanName.Free:
-        return [
-          'Fiche entreprise basique',
-          'Visibilité dans l\'annuaire public',
-          '3 photos et 1 document',
-        ];
-      case PlanName.Pro:
-        return [
-          'Badge « Vérifiée » mis en avant',
-          '10 photos et 5 documents',
-          'Statistiques mensuelles',
-          'Réponse aux appels d\'offres',
-        ];
-      case PlanName.Premium:
-        return [
-          'Mise en avant cartographie',
-          '50 photos et 20 documents',
-          'Statistiques avancées et exports',
-          'Accès API et support dédié',
-        ];
-      default:
-        return [];
+    const features: string[] = [];
+    
+    if (plan.hasFeaturedBadge) {
+      features.push('Badge « Vérifiée » mis en avant');
+    } else {
+      features.push('Fiche entreprise basique dans l\'annuaire');
     }
+
+    features.push(`${plan.maxImages} photos et ${plan.maxDocuments} document${plan.maxDocuments > 1 ? 's' : ''}`);
+
+    if (plan.hasAnalytics) {
+      features.push('Statistiques détaillées de la fiche');
+    }
+
+    if (plan.searchPriority > 0) {
+      features.push('Priorité d\'affichage dans les résultats');
+    }
+    
+    if (plan.name?.toLowerCase().includes('premium')) {
+      features.push('Accès API et support dédié');
+    } else if (plan.name?.toLowerCase().includes('pro')) {
+      features.push('Réponse aux appels d\'offres');
+    }
+
+    return features;
   }
 }

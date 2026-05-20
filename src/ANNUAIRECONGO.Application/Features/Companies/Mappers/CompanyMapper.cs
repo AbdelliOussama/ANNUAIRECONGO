@@ -51,6 +51,8 @@ public static class CompanyMapper
             IsFeatured = company.IsFeatured,
             IsVerified = company.IsVerified,
             IsPremium = company.IsPremium,
+            TrustScore = company.TrustScore,
+            TrustScoreAnalysis = company.TrustScoreAnalysis,
             SubmittedAt = company.SubmittedAt,
             Rccm = company.Rccm,
             Niu = company.Niu,

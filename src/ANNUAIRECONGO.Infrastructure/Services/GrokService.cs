@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Common.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace ANNUAIRECONGO.Infrastructure.Services;
@@ -18,11 +19,13 @@ public class GrokService : IGrokService
 {
     private readonly HttpClient _httpClient;
     private readonly GrokSettings _settings;
+    private readonly ILogger<GrokService> _logger;
 
-    public GrokService(HttpClient httpClient, IOptions<GrokSettings> settings)
+    public GrokService(HttpClient httpClient, IOptions<GrokSettings> settings, ILogger<GrokService> logger)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
+        _logger = logger;
     }
 
     public async Task<string> GenerateCompanyDescriptionAsync(
@@ -510,5 +513,169 @@ RÈGLES D'OR :
         }
 
         return new List<string>();
+    }
+
+    public async Task<(int Score, string Analysis)> GenerateTrustScoreAnalysisAsync(
+        string name,
+        bool hasRccm,
+        bool hasNiu,
+        int documentCount,
+        int serviceCount,
+        int imageCount,
+        int reportCount,
+        int ageYears,
+        double completenessPercentage,
+        int? manualScore,
+        CancellationToken cancellationToken)
+    {
+        var prompt = "Tu es un auditeur de conformité légale et financière pour les entreprises au Congo-Brazzaville. " +
+                     $"Analyse les indicateurs de confiance suivants pour l'entreprise '{name}' :\n" +
+                     $"- A un numéro RCCM : {(hasRccm ? "Oui" : "Non")}\n" +
+                     $"- A un numéro NIU : {(hasNiu ? "Oui" : "Non")}\n" +
+                     $"- Nombre de documents officiels fournis : {documentCount}\n" +
+                     $"- Nombre de services déclarés : {serviceCount}\n" +
+                     $"- Nombre d'images réelles du local : {imageCount}\n" +
+                     $"- Nombre de plaintes/rapports déposés : {reportCount}\n" +
+                     $"- Âge d'existence de l'entreprise : {ageYears} ans\n" +
+                     $"- Complétude du profil en ligne : {completenessPercentage:F1}%\n" +
+                     (manualScore.HasValue ? $"- Score imposé par l'administrateur : {manualScore.Value}/100\n" : "") +
+                     "\n" +
+                     "Consignes de rédaction :\n" +
+                     "1. Rédige un rapport de justification professionnel en français de 3 paragraphes distincts :\n" +
+                     "   - Paragraphe 1 : Analyse de la régularité administrative (RCCM, NIU) et la conformité légale.\n" +
+                     "   - Paragraphe 2 : Évaluation opérationnelle (complétude du profil, documents d'activités, présence terrain et plaintes).\n" +
+                     "   - Paragraphe 3 : Synthèse économique et recommandations pour les investisseurs ou partenaires.\n" +
+                     "2. Retourne le résultat STRICTEMENT sous forme de JSON valide contenant les clés :\n" +
+                     "   - recommendedScore : un entier entre 0 et 100 " + (manualScore.HasValue ? $"(doit être exactement {manualScore.Value})" : "(déterminé objectivement par rapport aux indicateurs)") + "\n" +
+                     "   - justification : les 3 paragraphes en texte brut séparés par des retours à la ligne.\n" +
+                     "3. IMPORTANT : Ne mets AUCUN texte avant ou après le JSON. Pas de ```json, pas de commentaires, pas d'introduction. UNIQUEMENT le JSON brut commençant par { et terminant par }.";
+
+        var requestBody = new
+        {
+            model = _settings.Model,
+            messages = new[]
+            {
+                new { role = "user", content = prompt }
+            },
+            temperature = 0.2
+        };
+
+        var json = JsonSerializer.Serialize(requestBody);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions");
+        request.Content = content;
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Groq API returned {StatusCode} for TrustScore analysis: {Body}", response.StatusCode, responseContent);
+                var fallbackScore = manualScore ?? ComputeFallbackScore(hasRccm, hasNiu, documentCount, completenessPercentage);
+                return (fallbackScore, $"L'évaluation IA est temporairement indisponible (HTTP {(int)response.StatusCode}). Le score ci-dessus est calculé algorithmiquement à partir des indicateurs de complétude du profil, des documents fournis et de la conformité administrative.");
+            }
+
+            using var doc = JsonDocument.Parse(responseContent);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("choices", out var choices) &&
+                choices.ValueKind == JsonValueKind.Array &&
+                choices.GetArrayLength() > 0)
+            {
+                var firstChoice = choices[0];
+                if (firstChoice.TryGetProperty("message", out var messageProp) &&
+                    messageProp.TryGetProperty("content", out var contentProp))
+                {
+                    var text = contentProp.GetString()?.Trim();
+                    _logger.LogInformation("Groq TrustScore raw response: {Text}", text?.Substring(0, Math.Min(text.Length, 200)));
+
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        // Extract JSON from the response - handle markdown fences and leading/trailing text
+                        var jsonText = ExtractJsonObject(text);
+
+                        if (!string.IsNullOrWhiteSpace(jsonText))
+                        {
+                            using var parsedJson = JsonDocument.Parse(jsonText);
+                            var parsedRoot = parsedJson.RootElement;
+
+                            // Handle score being int or string
+                            int score;
+                            if (manualScore.HasValue)
+                            {
+                                score = manualScore.Value;
+                            }
+                            else if (parsedRoot.TryGetProperty("recommendedScore", out var scoreProp))
+                            {
+                                score = scoreProp.ValueKind == JsonValueKind.Number
+                                    ? scoreProp.GetInt32()
+                                    : int.TryParse(scoreProp.GetString(), out var parsed) ? parsed : 50;
+                            }
+                            else
+                            {
+                                score = 50;
+                            }
+
+                            string justification = "";
+                            if (parsedRoot.TryGetProperty("justification", out var justProp))
+                            {
+                                justification = justProp.GetString() ?? string.Empty;
+                            }
+
+                            score = Math.Clamp(score, 0, 100);
+                            _logger.LogInformation("TrustScore parsed successfully: Score={Score}, JustificationLength={Len}", score, justification.Length);
+                            return (score, justification);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Could not extract JSON object from Groq response: {Text}", text);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception during TrustScore AI analysis for company '{Name}'", name);
+        }
+
+        var defScore = manualScore ?? ComputeFallbackScore(hasRccm, hasNiu, documentCount, completenessPercentage);
+        return (defScore, $"L'analyse IA n'a pas pu être complétée pour l'entreprise '{name}'. Le score de {defScore}/100 est calculé algorithmiquement à partir des indicateurs suivants : conformité RCCM ({(hasRccm ? "présent" : "absent")}), NIU ({(hasNiu ? "présent" : "absent")}), {documentCount} document(s), et {completenessPercentage:F0}% de complétude du profil.");
+    }
+
+    /// <summary>
+    /// Extracts the first valid JSON object {...} from text that may contain markdown fences or surrounding prose.
+    /// </summary>
+    private static string? ExtractJsonObject(string text)
+    {
+        // Remove markdown code fences
+        if (text.Contains("```"))
+        {
+            text = text.Replace("```json", "").Replace("```", "").Trim();
+        }
+
+        // Find the first { and the matching last }
+        var start = text.IndexOf('{');
+        var end = text.LastIndexOf('}');
+
+        if (start >= 0 && end > start)
+        {
+            return text.Substring(start, end - start + 1);
+        }
+
+        return null;
+    }
+
+    private static int ComputeFallbackScore(bool hasRccm, bool hasNiu, int documentCount, double completenessPercentage)
+    {
+        return (int)Math.Min(100, Math.Max(0,
+            (hasRccm ? 30 : 0) +
+            (hasNiu ? 20 : 0) +
+            (Math.Min(documentCount, 3) * 5) +
+            (completenessPercentage * 0.35)));
     }
 }

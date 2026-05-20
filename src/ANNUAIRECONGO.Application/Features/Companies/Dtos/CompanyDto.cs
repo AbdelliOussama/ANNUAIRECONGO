@@ -50,6 +50,8 @@ public class CompanyDto
     public bool IsFeatured { get; set; }
     public bool IsVerified { get; set; }
     public bool IsPremium { get; set; }
+    public int TrustScore { get; set; }
+    public string? TrustScoreAnalysis { get; set; }
 
     [JsonPropertyName("submittedAt")]
     public DateTime? SubmittedAt { get; set; }

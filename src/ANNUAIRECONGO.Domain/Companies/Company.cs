@@ -41,6 +41,8 @@ public class Company : AuditableEntity
     public bool IsVerified { get; private set; }
     public bool IsPremium { get; private set; }
     public DateTime? SubmittedAt { get; private set; }
+    public int TrustScore { get; private set; }
+    public string? TrustScoreAnalysis { get; private set; }
 
     // ── Navigation Properties ─────────────────────────────────────
     public BusinessOwner? Owner { get; private set; }
@@ -253,6 +255,16 @@ public class Company : AuditableEntity
     public Result<Updated> SetFeatured(bool isFeatured)
     {
         IsFeatured = isFeatured;
+        return Result.Updated;
+    }
+
+    public Result<Updated> SetTrustScore(int score, string? analysis)
+    {
+        if (score < 0 || score > 100)
+            return Error.Validation("Company.InvalidTrustScore", "Le score de confiance doit être compris entre 0 et 100.");
+
+        TrustScore = score;
+        TrustScoreAnalysis = analysis;
         return Result.Updated;
     }
     // ── Helpers ───────────────────────────────────────────────────

@@ -43,4 +43,17 @@ public interface IGrokService
         IEnumerable<string> sectors,
         IEnumerable<string> services,
         CancellationToken cancellationToken);
+
+    Task<(int Score, string Analysis)> GenerateTrustScoreAnalysisAsync(
+        string name,
+        bool hasRccm,
+        bool hasNiu,
+        int documentCount,
+        int serviceCount,
+        int imageCount,
+        int reportCount,
+        int ageYears,
+        double completenessPercentage,
+        int? manualScore,
+        CancellationToken cancellationToken);
 }

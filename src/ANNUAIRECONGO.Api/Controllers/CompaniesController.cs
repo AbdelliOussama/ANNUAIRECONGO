@@ -691,4 +691,27 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
             Problem
         );
     }
+
+    public sealed record GenerateTrustScoreRequest(int? ManualScore);
+
+    [HttpPost("{id:guid}/trust-score")]
+    [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [EndpointSummary("Generate or override AI Trust Score Analysis for a company.")]
+    [EndpointDescription("Generates or updates a company's Trust Score and AI assessment justification.")]
+    [EndpointName("GenerateTrustScoreAnalysis")]
+    [MapToApiVersion("1.0")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GenerateTrustScoreAnalysis(
+        [FromRoute] Guid id,
+        [FromBody] GenerateTrustScoreRequest request,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(new ANNUAIRECONGO.Application.Features.Companies.Commands.GenerateTrustScore.GenerateTrustScoreAnalysisCommand(id, request.ManualScore), ct);
+        return result.Match(
+            Ok,
+            Problem
+        );
+    }
 }
