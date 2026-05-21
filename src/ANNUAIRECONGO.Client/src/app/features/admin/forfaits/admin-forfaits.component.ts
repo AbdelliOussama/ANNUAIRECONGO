@@ -31,7 +31,7 @@ import { XafPipe } from '@shared/pipes/xaf.pipe';
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           @for (plan of plans(); track plan.id) {
-            <form class="plan" [formGroup]="formFor(plan.id)" (ngSubmit)="save(plan.id)" novalidate>
+            <form class="plan" [formGroup]="formFor(plan.id)" (ngSubmit)="save(plan)" novalidate>
               <header class="plan-head">
                 <h3>{{ plan.name }}</h3>
                 <span class="badge" [class.badge-verified]="plan.isActive" [class.badge-pending]="!plan.isActive">

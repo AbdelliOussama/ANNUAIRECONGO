@@ -92,9 +92,9 @@ import { DatePipe } from '@angular/common';
             @for (plan of allPlans(); track plan.id) {
               <article class="plan" 
                        [class.is-current]="plan.id === subscription()?.planId"
-                       [class.is-primary]="+plan.name === 1">
+                       [class.is-primary]="isProPlan(plan.name)">
                 
-                @if (+plan.name === 1) {
+                @if (isProPlan(plan.name)) {
                   <span class="plan-highlight">Le plus choisi</span>
                 }
 
@@ -120,7 +120,7 @@ import { DatePipe } from '@angular/common';
                   </div>
                 } @else {
                   <div class="mt-auto">
-                    <ac-button [variant]="+plan.name >= 1 ? 'primary' : 'outline'" class="w-full justify-center" (click)="changePlan(plan)">
+                    <ac-button [variant]="!isFreePlan(plan.name) ? 'primary' : 'outline'" class="w-full justify-center" (click)="changePlan(plan)">
                       Choisir {{ getPlanLabel(plan.name) }}
                     </ac-button>
                   </div>
@@ -388,9 +388,33 @@ export class EspaceAbonnementComponent {
     });
   }
 
+  protected isFreePlan(name: number | string | undefined): boolean {
+    if (name === undefined) return false;
+    const n = typeof name === 'string' ? name.toLowerCase() : name;
+    return n === 'free' || n === 0 || n === '0';
+  }
+
+  protected isProPlan(name: number | string | undefined): boolean {
+    if (name === undefined) return false;
+    const n = typeof name === 'string' ? name.toLowerCase() : name;
+    return n === 'pro' || n === 1 || n === '1';
+  }
+
+  protected isPremiumPlan(name: number | string | undefined): boolean {
+    if (name === undefined) return false;
+    const n = typeof name === 'string' ? name.toLowerCase() : name;
+    return n === 'premium' || n === 2 || n === '2';
+  }
+
   protected getPlanLabel(name: number | string | undefined): string {
     if (name === undefined) return 'Standard';
-    if (typeof name === 'string' && isNaN(Number(name))) return name;
+    if (typeof name === 'string') {
+      const lower = name.toLowerCase();
+      if (lower === 'free') return 'Gratuit';
+      if (lower === 'pro') return 'Pro';
+      if (lower === 'premium') return 'Premium';
+      if (isNaN(Number(name))) return name;
+    }
     const val = Number(name);
     switch (val) {
       case PlanName.Free: return 'Gratuit';

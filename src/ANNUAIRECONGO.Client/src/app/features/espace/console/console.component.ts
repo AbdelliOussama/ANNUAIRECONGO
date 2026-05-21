@@ -382,7 +382,13 @@ export class EspaceConsoleComponent {
 
   protected getPlanLabel(name: number | string | undefined): string {
     if (name === undefined) return 'N/A';
-    if (typeof name === 'string' && isNaN(Number(name))) return name;
+    if (typeof name === 'string') {
+      const lower = name.toLowerCase();
+      if (lower === 'free') return 'Gratuit';
+      if (lower === 'pro') return 'Pro';
+      if (lower === 'premium') return 'Premium';
+      if (isNaN(Number(name))) return name;
+    }
     const val = Number(name);
     switch (val) {
       case PlanName.Free: return 'Gratuit';
