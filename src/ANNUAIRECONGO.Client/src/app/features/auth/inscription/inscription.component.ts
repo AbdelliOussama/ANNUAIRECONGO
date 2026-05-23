@@ -81,7 +81,7 @@ import { Sector } from '@core/models/company.model';
             leadingIcon="phone"
             autocomplete="tel"
             [hint]="FR.auth.phoneHint"
-            [pattern]="'^\\\\+?242\\\\s?0?[567]\\\\d{2}\\\\s?\\\\d{2}\\\\s?\\\\d{2}\\\\s?\\\\d{2}$'"
+            [pattern]="'^(?:\\\\+?242)?[\\\\s.-]?0?[4567](?:[\\\\s.-]?\\\\d){7}$'"
             [required]="true"
             [error]="errorFor(accountForm, 'phone')"
           />
@@ -367,7 +367,7 @@ export class InscriptionComponent {
       firstName:       ['', [Validators.required, Validators.minLength(2)]],
       lastName:        ['', [Validators.required, Validators.minLength(2)]],
       email:           ['', [Validators.required, Validators.email]],
-      phone:           ['', [Validators.required, Validators.pattern(/^\+?242\s?0?[567]\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/)]],
+      phone:           ['', [Validators.required, Validators.pattern(/^(?:\+?242)?[\s.-]?0?[4567](?:[\s.-]?\d){7}$/)]],
       password:        ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]],
       cgu:             [false, Validators.requiredTrue],

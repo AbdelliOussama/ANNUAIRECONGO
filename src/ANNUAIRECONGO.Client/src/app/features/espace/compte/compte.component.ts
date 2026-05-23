@@ -153,7 +153,7 @@ export class EspaceCompteComponent {
     firstName: [this.user?.firstName ?? '', [Validators.required, Validators.minLength(2)]],
     lastName:  [this.user?.lastName  ?? '', [Validators.required, Validators.minLength(2)]],
     email:     [this.user?.email     ?? '', [Validators.required, Validators.email]],
-    phone:     [this.user?.phoneNumber ?? '', [Validators.pattern(/^\+?242\s?0?[567]\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$/)]],
+    phone:     [this.user?.phoneNumber ?? '', [Validators.pattern(/^(?:\+?242)?[\s.-]?0?[4567](?:[\s.-]?\d){7}$/)]],
     position:  [this.user?.companyPosition ?? ''],
   });
 
