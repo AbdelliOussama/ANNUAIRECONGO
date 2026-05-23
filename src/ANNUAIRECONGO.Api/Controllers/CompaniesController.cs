@@ -144,25 +144,32 @@ public sealed class CompaniesController(ISender sender) : ApiController
         [FromQuery] int pageSize = 10,
         CancellationToken ct = default)
     {
-        var result = await sender.Send(new GetCompaniesQuery(
-            searchTerm,
-            smartSearch,
-            sectorId,
-            sectorSlug,
-            cityId,
-            regionId,
-            regionName,
-            status,
-            Rccm,
-            Niu,
-            sortBy,
-            sortOrder,
-            pageNumber,
-            pageSize), ct);
-        return result.Match(
-            response => Ok(response),
-            Problem
-        );
+        try
+        {
+            var result = await sender.Send(new GetCompaniesQuery(
+                searchTerm,
+                smartSearch,
+                sectorId,
+                sectorSlug,
+                cityId,
+                regionId,
+                regionName,
+                status,
+                Rccm,
+                Niu,
+                sortBy,
+                sortOrder,
+                pageNumber,
+                pageSize), ct);
+            return result.Match(
+                response => Ok(response),
+                Problem);
+        }
+        catch (OperationCanceledException)
+        {
+            // Client cancelled the request (e.g. search-as-you-type abort) — not a server error
+            return StatusCode(499);
+        }
     }
 
     [HttpPut("{id:guid}/update-company-profile" , Name = "UpdateCompanyProfile")]

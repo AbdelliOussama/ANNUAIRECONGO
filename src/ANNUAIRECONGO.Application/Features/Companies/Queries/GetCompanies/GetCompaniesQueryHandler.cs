@@ -67,6 +67,12 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                // Client cancelled (e.g. typed another character) — fall back to plain text search
+                _logger.LogDebug("Smart Search cancelled by client for query: '{SmartSearch}'", request.SmartSearch);
+                searchTerm = request.SmartSearch;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing Smart Search with Groq API. Falling back to regular search.");
@@ -180,6 +186,9 @@ public sealed record GetCompaniesQueryHandler(ILogger<GetCompaniesQueryHandler> 
             // Default sort: Newest first
             orderedQuery = orderedQuery.ThenByDescending(c => c.CreatedAtUtc);
         }
+
+        // Check cancellation before expensive DB operations
+        cancellationToken.ThrowIfCancellationRequested();
 
         var totalCount = await orderedQuery.CountAsync(cancellationToken);
         var companies = await orderedQuery

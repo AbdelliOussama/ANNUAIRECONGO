@@ -10,7 +10,7 @@ import { SectorService } from '@core/services/sector.service';
 import { GeographyService } from '@core/services/geography.service';
 import { Sector, Region, Company, PaginatedResponse } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
-import { switchMap, catchError, of, tap } from 'rxjs';
+import { switchMap, catchError, of, tap, debounceTime, distinctUntilChanged } from 'rxjs';
 
 interface Filters {
   query: string;
@@ -530,6 +530,8 @@ export class AnnuaireListComponent {
 
   private readonly result = toSignal<PaginatedResponse<Company> | null>(
     this.params$.pipe(
+      debounceTime(400),
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
       tap(() => this.loading.set(true)),
       switchMap(p => {
         console.log('Annuaire fetch parameters:', p);

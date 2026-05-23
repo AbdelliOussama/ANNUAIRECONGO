@@ -26,6 +26,14 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        // Handle client-cancelled requests gracefully (e.g. search-as-you-type abort)
+        if (exception is OperationCanceledException)
+        {
+            _logger.LogDebug("Request was cancelled by the client: {Path}", httpContext.Request.Path);
+            httpContext.Response.StatusCode = 499; // Client Closed Request (nginx convention)
+            return true; // Handled — no ProblemDetails body needed
+        }
+
         _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
