@@ -134,7 +134,7 @@ import { ModalService } from '@shared/services/modal.service';
             <header class="panel-head">
               <div>
                 <p class="panel-eyebrow">Mon abonnement</p>
-                <h2>Forfait {{ getPlanLabel(subscription()!.planName) }}</h2>
+                <h2>Forfait {{ subscription() ? getPlanLabel(subscription()!.planName) : 'Aucun' }}</h2>
               </div>
               @if (subscription()) {
                 <span class="badge badge-verified">{{ subscription()!.isActive ? 'Actif' : 'Inactif' }}</span>

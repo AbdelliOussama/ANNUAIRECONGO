@@ -352,7 +352,10 @@ export class TarifsComponent {
           highlight: isPro ? 'Le plus choisi' : undefined,
           primary: isPro || p.searchPriority > 0,
           features: this.getPlanFeatures(p),
-          cta: isFree ? 'S\'inscrire' : (isPremium ? 'Contacter les ventes' : `Choisir ${p.name}`),
+          // Free plan: CTA makes it clear the plan is included at registration (no manual selection needed).
+          // Pro plan: direct to registration; after login the user can upgrade from /espace/abonnement.
+          // Premium plan: contact sales.
+          cta: isFree ? 'Commencer gratuitement' : (isPremium ? 'Contacter les ventes' : `Choisir ${p.name}`),
           ctaLink: isPremium ? '/contact' : '/auth/inscription',
         } as PlanView;
       });
@@ -425,7 +428,7 @@ export class TarifsComponent {
     },
     {
       q: 'Puis-je bénéficier d\'une période d\'essai ?',
-      a: 'Le forfait Free reste accessible sans limite de durée. Pour les forfaits Pro et Premium, contactez notre équipe commerciale pour discuter d\'une démonstration ou d\'une offre adaptée.',
+      a: 'Le forfait Gratuit est automatiquement attribué à toute nouvelle entreprise lors de l\'inscription — aucune action supplémentaire n\'est requise. Pour les forfaits Pro et Premium, vous pouvez passer à niveau à tout moment depuis votre espace entreprise.',
     },
     {
       q: 'Comment recevoir mes factures ?',

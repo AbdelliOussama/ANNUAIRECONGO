@@ -74,7 +74,10 @@ public static class DependencyInjection
             options.SignIn.RequireConfirmedAccount = false;
         })
         .AddRoles<IdentityRole>()
-        .AddEntityFrameworkStores<AppDbContext>();
+        .AddEntityFrameworkStores<AppDbContext>()
+        // Required for GenerateEmailConfirmationTokenAsync / GeneratePasswordResetTokenAsync.
+        // Without this, UserManager throws "No IUserTwoFactorTokenProvider named 'Default' is registered."
+        .AddDefaultTokenProviders();
 
         services.AddTransient<IIdentityService, IdentityService>();
 

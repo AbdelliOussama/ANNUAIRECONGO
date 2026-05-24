@@ -84,8 +84,8 @@ import { DatePipe } from '@angular/common';
       @if (!loading()) {
         <section class="plans-section">
           <header class="section-head">
-            <h2>{{ subscription() ? 'Changer de forfait' : 'Choisir un forfait' }}</h2>
-            <p class="muted">Activation immédiate après validation du paiement.</p>
+            <h2>{{ subscription() ? 'Mettre à niveau mon forfait' : 'Choisir un forfait' }}</h2>
+            <p class="muted">{{ subscription() ? 'Passez à Pro ou Premium pour débloquer plus de fonctionnalités.' : 'Activation immédiate après validation du paiement.' }}</p>
           </header>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -321,7 +321,16 @@ export class EspaceAbonnementComponent {
   );
 
   private readonly plansData = toSignal<Plan[] | null>(this.planService.getPlans(), { initialValue: null });
-  protected readonly allPlans = computed(() => (this.plansData() || []).filter(p => p.isActive));
+
+  // Show only paid plans (Pro, Premium) when the company already has an active
+  // subscription (the Free plan is auto-applied on registration and should no
+  // longer appear as a selectable option — it would be a confusing downgrade path).
+  // Non-subscribed companies still see all three plans.
+  protected readonly allPlans = computed(() => {
+    const plans = (this.plansData() || []).filter(p => p.isActive);
+    const hasActiveSub = this.subscription() !== null;
+    return hasActiveSub ? plans.filter(p => p.price > 0) : plans;
+  });
 
   private readonly subsData = toSignal<Subscription[] | null>(
     this.boService.getMyCompanies().pipe(

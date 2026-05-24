@@ -140,15 +140,16 @@ import { Sector } from '@core/models/company.model';
           <div class="grid-2">
             <ac-input
               formControlName="rccm"
-              label="Numéro RCCM"
+              label="Numéro RCCM (facultatif)"
               placeholder="CG-BZV-2025-A-1234"
-              [required]="true"
+              hint="Format : CG-BZV-2025-A-1234. Ce champ peut être renseigné plus tard."
               [error]="errorFor(companyForm, 'rccm')"
             />
             <ac-input
               formControlName="niu"
-              label="NIU (Numéro d'Identification Unique)"
-              [required]="true"
+              label="NIU - Identifiant fiscal (facultatif)"
+              placeholder="Ex. : M2025BZV00123"
+              hint="Ce champ peut être complété après validation de votre fiche."
               [error]="errorFor(companyForm, 'niu')"
             />
           </div>
@@ -377,8 +378,11 @@ export class InscriptionComponent {
 
   protected readonly companyForm = this.fb.nonNullable.group({
     companyName: ['', [Validators.required, Validators.minLength(2)]],
-    rccm:        ['', [Validators.required, Validators.pattern(/^[A-Z]{2,3}-[A-Z]{2,4}-\d{4}-[A-Z]-\d{3,5}$/)]],
-    niu:         ['', [Validators.required, Validators.minLength(8)]],
+    // RCCM and NIU are optional at registration — the admin validates them during company review.
+    // A permissive pattern accepts both the official format (CG-BZV-2025-A-1234) and
+    // simpler internal references used during seeding/testing (e.g. RCCM-12345).
+    rccm:        ['', [Validators.pattern(/^[A-Za-z0-9][A-Za-z0-9\-]{2,29}$/)]],
+    niu:         ['', [Validators.minLength(4), Validators.maxLength(30)]],
     sectorId:    ['', Validators.required],
     cityId:      ['', Validators.required],
     website:     ['', Validators.pattern(/^(https?:\/\/)?[\w.-]+\.[a-z]{2,}.*$/i)],
@@ -409,7 +413,7 @@ export class InscriptionComponent {
     if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
     if (c.errors['pattern'])   {
       if (name === 'phone') return FR.errors.phoneCG;
-      if (name === 'rccm')  return 'Format attendu : CG-BZV-2025-A-1234';
+      if (name === 'rccm')  return 'Format invalide. Exemple : CG-BZV-2025-A-1234 ou RCCM-12345';
       if (name === 'website') return 'URL invalide. Exemple : https://exemple.cg';
       return FR.errors.pattern;
     }

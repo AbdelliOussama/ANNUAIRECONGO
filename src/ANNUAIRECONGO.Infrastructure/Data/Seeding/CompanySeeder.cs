@@ -82,19 +82,28 @@ public static class CompanySeeder
         foreach (var data in companyDataList)
         {
             var companyId = Guid.NewGuid();
+            // Generate realistic Congolese RCCM and NIU values for seeded companies.
+            // RCCM format: CG-{CITY}-{YEAR}-{LETTER}-{NUMBER}  (official Congo format)
+            // NIU format:  M{YEAR}{CITY}{NUMBER}                (Direction Générale des Impôts)
+            var rccmYear = random.Next(1995, 2024);
+            var rccmCity = data.CityId == pointeNoire.Id ? "PNR" : "BZV";
+            var rccmLetter = (char)('A' + random.Next(0, 26));
+            var rccm = $"CG-{rccmCity}-{rccmYear}-{rccmLetter}-{random.Next(100, 9999)}";
+            var niu = $"M{rccmYear}{rccmCity}{random.Next(10000, 99999)}";
+
             var companyResult = Company.Create(
                 companyId,
                 data.OwnerId,
                 data.Name,
                 data.CityId,
                 data.Desc,
-                $"{new Random().Next(10, 500)} Avenue General de Gaulle",
+                $"{random.Next(10, 500)} Avenue Général de Gaulle",
                 null,
                 null,
                 new List<Guid> { data.SectorId },
-                "RCCM-" + new Random().Next(10000, 99999),
-                "NIU" + new Random().Next(100000, 999999),
-                new Random().Next(1960, 2020),
+                rccm,
+                niu,
+                random.Next(1960, 2020),
                 data.IsPremium,
                 data.IsPremium
             );
