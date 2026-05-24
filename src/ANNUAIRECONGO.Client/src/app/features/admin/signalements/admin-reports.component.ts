@@ -42,12 +42,12 @@ import { BehaviorSubject } from 'rxjs';
                   <td>{{ r.reason }}</td>
                   <td class="mono">{{ r.reporterIp }}</td>
                   <td>
-                    @if (r.status === 0) { <span class="badge warning">En attente</span> }
-                    @if (r.status === 1) { <span class="badge success">Examiné</span> }
-                    @if (r.status === 2) { <span class="badge neutral">Rejeté</span> }
+                    @if (r.status === 'Pending')   { <span class="badge warning">En attente</span> }
+                    @if (r.status === 'Reviewed')  { <span class="badge success">Examiné</span> }
+                    @if (r.status === 'Dismissed') { <span class="badge neutral">Rejeté</span> }
                   </td>
                   <td>
-                    @if (r.status === 0) {
+                    @if (r.status === 'Pending') {
                       <div class="actions">
                         <button class="btn-sm action-btn primary" (click)="process(r.id, false)">Accepter</button>
                         <button class="btn-sm action-btn outline" (click)="process(r.id, true)">Rejeter</button>

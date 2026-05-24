@@ -576,7 +576,7 @@ export class AnnuaireListComponent {
       sectors:     c.sectors || [],
       description: c.description || '',
       city:        c.cityName || c.city?.name || 'Congo',
-      isVerified:  c.status === 2 || c.isVerified,
+      isVerified:  c.status === 'Active' || c.isVerified,
       isPremium:   c.isPremium,
     }));
   });

@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, of, switchMap, catchError, map } from 'rxjs';
+import { combineLatest, of, switchMap, catchError, map, tap, finalize } from 'rxjs';
 import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { NotificationService } from '@core/services/notification.service';
 import { StatsService } from '@core/services/stats.service';
 import { AuthService } from '@core/services/auth.service';
-import { Company, Subscription, Notification, PlanName, CompanyStats } from '@core/models/company.model';
+import { Company, CompanyStatus, Subscription, Notification, PlanName, CompanyStats } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { XafPipe } from '@shared/pipes/xaf.pipe';
@@ -62,6 +62,23 @@ import { ModalService } from '@shared/services/modal.service';
           </a>
         </ac-empty-state>
       } @else {
+        <!-- Status banner — shown when company is not yet Active -->
+        @if (company()!.status !== CS.Active) {
+          <div [class]="statusBannerClass(company()!.status)" role="alert">
+            <span class="material-symbols-outlined banner-icon" aria-hidden="true">{{ statusBannerIcon(company()!.status) }}</span>
+            <div class="banner-body">
+              <p class="banner-title">{{ statusBannerTitle(company()!.status) }}</p>
+              <p class="banner-text">{{ statusBannerText(company()!.status) }}</p>
+            </div>
+            @if (company()!.status === CS.Draft || company()!.status === CS.Rejected) {
+              <button type="button" class="btn btn-primary btn-sm banner-cta" (click)="onSubmitCompany()" [disabled]="submitting()">
+                <span class="material-symbols-outlined" aria-hidden="true">publish</span>
+                Soumettre ma fiche
+              </button>
+            }
+          </div>
+        }
+
         <!-- KPIs -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Indicateurs clés">
           <article class="kpi">
@@ -116,7 +133,7 @@ import { ModalService } from '@shared/services/modal.service';
                 <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
                 Voir publiquement
               </a>
-              @if (company()!.status === 0 || company()!.status === 3) {
+              @if (company()!.status === CS.Draft || company()!.status === CS.Rejected) {
                 <button type="button" class="btn btn-primary btn-sm" (click)="onSubmitCompany()" [disabled]="submitting()">
                   <span class="material-symbols-outlined" aria-hidden="true">publish</span>
                   Soumettre pour validation
@@ -313,6 +330,25 @@ import { ModalService } from '@shared/services/modal.service';
     .link { color: var(--color-primary); font-weight: 600; font-size: 13px; }
     .link:hover { text-decoration: underline; }
 
+    /* Status banners */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-xl);
+      border: 1px solid;
+      flex-wrap: wrap;
+    }
+    .banner-draft   { background: var(--color-surface-container-highest); border-color: var(--color-outline-variant); color: var(--color-on-surface-variant); }
+    .banner-pending { background: var(--color-tertiary-fixed); border-color: var(--color-tertiary); color: var(--color-on-tertiary-fixed); }
+    .banner-rejected{ background: var(--color-error-container); border-color: var(--color-error); color: var(--color-on-error-container); }
+    .banner-icon { font-size: 24px; flex-shrink: 0; }
+    .banner-body { flex: 1; min-width: 0; }
+    .banner-title { font-size: 14px; font-weight: 700; margin: 0 0 2px; }
+    .banner-text  { font-size: 13px; margin: 0; line-height: 1.5; opacity: 0.85; }
+    .banner-cta   { margin-left: auto; white-space: nowrap; }
+
     .status { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
     .status-validee   { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
     .status-en-attente{ background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
@@ -322,6 +358,8 @@ import { ModalService } from '@shared/services/modal.service';
 })
 export class EspaceConsoleComponent {
   protected readonly FR = FR;
+  // Expose enum to template
+  protected readonly CS = CompanyStatus;
   private readonly boService   = inject(BusinessOwnerService);
   private readonly subService  = inject(SubscriptionService);
   private readonly notifService= inject(NotificationService);
@@ -334,12 +372,24 @@ export class EspaceConsoleComponent {
   protected readonly identity = this.authService.currentUser;
   protected readonly submitting = signal(false);
 
+  // Tracks whether the initial companies API call has completed (success or error).
+  // Using a dedicated signal avoids the race condition where loading() = false
+  // momentarily before identity() resolves, causing OnPush to render the wrong branch.
+  private readonly _dataLoaded = signal(false);
+
   private readonly companyData = toSignal<Company | null>(
-    this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
+    this.boService.getMyCompanies().pipe(
+      map(list => list[0] || null),
+      tap(() => this._dataLoaded.set(true)),
+      catchError(() => { this._dataLoaded.set(true); return of(null); })
+    ),
     { initialValue: null }
   );
 
   protected readonly company = computed(() => this.companyData());
+
+  // Only show loading skeleton while the API call is in-flight.
+  protected readonly loading = computed(() => !this._dataLoaded());
 
   private readonly subData = toSignal(
     this.boService.getMyCompanies().pipe(
@@ -374,8 +424,6 @@ export class EspaceConsoleComponent {
   );
   protected readonly stats = computed(() => this.statsData());
 
-  protected readonly loading = computed(() => this.companyData() === null && this.identity() !== null);
-
   protected formatInt(n: number): string {
     return new Intl.NumberFormat('fr-FR').format(n);
   }
@@ -408,20 +456,58 @@ export class EspaceConsoleComponent {
     }
   }
 
-  protected statusLabel(status: number): string {
+  protected statusBannerTitle(status: CompanyStatus | string): string {
     switch (status) {
-      case 2: return 'Vérifiée';
-      case 1: return 'En attente';
-      case 3: return 'Refusée';
+      case CompanyStatus.Draft:    return 'Votre fiche est en brouillon';
+      case CompanyStatus.Pending:  return 'Votre fiche est en cours d\'examen';
+      case CompanyStatus.Rejected: return 'Votre fiche a été refusée';
+      default: return '';
+    }
+  }
+
+  protected statusBannerText(status: CompanyStatus | string): string {
+    switch (status) {
+      case CompanyStatus.Draft:    return 'Elle n\'est pas encore visible dans l\'annuaire. Soumettez-la pour qu\'un administrateur l\'examine et la publie.';
+      case CompanyStatus.Pending:  return 'Un administrateur examine votre fiche. Vous serez notifié par e-mail dès qu\'elle sera publiée sur l\'annuaire.';
+      case CompanyStatus.Rejected: return 'Consultez le motif de rejet ci-dessous, corrigez votre fiche puis soumettez-la à nouveau.';
+      default: return '';
+    }
+  }
+
+  protected statusBannerIcon(status: CompanyStatus | string): string {
+    switch (status) {
+      case CompanyStatus.Draft:    return 'edit_note';
+      case CompanyStatus.Pending:  return 'pending';
+      case CompanyStatus.Rejected: return 'cancel';
+      default: return 'info';
+    }
+  }
+
+  protected statusBannerClass(status: CompanyStatus | string): string {
+    switch (status) {
+      case CompanyStatus.Draft:    return 'status-banner banner-draft';
+      case CompanyStatus.Pending:  return 'status-banner banner-pending';
+      case CompanyStatus.Rejected: return 'status-banner banner-rejected';
+      default: return 'status-banner';
+    }
+  }
+
+  protected statusLabel(status: CompanyStatus | string): string {
+    switch (status) {
+      case CompanyStatus.Active:   return 'Vérifiée';
+      case CompanyStatus.Pending:  return 'En attente';
+      case CompanyStatus.Rejected: return 'Refusée';
+      case CompanyStatus.Suspended:return 'Suspendue';
       default: return 'Brouillon';
     }
   }
 
-  protected statusClass(status: number): string {
+  protected statusClass(status: CompanyStatus | string): string {
     switch (status) {
-      case 2: return 'status status-validee';
-      case 1: return 'status status-en-attente';
-      case 3: return 'status status-rejetee';
+      case CompanyStatus.Active:   return 'status status-validee';
+      case CompanyStatus.Pending:  return 'status status-en-attente';
+      case CompanyStatus.Rejected: return 'status status-rejetee';
+      case CompanyStatus.Suspended:return 'status status-brouillon';
       default: return 'status status-brouillon';
     }
   }

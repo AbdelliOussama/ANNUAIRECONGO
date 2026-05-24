@@ -49,9 +49,10 @@ public sealed class CreatePaymentCommandHandler(
         var paymentDto = new PaymentDto(
             payment.Id,
             payment.CompanyId,
+            payment.Company?.Name,
             payment.SubscriptionId,
             payment.Reference,
-            payment.Subscription.Plan.Name,
+            payment.Subscription?.Plan?.Name,
             payment.Amount,
             payment.Currency,
             payment.Method,

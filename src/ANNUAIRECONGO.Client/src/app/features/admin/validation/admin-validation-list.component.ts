@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { CompanyService } from '@core/services/company.service';
 import { CompanyStatus, PaginatedResponse, Company } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
@@ -137,6 +139,7 @@ type StatusFilter = 'all' | 'en-attente' | 'validee' | 'rejetee';
     .status-en-attente { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
     .status-validee    { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
     .status-rejetee    { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .status-brouillon  { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
 
     .actions-col { text-align: right; }
     .link { color: var(--color-primary); font-weight: 700; }
@@ -154,16 +157,31 @@ export class AdminValidationListComponent {
     { value: 'rejetee',     label: 'Refusées'    },
   ];
 
+  // Load Pending (1), Active (2) and Rejected (3) in parallel.
+  // The backend defaults to Active-only when no status is passed, so we must
+  // be explicit for each bucket and merge client-side.
   private readonly companiesPage = toSignal(
-    this.companyService.getCompanies({ pageSize: 1000 }), 
-    { initialValue: { items: [], pageNumber: 1, pageSize: 1000, totalCount: 0, totalPages: 0 } as PaginatedResponse<Company> }
+    forkJoin([
+      this.companyService.getCompanies({ pageSize: 500, status: 1 }), // Pending
+      this.companyService.getCompanies({ pageSize: 500, status: 2 }), // Active/Validated
+      this.companyService.getCompanies({ pageSize: 500, status: 3 }), // Rejected
+    ]).pipe(
+      map(([pending, validated, rejected]) => ({
+        items: [...pending.items, ...validated.items, ...rejected.items],
+        pageNumber: 1,
+        pageSize: 1500,
+        totalCount: pending.totalCount + validated.totalCount + rejected.totalCount,
+        totalPages: 1,
+      } as PaginatedResponse<Company>))
+    ),
+    { initialValue: { items: [], pageNumber: 1, pageSize: 1500, totalCount: 0, totalPages: 0 } as PaginatedResponse<Company> }
   );
 
-  protected readonly loading = computed(() => this.companiesPage().items.length === 0 && this.firstLoad());
+  protected readonly loading = computed(() => this.companiesPage().totalCount === 0 && this.firstLoad());
   private readonly firstLoad = signal(true);
 
   constructor() {
-    setTimeout(() => this.firstLoad.set(false), 500);
+    setTimeout(() => this.firstLoad.set(false), 800);
   }
 
   protected readonly visible = computed(() => {
@@ -186,12 +204,13 @@ export class AdminValidationListComponent {
     }));
   });
 
-  private mapStatus(status: number): string {
+  // API returns enum names as strings (JsonStringEnumConverter).
+  private mapStatus(status: string): string {
     switch (status) {
-      case 1: return 'en-attente';
-      case 2: return 'validee';
-      case 3: return 'rejetee';
-      default: return 'en-attente';
+      case 'Pending':   return 'en-attente';
+      case 'Active':    return 'validee';
+      case 'Rejected':  return 'rejetee';
+      default:          return 'brouillon'; // Draft / Suspended — shouldn't normally reach the admin queue
     }
   }
 
@@ -205,6 +224,7 @@ export class AdminValidationListComponent {
       'en-attente': 'En attente',
       validee:      'Validée',
       rejetee:      'Refusée',
+      brouillon:    'Brouillon',
     } as Record<string, string>)[s] ?? s;
   }
   protected statusClass(s: string): string {

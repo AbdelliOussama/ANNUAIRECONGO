@@ -123,6 +123,10 @@ getCompanies(filter: CompanyFilter = {}): Observable<PaginatedResponse<Company>>
      return this.api.post<void>(`/api/v1/companies/${companyId}/reject-company`, { reason });
    }
 
+   verifyCompany(companyId: string): Observable<void> {
+     return this.api.patch<void>(`/api/v1/companies/${companyId}/verify-company`, {});
+   }
+
    setFeatured(companyId: string, isFeatured: boolean): Observable<void> {
      return this.api.post<void>(`/api/v1/companies/${companyId}/set-featured`, isFeatured);
    }

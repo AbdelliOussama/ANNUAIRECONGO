@@ -108,12 +108,13 @@ export interface Company {
   trustScoreAnalysis?: string;
 }
 
+// API serializes enums as strings via JsonStringEnumConverter — values must match the C# enum names exactly.
 export enum CompanyStatus {
-  Draft = 0,
-  Pending = 1,
-  Active = 2,
-  Rejected = 3,
-  Suspended = 4
+  Draft     = 'Draft',
+  Pending   = 'Pending',
+  Active    = 'Active',
+  Rejected  = 'Rejected',
+  Suspended = 'Suspended',
 }
 
 export interface Subscription {
@@ -134,10 +135,11 @@ export enum PlanName {
   Premium = 2
 }
 
+// API serializes enums as strings via JsonStringEnumConverter — values must match C# enum names exactly.
 export enum PaymentMethod {
-  Stripe = 0,
-  MTNMoMo = 1,
-  AirtelMoney = 2
+  Stripe      = 'Stripe',
+  MTNMoMo     = 'MTNMoMo',
+  AirtelMoney = 'AirtelMoney',
 }
 
 export interface Payment {
@@ -149,8 +151,8 @@ export interface Payment {
   planName?: string;
   amount: number;
   currency: string;
-  method: number;
-  status: number;
+  method: string;   // serialized as string by JsonStringEnumConverter: "Stripe" | "MTNMoMo" | "AirtelMoney"
+  status: string;   // serialized as string: "Pending" | "Success" | "Failed" | "Refunded"
   gatewayRef?: string;
   invoiceUrl?: string;
   paidAt?: string;
@@ -158,13 +160,12 @@ export interface Payment {
   lastModifiedAt: string;
 }
 
+// API serializes enums as strings via JsonStringEnumConverter — values must match C# enum names exactly.
 export enum PaymentStatus {
-  Pending = 0,
-  Success = 1,
-  Completed = 1, // Alias for Success
-  Failed = 2,
-  Refunded = 3,
-  Rejected = 4   // Added as placeholder for rejections
+  Pending  = 'Pending',
+  Success  = 'Success',
+  Failed   = 'Failed',
+  Refunded = 'Refunded',
 }
 
 export interface Notification {

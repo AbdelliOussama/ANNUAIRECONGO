@@ -45,7 +45,7 @@ import { Company } from '@core/models/company.model';
               <th>NIU</th>
               <th>Secteur</th>
               <th>Ville</th>
-              <th>Statut</th>
+              <th>Identité</th>
               <th class="sr-only">Actions</th>
             </tr>
           </thead>
@@ -61,9 +61,12 @@ import { Company } from '@core/models/company.model';
                 <td>{{ c.city }}</td>
                 <td>
                   @if (c.isVerified) {
-                    <span class="badge badge-verified">Vérifiée</span>
+                    <span class="badge badge-verified">
+                      <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">verified</span>
+                      Vérifiée
+                    </span>
                   } @else {
-                    <span class="badge badge-pending">En attente</span>
+                    <span class="badge badge-neutral">Non vérifiée</span>
                   }
                 </td>
                 <td>
@@ -120,6 +123,15 @@ import { Company } from '@core/models/company.model';
 
     .link { color: var(--color-primary); font-weight: 600; }
     .link:hover { text-decoration: underline; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: var(--radius-full);
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .badge-verified { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
+    .badge-neutral  { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
   `],
 })
 export class RegistreComponent {

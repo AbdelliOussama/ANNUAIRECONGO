@@ -44,9 +44,16 @@ public sealed class CancelSubscriptionCommandHandler(ILogger<CancelSubscriptionC
             _logger.LogWarning("Failed to cancel subscription with ID {SubscriptionId}: {ErrorMessage}", request.SubscriptionId, cancelResult.Errors.First().Description);
             return cancelResult.Errors;
         }
-        subscription.AddDomainEvent(new SubscriptionCancelledEvent(subscription.Id, subscription.CompanyId,subscription.Company.OwnerId.ToString()));
+
+        // Clear the company's ActiveSubscriptionId so it no longer points to a
+        // cancelled subscription — without this, future queries on the company
+        // would return a cancelled sub as the "active" one.
+        subscription.Company.ClearActiveSubscription();
+
+        subscription.AddDomainEvent(new SubscriptionCancelledEvent(subscription.Id, subscription.CompanyId, subscription.Company.OwnerId?.ToString() ?? string.Empty));
         _logger.LogInformation("Subscription with ID {SubscriptionId} cancelled successfully.", request.SubscriptionId);
         await _context.SaveChangesAsync(cancellationToken);
+        await _cache.RemoveByTagAsync("Company");
         return Result.Updated;
     }
 }

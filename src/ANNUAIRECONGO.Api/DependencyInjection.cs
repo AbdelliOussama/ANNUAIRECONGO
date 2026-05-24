@@ -43,8 +43,14 @@ public static class DependencyInjection
         services.AddOutputCache(options =>
         {
             options.SizeLimit = 100 * 1024 * 1024; // 100 mb
-            options.AddBasePolicy(policy =>
-                policy.Expire(TimeSpan.FromSeconds(60)));
+            // Only cache truly public (unauthenticated) GET responses.
+            // Authenticated requests carry user-specific state that changes on
+            // mutations (subscribe, cancel, validate…); caching them would
+            // cause stale data to be served until the entry expires, even after
+            // the underlying data has changed.
+            options.AddBasePolicy(policy => policy
+                .With(ctx => !ctx.HttpContext.Request.Headers.ContainsKey("Authorization"))
+                .Expire(TimeSpan.FromSeconds(60)));
         });
 
         return services;

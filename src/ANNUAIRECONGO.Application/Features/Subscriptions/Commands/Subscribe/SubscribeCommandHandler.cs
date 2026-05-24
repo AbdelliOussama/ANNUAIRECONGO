@@ -52,13 +52,31 @@ public sealed record SubscribeCommandHandler(
         if (plan is null)
             return PlanErrors.NotFound(request.PlanId);
 
-        // 3. Check no active subscription already exists
-        var hasActive = await context.Subscriptions.AnyAsync(s =>
-            s.CompanyId == request.CompanyId &&
-            (s.Status == SubscriptionStatus.Active ||
-            s.Status == SubscriptionStatus.ExpiringSoon), ct);
-        if (hasActive)
-            return SubscriptionErrors.AlreadyActive;
+        // 3. Cancel any existing active subscription (upgrade / plan-change flow).
+        //    A new user who registers gets a Free plan auto-activated; upgrading
+        //    to Pro/Premium must cancel that first subscription before creating
+        //    the new one — otherwise AlreadyActive would permanently block changes.
+        var existingActive = await context.Subscriptions
+            .Include(s => s.Company)
+            .FirstOrDefaultAsync(s =>
+                s.CompanyId == request.CompanyId &&
+                (s.Status == SubscriptionStatus.Active ||
+                 s.Status == SubscriptionStatus.ExpiringSoon), ct);
+
+        if (existingActive is not null)
+        {
+            var cancelResult = existingActive.Cancel();
+            if (cancelResult.IsError)
+            {
+                logger.LogWarning("Could not cancel existing subscription {SubId} for upgrade: {Error}",
+                    existingActive.Id, cancelResult.Errors.First().Description);
+                return cancelResult.Errors;
+            }
+            // Clear the company's pointer to the now-cancelled subscription
+            company.ClearActiveSubscription();
+            logger.LogInformation("Existing subscription {SubId} cancelled for plan upgrade on company {CompanyId}",
+                existingActive.Id, request.CompanyId);
+        }
 
         // 4. Create Subscription (Pending)
         var subscriptionResult = Subscription.Create(

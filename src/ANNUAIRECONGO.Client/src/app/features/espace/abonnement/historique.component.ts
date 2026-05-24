@@ -129,11 +129,11 @@ import { DatePipe } from '@angular/common';
     .link:hover { text-decoration: underline; }
     .link .material-symbols-outlined { font-size: 18px; }
 
-    .badge-0 { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); } /* Pending */
-    .badge-1 { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); } /* Success/Completed */
-    .badge-2 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Failed */
-    .badge-3 { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); } /* Refunded */
-    .badge-4 { background: var(--color-error-container); color: var(--color-on-error-container); } /* Rejected */
+    .badge-pending  { background: var(--color-secondary-container); color: var(--color-on-secondary-fixed); }
+    .badge-success  { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
+    .badge-failed   { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .badge-refunded { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
+    .badge-neutral  { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
   `],
 })
 export class HistoriquePaiementsComponent {
@@ -159,33 +159,41 @@ export class HistoriquePaiementsComponent {
 
   protected readonly loading = computed(() => this.owner() === null && this.rows() === null);
 
-  protected methodLabel(m: number): string {
-    return ({
-      [PaymentMethod.MTNMoMo]:    'MTN MoMo',
-      [PaymentMethod.AirtelMoney]: 'Airtel Money',
-      [PaymentMethod.Stripe]:      'Carte bancaire',
-    } as any)[m] || 'Inconnu';
+  protected methodLabel(m: string): string {
+    switch (m) {
+      case PaymentMethod.MTNMoMo:     return 'MTN MoMo';
+      case PaymentMethod.AirtelMoney: return 'Airtel Money';
+      case PaymentMethod.Stripe:      return 'Carte bancaire';
+      default:                        return m || 'Inconnu';
+    }
   }
 
-  protected methodColor(m: number): string {
-    return ({
-      [PaymentMethod.MTNMoMo]:    '#fcd34d',
-      [PaymentMethod.AirtelMoney]: '#fb7185',
-      [PaymentMethod.Stripe]:      '#3b82f6',
-    } as any)[m] || '#94a3b8';
+  protected methodColor(m: string): string {
+    switch (m) {
+      case PaymentMethod.MTNMoMo:     return '#fcd34d';
+      case PaymentMethod.AirtelMoney: return '#fb7185';
+      case PaymentMethod.Stripe:      return '#3b82f6';
+      default:                        return '#94a3b8';
+    }
   }
 
-  protected statusLabel(s: number): string {
-    return ({
-      [PaymentStatus.Pending]:   'En attente',
-      [PaymentStatus.Completed]: 'Payé',
-      [PaymentStatus.Failed]:    'Échoué',
-      [PaymentStatus.Refunded]:  'Remboursé',
-      [PaymentStatus.Rejected]:  'Rejeté',
-    } as any)[s] || 'Inconnu';
+  protected statusLabel(s: string): string {
+    switch (s) {
+      case PaymentStatus.Pending:  return 'En attente';
+      case PaymentStatus.Success:  return 'Payé';
+      case PaymentStatus.Failed:   return 'Échoué';
+      case PaymentStatus.Refunded: return 'Remboursé';
+      default:                     return s || 'Inconnu';
+    }
   }
 
-  protected statusClass(s: number): string {
-    return `badge-${s}`;
+  protected statusClass(s: string): string {
+    switch (s) {
+      case PaymentStatus.Pending:  return 'badge-pending';
+      case PaymentStatus.Success:  return 'badge-success';
+      case PaymentStatus.Failed:   return 'badge-failed';
+      case PaymentStatus.Refunded: return 'badge-refunded';
+      default:                     return 'badge-neutral';
+    }
   }
 }

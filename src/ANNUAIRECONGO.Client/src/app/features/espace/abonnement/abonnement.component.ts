@@ -353,12 +353,29 @@ export class EspaceAbonnementComponent {
     this.router.navigateByUrl('/espace/abonnement/historique');
   }
 
-  protected cancel(): void {
+  protected async cancel(): Promise<void> {
     const s = this.subscription();
     if (!s) return;
-    this.subService.cancelSubscription(s.id).subscribe(() => {
-      this.toast.success('Votre abonnement a été résilié.');
-      window.location.reload();
+    const { confirmed } = await this.modal.confirm({
+      title: 'Résilier votre abonnement ?',
+      body: 'Votre forfait sera annulé immédiatement. Vous pourrez souscrire à nouveau à tout moment.',
+      confirmLabel: 'Résilier',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+    this.subService.cancelSubscription(s.id).subscribe({
+      next: () => {
+        this.toast.success('Votre abonnement a été résilié.');
+        // Navigate away then back so Angular re-initialises the component and
+        // re-subscribes all signals, fetching fresh data from the server.
+        this.router.navigate(['/espace'], { replaceUrl: true }).then(() =>
+          this.router.navigate(['/espace/abonnement'], { replaceUrl: true })
+        );
+      },
+      error: (err) => {
+        const msg = err?.error?.detail || err?.error?.title || 'Erreur lors de la résiliation.';
+        this.toast.error(msg);
+      }
     });
   }
 
@@ -391,8 +408,9 @@ export class EspaceAbonnementComponent {
           queryParams: { paymentId: res.paymentId }
         });
       },
-      error: () => {
-        this.toast.error('Erreur lors de la création de l\'abonnement.');
+      error: (err: any) => {
+        const msg = err?.error?.detail || err?.error?.title || 'Erreur lors de la création de l\'abonnement.';
+        this.toast.error(msg);
       }
     });
   }

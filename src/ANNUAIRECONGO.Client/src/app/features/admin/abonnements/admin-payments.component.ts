@@ -145,13 +145,13 @@ export class AdminPaymentsComponent {
     });
   }
 
-  mapMethod(m: number): string {
+  mapMethod(m: string): string {
+    // API serializes PaymentMethod enum as string via JsonStringEnumConverter
     switch(m) {
-      case 0: return 'Carte Bancaire';
-      case 1: return 'Mobile Money';
-      case 2: return 'Virement';
-      case 3: return 'Espèces (Agence)';
-      default: return 'Autre';
+      case 'Stripe':      return 'Carte Bancaire';
+      case 'MTNMoMo':     return 'MTN Mobile Money';
+      case 'AirtelMoney': return 'Airtel Money';
+      default:            return m || 'Autre';
     }
   }
 }

@@ -15,15 +15,16 @@ namespace ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Dtos;
 ///     to /api/v1/plans.
 /// </summary>
 public sealed record PaymentDto(
-    Guid          Id,
-    Guid          CompanyId,
-    Guid          SubscriptionId,
+    Guid            Id,
+    Guid            CompanyId,
+    string?         CompanyName,
+    Guid            SubscriptionId,
     string        Reference,
-    PlanName?     PlanName,
-    decimal       Amount,
-    string        Currency,
-    PaymentMethod Method,
-    PaymentStatus Status,
-    string?       GatewayRef,
-    string?       InvoiceUrl,
-    DateTimeOffset?     PaidAt);
+    PlanName?       PlanName,
+    decimal         Amount,
+    string          Currency,
+    PaymentMethod   Method,
+    PaymentStatus   Status,
+    string?         GatewayRef,
+    string?         InvoiceUrl,
+    DateTimeOffset? PaidAt);

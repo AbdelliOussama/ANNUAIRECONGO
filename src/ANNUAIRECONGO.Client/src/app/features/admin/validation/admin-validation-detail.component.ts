@@ -37,7 +37,14 @@ import { FormsModule } from '@angular/forms';
         <article class="card">
           <header class="head">
             <div>
-              <span [class]="'status status-' + fiche()!.status">{{ statusLabel(fiche()!.status) }}</span>
+              <div class="badge-row">
+                <span [class]="'status status-' + fiche()!.status">{{ statusLabel(fiche()!.status) }}</span>
+                @if (fiche()!.isVerified) {
+                  <span class="status status-verified">
+                    <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;margin-right:3px">verified</span>Identité vérifiée
+                  </span>
+                }
+              </div>
               <h1>{{ fiche()!.name }}</h1>
               <p class="meta">{{ fiche()!.sectorLabel }} · {{ fiche()!.city }} · soumise le {{ fiche()!.submittedAt | date:'dd/MM/yyyy' }}</p>
             </div>
@@ -45,6 +52,11 @@ import { FormsModule } from '@angular/forms';
               <div class="actions">
                 <ac-button variant="danger" iconLeft="close" (click)="reject()" [loading]="rejecting()">Rejeter</ac-button>
                 <ac-button variant="primary" iconLeft="check" (click)="validate()" [loading]="validating()">Valider</ac-button>
+              </div>
+            }
+            @if (fiche()!.status === 'validee' && !fiche()!.isVerified) {
+              <div class="actions">
+                <ac-button variant="primary" iconLeft="verified" (click)="verifyIdentity()" [loading]="verifying()">Vérifier l'identité</ac-button>
               </div>
             }
           </header>
@@ -198,10 +210,12 @@ import { FormsModule } from '@angular/forms';
     .meta { color: var(--color-on-secondary-container); font-size: 13px; margin: 0; }
     .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .status { display: inline-flex; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .badge-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 4px; }
+    .status { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
     .status-en-attente { background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
     .status-validee    { background: var(--color-primary-fixed); color: var(--color-on-primary-fixed); }
     .status-rejetee    { background: var(--color-error-container); color: var(--color-on-error-container); }
+    .status-verified   { background: #d1fae5; color: #065f46; }
 
     .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
     .kv dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-outline); margin-bottom: 4px; }
@@ -493,6 +507,7 @@ export class AdminValidationDetailComponent {
 
   protected readonly validating = signal(false);
   protected readonly rejecting = signal(false);
+  protected readonly verifying = signal(false);
   protected readonly analyzing = signal(false);
   protected manualScore: number | null = null;
 
@@ -531,6 +546,7 @@ export class AdminValidationDetailComponent {
       images: c.images || [],
       trustScore: c.trustScore ?? 0,
       trustScoreAnalysis: c.trustScoreAnalysis || null,
+      isVerified: c.isVerified ?? false,
     };
   });
 
@@ -554,12 +570,13 @@ export class AdminValidationDetailComponent {
     return raw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
   });
 
-  private mapStatus(status: number): string {
+  // API returns enum names as strings (JsonStringEnumConverter).
+  private mapStatus(status: string): string {
     switch (status) {
-      case 1: return 'en-attente';
-      case 2: return 'validee';
-      case 3: return 'rejetee';
-      default: return 'en-attente';
+      case 'Pending':   return 'en-attente';
+      case 'Active':    return 'validee';
+      case 'Rejected':  return 'rejetee';
+      default:          return 'en-attente';
     }
   }
 
@@ -613,6 +630,33 @@ export class AdminValidationDetailComponent {
         this.router.navigateByUrl('/admin/validation');
       },
       error: () => this.validating.set(false)
+    });
+  }
+
+  protected async verifyIdentity(): Promise<void> {
+    const f = this.fiche();
+    if (!f) return;
+    const { confirmed } = await this.modal.confirm({
+      title: `Vérifier l'identité de « ${f.name} » ?`,
+      body: 'Confirmez que le RCCM et le NIU ont été vérifiés auprès des registres officiels de la République du Congo.',
+      tone: 'info',
+      confirmLabel: 'Marquer comme vérifiée',
+    });
+    if (!confirmed) return;
+
+    this.verifying.set(true);
+    this.companyService.verifyCompany(f.id).subscribe({
+      next: () => {
+        this.verifying.set(false);
+        this.toast.success('Identité vérifiée. Le badge "Vérifiée" est maintenant visible sur la fiche.');
+        // Refresh data
+        const updated = this._companyData();
+        if (updated) this._companyData.set({ ...updated, isVerified: true });
+      },
+      error: () => {
+        this.verifying.set(false);
+        this.toast.error('Échec de la vérification.');
+      }
     });
   }
 

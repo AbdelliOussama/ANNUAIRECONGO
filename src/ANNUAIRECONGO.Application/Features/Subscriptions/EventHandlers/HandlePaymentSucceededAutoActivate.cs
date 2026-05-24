@@ -3,12 +3,14 @@ using ANNUAIRECONGO.Domain.Subscriptions.Events;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments.Events;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.EventHandlers;
 
 public sealed class HandlePaymentSucceededAutoActivate(
     IAppDbContext context,
+    HybridCache cache,
     ILogger<HandlePaymentSucceededAutoActivate> logger)
     : INotificationHandler<PaymentSucceededEvent>
 {
@@ -47,6 +49,11 @@ public sealed class HandlePaymentSucceededAutoActivate(
             subscription.ExpiresAt));
 
         await context.SaveChangesAsync(ct);
+
+        // Invalidate the company cache so the fiche and any cached company
+        // queries immediately reflect the new ActiveSubscriptionId.
+        await cache.RemoveByTagAsync("Company", ct);
+
         logger.LogInformation(
             "Subscription {SubId} activated for Company {CompId} after payment success",
             subscription.Id, subscription.CompanyId);

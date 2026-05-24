@@ -1,8 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { SubscriptionService } from '@core/services/subscription.service';
-import { ToastService } from '@shared/services/toast.service';
 import { FR } from '@core/i18n/fr.constants';
 
 @Component({
@@ -13,34 +11,27 @@ import { FR } from '@core/i18n/fr.constants';
   template: `
     <section class="wrap">
       <div class="card">
-        @if (confirming()) {
-          <div class="icon-bubble" aria-hidden="true">
-            <span class="material-symbols-outlined spin">sync</span>
-          </div>
-          <h1>Confirmation en cours...</h1>
-          <p class="lead">Nous validons votre paiement auprès de la plateforme de paiement. Veuillez patienter.</p>
-        } @else {
-          <div class="icon-bubble" aria-hidden="true">
-            <span class="material-symbols-outlined icon-filled">check_circle</span>
-          </div>
+        <div class="icon-bubble" aria-hidden="true">
+          <span class="material-symbols-outlined icon-filled">schedule</span>
+        </div>
 
-          <h1>{{ FR.payment.successTitle }}</h1>
-          <p class="lead">
-            Votre paiement a bien été traité. Votre abonnement est désormais actif.
-            Une facture vous sera envoyée par e-mail dans quelques minutes.
+        <h1>Demande reçue !</h1>
+        <p class="lead">
+          Votre demande d'abonnement a bien été enregistrée. Votre paiement est
+          en attente de validation par notre équipe (généralement sous 24&nbsp;h ouvrées).
+          Vous recevrez une notification dès l'activation de votre abonnement.
+        </p>
+
+        @if (paymentId()) {
+          <p class="ref">
+            Référence de paiement : <strong>{{ paymentId() }}</strong>
           </p>
-
-          @if (paymentId()) {
-            <p class="ref">
-              ID Paiement : <strong>{{ paymentId() }}</strong>
-            </p>
-          }
-
-          <div class="actions">
-            <a routerLink="/espace" class="btn btn-primary">Retour à mon espace</a>
-            <a routerLink="/espace/abonnement/historique" class="btn btn-ghost">Voir l'historique</a>
-          </div>
         }
+
+        <div class="actions">
+          <a routerLink="/espace" class="btn btn-primary">Retour à mon espace</a>
+          <a routerLink="/espace/abonnement/historique" class="btn btn-ghost">Voir l'historique</a>
+        </div>
       </div>
     </section>
   `,
@@ -64,8 +55,6 @@ import { FR } from '@core/i18n/fr.constants';
       margin-bottom: 22px;
     }
     .icon-bubble .material-symbols-outlined { font-size: 44px; }
-    .spin { animation: spin 2s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     h1 {
       font-family: var(--font-headline);
@@ -93,28 +82,7 @@ import { FR } from '@core/i18n/fr.constants';
 export class PaiementSuccesComponent {
   protected readonly FR = FR;
   private readonly route = inject(ActivatedRoute);
-  private readonly subService = inject(SubscriptionService);
-  private readonly toast = inject(ToastService);
 
   private readonly paramMap = toSignal(this.route.queryParamMap, { initialValue: null });
   protected readonly paymentId = () => this.paramMap()?.get('paymentId') ?? null;
-
-  protected readonly confirming = signal(false);
-
-  constructor() {
-    const pid = this.route.snapshot.queryParamMap.get('paymentId');
-    if (pid) {
-      this.confirming.set(true);
-      this.subService.confirmPayment(pid).subscribe({
-        next: () => {
-          this.confirming.set(false);
-          this.toast.success('Paiement confirmé avec succès.');
-        },
-        error: () => {
-          this.confirming.set(false);
-          this.toast.error('Erreur lors de la confirmation du paiement.');
-        }
-      });
-    }
-  }
 }

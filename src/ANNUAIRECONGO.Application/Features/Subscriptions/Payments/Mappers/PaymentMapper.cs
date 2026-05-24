@@ -15,6 +15,7 @@ public static class PaymentMapper
         return new PaymentDto(
             payment.Id,
             payment.CompanyId,
+            payment.Company?.Name,
             payment.SubscriptionId,
             payment.Reference,
             payment.Subscription?.Plan?.Name,

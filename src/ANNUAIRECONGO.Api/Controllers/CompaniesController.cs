@@ -330,6 +330,27 @@ public sealed class CompaniesController(ISender sender) : ApiController
         );
     }
 
+    [HttpPatch("{id:guid}/verify-company", Name = "VerifyCompany")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Mark a company identity as verified.")]
+    [EndpointDescription("Admin-only. Sets IsVerified = true on an Active company after KYC/document review.")]
+    [EndpointName("VerifyCompany")]
+    [MapToApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> VerifyCompany([FromRoute] Guid id, CancellationToken ct)
+    {
+        var result = await sender.Send(
+            new ANNUAIRECONGO.Application.Features.Companies.Commands.StatusTransition.VerifyCompany.VerifyCompanyCommand(id), ct);
+        return result.Match(
+            response => Ok(response),
+            Problem
+        );
+    }
+
     // Plan Management
 
     [HttpPost("{id:guid}/clear-active-subscription" , Name = "ClearActiveSubscription")]

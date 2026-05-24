@@ -58,13 +58,13 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                   <td>{{ c.cityName }}</td>
                   <td class="mono">{{ c.rccm || '-' }}</td>
                   <td>
-                    @if (c.status === 2) {
+                    @if (c.status === 'Active') {
                       <span class="badge badge-verified">Active</span>
-                    } @else if (c.status === 1) {
+                    } @else if (c.status === 'Pending') {
                       <span class="badge badge-pending">En attente</span>
-                    } @else if (c.status === 3) {
+                    } @else if (c.status === 'Rejected') {
                       <span class="badge badge-rejected">Rejetée</span>
-                    } @else if (c.status === 4) {
+                    } @else if (c.status === 'Suspended') {
                       <span class="badge badge-error">Suspendue</span>
                     } @else {
                       <span class="badge badge-draft">Brouillon</span>
@@ -74,12 +74,15 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                       <div class="actions-group">
                         <a [routerLink]="['/annuaire', c.slug]" class="link">Voir</a>
                         <a [routerLink]="['/admin/audit']" [queryParams]="{targetType: 'Company', targetId: c.id}" class="link" style="font-weight: normal; font-size: 11px;">Logs</a>
-                        @if (c.status === 2) {
+                        @if (c.status === 'Active' && !c.isVerified) {
+                          <button (click)="verify(c)" class="btn-action verify">Vérifier</button>
+                        }
+                        @if (c.status === 'Active') {
                           <button (click)="suspend(c)" class="btn-action warn">Suspendre</button>
-                        } @else if (c.status === 4) {
+                        } @else if (c.status === 'Suspended') {
                           <button (click)="reactivate(c)" class="btn-action ok">Réactiver</button>
                         }
-                        @if (c.status === 1) {
+                        @if (c.status === 'Pending') {
                           <button (click)="reject(c)" class="btn-action danger">Rejeter</button>
                         }
                       </div>
@@ -124,9 +127,10 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
       border-radius: var(--radius-sm); padding: 4px 8px; font-size: 11px;
       font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-    .btn-action.warn { color: var(--color-tertiary); }
-    .btn-action.ok   { color: var(--color-primary); }
+    .btn-action.warn   { color: var(--color-tertiary); }
+    .btn-action.ok     { color: var(--color-primary); }
     .btn-action.danger { color: var(--color-error); }
+    .btn-action.verify { color: #0d6efd; }
     .btn-action:hover { background: var(--color-surface-container); }
 
     .badge-draft { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
@@ -193,6 +197,23 @@ export class AdminEntreprisesComponent {
     this.companyService.rejectCompany(c.id, reason).subscribe(() => {
       this.toast.success('Entreprise rejetée.');
       this.trigger.next(this.query());
+    });
+  }
+
+  async verify(c: Company) {
+    const { confirmed } = await this.modal.confirm({
+      title: `Vérifier l'identité de « ${c.name} » ?`,
+      body: 'Confirmez que le RCCM et le NIU ont été vérifiés auprès des registres officiels.',
+      confirmLabel: 'Vérifier',
+      tone: 'info'
+    });
+    if (!confirmed) return;
+    this.companyService.verifyCompany(c.id).subscribe({
+      next: () => {
+        this.toast.success('Identité vérifiée.');
+        this.trigger.next(this.query());
+      },
+      error: (err) => this.toast.error('Échec de la vérification.')
     });
   }
 }

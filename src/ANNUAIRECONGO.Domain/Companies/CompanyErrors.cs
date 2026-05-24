@@ -130,4 +130,8 @@ public static class CompanyErrors
         "Company.ImageWithTheSameUrlExists",
         "An image with the same URL already exists for this company.");
 
+    public static readonly Error AlreadyVerified = Error.Conflict(
+        "Company.AlreadyVerified",
+        "This company is already verified.");
+
 }

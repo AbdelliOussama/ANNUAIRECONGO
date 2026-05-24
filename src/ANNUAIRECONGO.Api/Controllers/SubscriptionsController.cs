@@ -76,13 +76,15 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     }
 
     [HttpPut("payments/{paymentId:guid}/confirm")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status402PaymentRequired)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Confirm a payment.")]
-    [EndpointDescription("This endpoint confirms a payment with the payment gateway reference.")]
+    [EndpointSummary("Confirm a payment (Admin only).")]
+    [EndpointDescription("This endpoint confirms a pending manual payment and activates the associated subscription. Requires Admin role.")]
     [EndpointName("ConfirmPayment")]
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId,CancellationToken ct)

@@ -237,6 +237,18 @@ public class Company : AuditableEntity
         return Result.Updated;
     }
 
+    public Result<Updated> Verify()
+    {
+        if (Status != CompanyStatus.Active)
+            return CompanyErrors.NotActive;
+
+        if (IsVerified)
+            return CompanyErrors.AlreadyVerified;
+
+        IsVerified = true;
+        return Result.Updated;
+    }
+
     // ── Plan Management ───────────────────────────────────────────
 
     public Result<Updated> SetActiveSubscription(Guid subscriptionId)
