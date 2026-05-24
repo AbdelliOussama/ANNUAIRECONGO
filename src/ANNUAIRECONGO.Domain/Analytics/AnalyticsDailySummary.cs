@@ -1,4 +1,3 @@
-
 using ANNUAIRECONGO.Domain.Common;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Companies;
@@ -14,7 +13,7 @@ public class AnalyticsDailySummary : Entity
     public Company Company { get; private set; } = null!;
 
     private AnalyticsDailySummary() { }
-    private AnalyticsDailySummary(Guid companyId,DateOnly summaryDate,int profileViews,int contactClicks,int searchAppearance) : base(Guid.NewGuid())
+    private AnalyticsDailySummary(Guid companyId, DateOnly summaryDate, int profileViews, int contactClicks, int searchAppearance) : base(Guid.NewGuid())
     {
         CompanyId = companyId;
         SummaryDate = summaryDate;
@@ -22,6 +21,7 @@ public class AnalyticsDailySummary : Entity
         ContactClicks = contactClicks;
         SearchAppearances = searchAppearance;
     }
+
     public static Result<AnalyticsDailySummary> Create(
         Guid companyId,
         DateOnly summaryDate,
@@ -29,7 +29,7 @@ public class AnalyticsDailySummary : Entity
         int contactClicks,
         int searchAppearances)
     {
-        return new AnalyticsDailySummary(companyId,summaryDate,profileViews,contactClicks,searchAppearances);
+        return new AnalyticsDailySummary(companyId, summaryDate, profileViews, contactClicks, searchAppearances);
     }
 
     public Result<Updated> UpdateCounts(int profileViews, int contactClicks, int searchAppearances)

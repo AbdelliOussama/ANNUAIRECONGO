@@ -7,12 +7,12 @@ namespace ANNUAIRECONGO.Domain.BusinessOwners;
 
 public sealed class BusinessOwner : AuditableEntity
 {
-    public string FirstName { get;private set; }
-    public string LastName { get;private set; }
+    public string FirstName { get; private set; } = string.Empty;
+    public string LastName { get; private set; } = string.Empty;
     public string FullName => $"{FirstName} {LastName}";
     public Role Role { get; private set; }
     public string Email { get; private set; } = string.Empty;
-    public string Phone { get; private set; }
+    public string Phone { get; private set; } = string.Empty;
     public string? CompanyPosition { get; private set; }
     public bool IsVerified { get; private set; } = default; // KYC verification
     private readonly List<Company> _companies = new List<Company>();
