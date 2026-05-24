@@ -354,8 +354,7 @@ public class IdentityService : IIdentityService
                 bo?.FirstName,
                 bo?.LastName,
                 bo?.Phone,
-                bo?.CompanyPosition
-            ));
+                bo?.CompanyPosition));
         }
 
         return result;

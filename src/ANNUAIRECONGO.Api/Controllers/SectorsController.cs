@@ -5,8 +5,8 @@ using ANNUAIRECONGO.Application.Features.Sectors.Commands.DeleteSector;
 using ANNUAIRECONGO.Application.Features.Sectors.Commands.GenerateSectorReport;
 using ANNUAIRECONGO.Application.Features.Sectors.Dtos;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorById;
-using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectors;
 using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectorReports;
+using ANNUAIRECONGO.Application.Features.Sectors.Queries.GetSectors;
 using ANNUAIRECONGO.Contracts.Requests.Sectors;
 using Asp.Versioning;
 using MediatR;
@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
 namespace ANNUAIRECONGO.Api.Controllers;
-
 
 [Route("api/v{version:apiVersion}/sectors")]
 [ApiVersion("1.0")]
@@ -37,10 +36,9 @@ public sealed class SectorsController(ISender sender) : ApiController
         var result = await sender.Send(command, ct);
         return result.Match(
             response => CreatedAtRoute(
-                routeName : "GetSectorById",
-                routeValues : new { Version = "1.0", id = response.SectorId},
-                value : response
-            ),
+                routeName: "GetSectorById",
+                routeValues: new { Version = "1.0", id = response.SectorId },
+                value: response),
             Problem);
     }
 
@@ -89,7 +87,9 @@ public sealed class SectorsController(ISender sender) : ApiController
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateSector(Guid SectorId, [FromBody] UpdateSectorRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(new UpdateSectorCommand(SectorId, request.Name,request.IConUrl, request.Description), ct);
+        var result = await sender.Send(
+            new UpdateSectorCommand(SectorId, request.Name, request.IConUrl, request.Description),
+            ct);
         return result.Match(
             response => Ok(response),
             Problem);

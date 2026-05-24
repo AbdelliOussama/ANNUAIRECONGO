@@ -51,18 +51,18 @@ public class ApplicationDbContextInitialiser(
     public async Task TrySeedAsync()
     {
         // Default roles
-        var AdminRole = new IdentityRole(nameof(Role.Admin));
+        var adminRole = new IdentityRole(nameof(Role.Admin));
 
-        if (_roleManager.Roles.All(r => r.Name != AdminRole.Name))
+        if (_roleManager.Roles.All(r => r.Name != adminRole.Name))
         {
-            await _roleManager.CreateAsync(AdminRole);
+            await _roleManager.CreateAsync(adminRole);
         }
 
-        var BusinessOwnerRole = new IdentityRole(nameof(Role.EntrepriseOwner));
+        var businessOwnerRole = new IdentityRole(nameof(Role.EntrepriseOwner));
 
-        if (_roleManager.Roles.All(r => r.Name != BusinessOwnerRole.Name))
+        if (_roleManager.Roles.All(r => r.Name != businessOwnerRole.Name))
         {
-            await _roleManager.CreateAsync(BusinessOwnerRole);
+            await _roleManager.CreateAsync(businessOwnerRole);
         }
 
         // Admin Users
@@ -79,9 +79,9 @@ public class ApplicationDbContextInitialiser(
             {
                 var user = new AppUser { Id = a.Id, Email = a.Email, UserName = a.Email, EmailConfirmed = true };
                 await _userManager.CreateAsync(user, a.Email); // Using email as password for simplicity in dev
-                if (!string.IsNullOrWhiteSpace(AdminRole.Name))
+                if (!string.IsNullOrWhiteSpace(adminRole.Name))
                 {
-                    await _userManager.AddToRolesAsync(user, [AdminRole.Name]);
+                    await _userManager.AddToRolesAsync(user, [adminRole.Name]);
                 }
             }
         }
@@ -110,9 +110,9 @@ public class ApplicationDbContextInitialiser(
             {
                 var user = new AppUser { Id = bo.Id, Email = bo.Email, UserName = bo.Email, EmailConfirmed = true };
                 await _userManager.CreateAsync(user, "Password123!"); // Secure password for business owners
-                if (!string.IsNullOrWhiteSpace(BusinessOwnerRole.Name))
+                if (!string.IsNullOrWhiteSpace(businessOwnerRole.Name))
                 {
-                    await _userManager.AddToRolesAsync(user, [BusinessOwnerRole.Name]);
+                    await _userManager.AddToRolesAsync(user, [businessOwnerRole.Name]);
                 }
                 
                 // Add to list to create domain entities

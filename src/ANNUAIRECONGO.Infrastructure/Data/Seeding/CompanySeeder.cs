@@ -105,8 +105,7 @@ public static class CompanySeeder
                 niu,
                 random.Next(1960, 2020),
                 data.IsPremium,
-                data.IsPremium
-            );
+                data.IsPremium);
 
             if (companyResult.IsSuccess)
             {
@@ -115,14 +114,23 @@ public static class CompanySeeder
                 
                 // Seed primary and social contacts
                 var phoneResult = CompanyContact.Create(company.Id, ContactType.Phone, $"+242 06 {random.Next(100, 999)} {random.Next(1000, 9999)}", true);
-                if(phoneResult.IsSuccess) context.CompanyContacts.Add(phoneResult.Value);
+                if (phoneResult.IsSuccess)
+                {
+                    context.CompanyContacts.Add(phoneResult.Value);
+                }
                 
                 var cleanName = new string(data.Name.Where(c => char.IsLetterOrDigit(c)).ToArray()).ToLower();
                 var emailResult = CompanyContact.Create(company.Id, ContactType.Email, $"contact@{cleanName}.cg", true);
-                if(emailResult.IsSuccess) context.CompanyContacts.Add(emailResult.Value);
+                if (emailResult.IsSuccess)
+                {
+                    context.CompanyContacts.Add(emailResult.Value);
+                }
 
                 var facebookResult = CompanyContact.Create(company.Id, ContactType.Facebook, $"https://facebook.com/{cleanName}", false);
-                if(facebookResult.IsSuccess) context.CompanyContacts.Add(facebookResult.Value);
+                if (facebookResult.IsSuccess)
+                {
+                    context.CompanyContacts.Add(facebookResult.Value);
+                }
 
                 // Submit and Validate
                 company.Submit();
@@ -156,8 +164,7 @@ public static class CompanySeeder
                             PaymentMethod.MTNMoMo,
                             "MOMO-" + random.Next(1000000, 9999999),
                             "https://example.com/invoice.pdf",
-                            DateTimeOffset.UtcNow
-                        );
+                            DateTimeOffset.UtcNow);
 
                         if (paymentResult.IsSuccess)
                         {
@@ -175,8 +182,7 @@ public static class CompanySeeder
                             owner.Id.ToString(),
                             "payment_succeeded",
                             $"Paiement de {planToUse.Price} XAF reçu pour l'abonnement {planToUse.Name}.",
-                            $"/espace/abonnements"
-                        );
+                            $"/espace/abonnements");
 
                         if (notifResult.IsSuccess)
                         {

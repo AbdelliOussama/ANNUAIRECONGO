@@ -1,11 +1,8 @@
+using ANNUAIRECONGO.Application.Features.Ai.Queries.GetChatResponse;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
-using System.Threading.Tasks;
-using ANNUAIRECONGO.Application.Features.Ai.Queries.GetChatResponse;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 

@@ -4,16 +4,12 @@ namespace ANNUAIRECONGO.Api.Infrastructure;
 
 public class RequestLogContextMiddleware
 {
-    #region Fields
     private readonly RequestDelegate _next;
-    #endregion
 
-    #region Constructors
     public RequestLogContextMiddleware(RequestDelegate next)
     {
         _next = next;
     }
-    #endregion
 
     public Task InvokeAsync(HttpContext httpContext)
     {

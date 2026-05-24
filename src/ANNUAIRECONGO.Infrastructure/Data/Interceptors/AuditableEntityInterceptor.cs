@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace ANNUAIRECONGO.Infrastructure.Data.Interceptors;
 
-public class AuditableEntityInterceptor(IUser user, TimeProvider DateTimeOffset) : SaveChangesInterceptor
+public class AuditableEntityInterceptor(IUser user, TimeProvider dateTimeOffset) : SaveChangesInterceptor
 {
     private readonly IUser _user = user;
-    private readonly TimeProvider _DateTimeOffset = DateTimeOffset;
+    private readonly TimeProvider _dateTimeOffset = dateTimeOffset;
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
@@ -37,7 +37,7 @@ public class AuditableEntityInterceptor(IUser user, TimeProvider DateTimeOffset)
         {
             if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
             {
-                var utcNow = _DateTimeOffset.GetUtcNow();
+                var utcNow = _dateTimeOffset.GetUtcNow();
 
                 if (entry.State == EntityState.Added)
                 {

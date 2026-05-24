@@ -9,6 +9,6 @@ public class CompanyContactConfigurations : IEntityTypeConfiguration<CompanyCont
     public void Configure(EntityTypeBuilder<CompanyContact> builder)
     {
         builder.HasKey(c => c.Id);
-        builder.Property(c=>c.Value).HasMaxLength(255);
+        builder.Property(c => c.Value).HasMaxLength(255);
     }
 }

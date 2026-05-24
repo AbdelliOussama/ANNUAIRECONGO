@@ -495,7 +495,7 @@ RÈGLES D'OR :
                         // Clean up markdown block wraps if present
                         if (text.StartsWith("```"))
                         {
-                            text = text.Replace("```json", "").Replace("```", "").Trim();
+                            text = text.Replace("```json", string.Empty).Replace("```", string.Empty).Trim();
                         }
 
                         var list = JsonSerializer.Deserialize<List<string>>(text);
@@ -538,7 +538,7 @@ RÈGLES D'OR :
                      $"- Nombre de plaintes/rapports déposés : {reportCount}\n" +
                      $"- Âge d'existence de l'entreprise : {ageYears} ans\n" +
                      $"- Complétude du profil en ligne : {completenessPercentage:F1}%\n" +
-                     (manualScore.HasValue ? $"- Score imposé par l'administrateur : {manualScore.Value}/100\n" : "") +
+                     (manualScore.HasValue ? $"- Score imposé par l'administrateur : {manualScore.Value}/100\n" : string.Empty) +
                      "\n" +
                      "Consignes de rédaction :\n" +
                      "1. Rédige un rapport de justification professionnel en français de 3 paragraphes distincts :\n" +
@@ -620,7 +620,7 @@ RÈGLES D'OR :
                                 score = 50;
                             }
 
-                            string justification = "";
+                            string justification = string.Empty;
                             if (parsedRoot.TryGetProperty("justification", out var justProp))
                             {
                                 justification = justProp.GetString() ?? string.Empty;
@@ -655,7 +655,7 @@ RÈGLES D'OR :
         // Remove markdown code fences
         if (text.Contains("```"))
         {
-            text = text.Replace("```json", "").Replace("```", "").Trim();
+            text = text.Replace("```json", string.Empty).Replace("```", string.Empty).Trim();
         }
 
         // Find the first { and the matching last }
@@ -672,10 +672,11 @@ RÈGLES D'OR :
 
     private static int ComputeFallbackScore(bool hasRccm, bool hasNiu, int documentCount, double completenessPercentage)
     {
-        return (int)Math.Min(100, Math.Max(0,
-            (hasRccm ? 30 : 0) +
-            (hasNiu ? 20 : 0) +
-            (Math.Min(documentCount, 3) * 5) +
-            (completenessPercentage * 0.35)));
+        var rawScore = (hasRccm ? 30 : 0) +
+                       (hasNiu ? 20 : 0) +
+                       (Math.Min(documentCount, 3) * 5) +
+                       (completenessPercentage * 0.35);
+
+        return (int)Math.Min(100, Math.Max(0, rawScore));
     }
 }

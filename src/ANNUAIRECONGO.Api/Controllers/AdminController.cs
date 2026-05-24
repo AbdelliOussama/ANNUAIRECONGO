@@ -1,5 +1,6 @@
-using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUsers;
+using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
+using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUsers;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +33,7 @@ public sealed class AdminController(ISender sender) : ApiController
     [EndpointDescription("Permanently deletes a user account and their profile.")]
     [EndpointName("DeleteUser")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> DeleteUser(string userId, [FromServices] ANNUAIRECONGO.Application.Common.Interfaces.IIdentityService identityService, CancellationToken ct)
+    public async Task<IActionResult> DeleteUser(string userId, [FromServices] IIdentityService identityService, CancellationToken ct)
     {
         var result = await identityService.DeleteAccountAsync(userId, ct);
         return result.Match(

@@ -20,10 +20,12 @@ namespace ANNUAIRECONGO.Api.Controllers;
 public sealed class BusinessOwnersControllers : ApiController
 {
     private readonly ISender _sender;
+
     public BusinessOwnersControllers(ISender sender)
     {
         _sender = sender;
     }
+
     [HttpGet]
     [ProducesResponseType(typeof(BusinessOwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -39,7 +41,6 @@ public sealed class BusinessOwnersControllers : ApiController
             response => Ok(response),
             Problem);
     }
-
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(BusinessOwnerDto), StatusCodes.Status200OK)]
@@ -71,7 +72,6 @@ public sealed class BusinessOwnersControllers : ApiController
             Problem);
     }
 
-
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(BusinessOwnerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -79,12 +79,18 @@ public sealed class BusinessOwnersControllers : ApiController
     [EndpointDescription("This endpoint updates a business owner's profile.")]
     [EndpointName("UpdateBusinessOwner")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult>UpdateBusinessOwner(Guid id, UpdateBusinessOwnerRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateBusinessOwner(Guid id, UpdateBusinessOwnerRequest request, CancellationToken ct)
     {
-        var result = await _sender.Send(new UpdateBusinessOwnerProfileCommand(id,request.FirstName,request.LastName,request.PhoneNumber,request.CompanyPosition ), ct);
+        var result = await _sender.Send(
+            new UpdateBusinessOwnerProfileCommand(
+                id,
+                request.FirstName,
+                request.LastName,
+                request.PhoneNumber,
+                request.CompanyPosition),
+            ct);
         return result.Match(
             response => Ok(response),
             Problem);
     }
 }
-

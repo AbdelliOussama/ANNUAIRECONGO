@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using ANNUAIRECONGO.Application.Features.Identity;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ChangePassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.DeleteAccount;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
@@ -9,16 +8,17 @@ using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.UpdateProfile;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.VerifyEmail;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
+using ANNUAIRECONGO.Application.Features.Identity.Queries.ExportData;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GenerateTokens;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUserInfo;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.RefreshTokens;
+using ANNUAIRECONGO.Contracts.Requests.Identity;
+using ANNUAIRECONGO.Contracts.Responses.Identity;
+using ANNUAIRECONGO.Domain.Identity;
 using Asp.Versioning;
-
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ANNUAIRECONGO.Contracts.Requests.Identity;
-using ANNUAIRECONGO.Contracts.Responses.Identity;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -41,13 +41,13 @@ public sealed class IdentityController(ISender sender) : ApiController
             {
                 AccessToken = response.AccessToken,
                 RefreshToken = response.RefreshToken,
-                ExpiresOnUtc = response.ExpiresOnUtc
+                ExpiresOnUtc = response.ExpiresOnUtc,
             }),
             Problem);
     }
 
     [HttpPost("token/refresh-token")]
-    [ProducesResponseType(typeof(ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Refreshes access token using a valid refresh token.")]
@@ -57,11 +57,11 @@ public sealed class IdentityController(ISender sender) : ApiController
     {
         var result = await sender.Send(new RefreshTokenQuery(request.RefreshToken, request.ExpiredAccessToken), ct);
         return result.Match(
-            response => Ok(new ANNUAIRECONGO.Contracts.Responses.Identity.TokenResponse
+            response => Ok(new TokenResponse
             {
                 AccessToken = response.AccessToken,
                 RefreshToken = response.RefreshToken,
-                ExpiresOnUtc = response.ExpiresOnUtc
+                ExpiresOnUtc = response.ExpiresOnUtc,
             }),
             Problem);
     }
@@ -80,7 +80,7 @@ public sealed class IdentityController(ISender sender) : ApiController
 
         if (string.IsNullOrEmpty(userId))
         {
-            return Problem([ANNUAIRECONGO.Domain.Identity.IdentityErrors.UserNotFound]);
+            return Problem([IdentityErrors.UserNotFound]);
         }
 
         var result = await sender.Send(new GetUserByIdQuery(userId), ct);
@@ -90,33 +90,34 @@ public sealed class IdentityController(ISender sender) : ApiController
             Problem);
     }
 
-     [HttpPost("register")]
-     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
-     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-     [EndpointSummary("Registers a new user and creates associated business owner profile.")]
-     [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
-     [EndpointName("Register")]
-     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
-     {
-         var result = await sender.Send(new RegisterCommand(
-             request.Email,
-             request.Password,
-             request.FirstName,
-             request.LastName,
-             request.PhoneNumber,
-             request.CompanyPosition,
-             request.CompanyName,
-             request.CityId,
-             request.SectorIds,
-             request.Website,
-             request.Rccm,
-             request.Niu), ct);
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Registers a new user and creates associated business owner profile.")]
+    [EndpointDescription("Creates a new AppUser with BusinessOwner role and associated BusinessOwner profile.")]
+    [EndpointName("Register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+    {
+        var result = await sender.Send(new RegisterCommand(
+            request.Email,
+            request.Password,
+            request.FirstName,
+            request.LastName,
+            request.PhoneNumber,
+            request.CompanyPosition,
+            request.CompanyName,
+            request.CityId,
+            request.SectorIds,
+            request.Website,
+            request.Rccm,
+            request.Niu),
+            ct);
 
-         return result.Match(
-             userId => Created($"identity/{userId}", userId),
-             Problem);
-     }
+        return result.Match(
+            userId => Created($"identity/{userId}", userId),
+            Problem);
+    }
 
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -144,7 +145,9 @@ public sealed class IdentityController(ISender sender) : ApiController
     [AllowAnonymous]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(new ResetPasswordCommand(request.Email, request.Token, request.NewPassword), ct);
+        var result = await sender.Send(
+            new ResetPasswordCommand(request.Email, request.Token, request.NewPassword),
+            ct);
         return result.Match(
             _ => Ok(),
             Problem);
@@ -192,7 +195,9 @@ public sealed class IdentityController(ISender sender) : ApiController
     [EndpointName("ChangePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
+        var result = await sender.Send(
+            new ChangePasswordCommand(request.CurrentPassword, request.NewPassword),
+            ct);
         return result.Match(
             _ => Ok(),
             Problem);
@@ -224,7 +229,9 @@ public sealed class IdentityController(ISender sender) : ApiController
     [EndpointName("UpdateProfile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
     {
-        var result = await sender.Send(new UpdateProfileCommand(request.FirstName, request.LastName, request.PhoneNumber, request.CompanyPosition), ct);
+        var result = await sender.Send(
+            new UpdateProfileCommand(request.FirstName, request.LastName, request.PhoneNumber, request.CompanyPosition),
+            ct);
         return result.Match(
             _ => Ok(),
             Problem);
@@ -243,10 +250,10 @@ public sealed class IdentityController(ISender sender) : ApiController
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
-            return Problem([ANNUAIRECONGO.Domain.Identity.IdentityErrors.UserNotFound]);
+            return Problem([IdentityErrors.UserNotFound]);
         }
 
-        var result = await sender.Send(new ANNUAIRECONGO.Application.Features.Identity.Queries.ExportData.ExportDataQuery(userId), ct);
+        var result = await sender.Send(new ExportDataQuery(userId), ct);
         return result.Match(
             json => File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", $"export_data_{DateTimeOffset.UtcNow:yyyyMMdd}.json"),
             Problem);

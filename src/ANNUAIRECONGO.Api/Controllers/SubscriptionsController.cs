@@ -1,18 +1,19 @@
-using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.CancelSubscription;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.ConfirmPayment;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Queries.GetCompanySubscriptions;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Queries.GetCompanyPayments;
 using ANNUAIRECONGO.Application.Common.Interfaces;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.CancelSubscription;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.Subscribe;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.ConfirmPayment;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RefundPayment;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RejectPayment;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Queries.GetCompanyPayments;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Queries.GetPendingPayments;
+using ANNUAIRECONGO.Application.Features.Subscriptions.Queries.GetCompanySubscriptions;
+using ANNUAIRECONGO.Contracts.Requests.Subscriptions;
+using ANNUAIRECONGO.Contracts.Requests.Subscriptions.Payments;
+using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Commands.Subscribe;
-using ANNUAIRECONGO.Contracts.Requests.Subscriptions.Payments;
-using ANNUAIRECONGO.Domain.Subscriptions.Payments.Enums;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RefundPayment;
-using ANNUAIRECONGO.Application.Features.Subscriptions.Payments.Commands.RejectPayment;
-using ANNUAIRECONGO.Contracts.Requests.Subscriptions;
 
 namespace ANNUAIRECONGO.Api.Controllers;
 
@@ -33,7 +34,9 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> CreateSubscription([FromBody] SubscribeRequest request, CancellationToken ct)
     {
-        var result =await sender.Send(new SubscribeCommand(request.CompanyId, request.PlanId,(PaymentMethod) request.Method ),ct);
+        var result = await sender.Send(
+            new SubscribeCommand(request.CompanyId, request.PlanId, (PaymentMethod)request.Method),
+            ct);
         return result.Match(
             response => CreatedAtAction(nameof(GetCompanySubscriptions), new { companyId = request.CompanyId }, response),
             Problem);
@@ -68,7 +71,6 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCompanySubscriptions([FromRoute] Guid companyId, CancellationToken ct)
     {
-
         var result = await sender.Send(new GetCompanySubscriptionsQuery(companyId, user.Id), ct);
         return result.Match(
             response => Ok(response),
@@ -87,7 +89,7 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [EndpointDescription("This endpoint confirms a pending manual payment and activates the associated subscription. Requires Admin role.")]
     [EndpointName("ConfirmPayment")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId,CancellationToken ct)
+    public async Task<IActionResult> ConfirmPayment([FromRoute] Guid paymentId, CancellationToken ct)
     {
         var command = new ConfirmPaymentCommand(paymentId);
         var result = await sender.Send(command, ct);
@@ -106,7 +108,7 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [EndpointDescription("This endpoint refunds a payment with the payment gateway reference.")]
     [EndpointName("RefundPayment")]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> RefundPayment([FromRoute] Guid paymentId,  CancellationToken ct)
+    public async Task<IActionResult> RefundPayment([FromRoute] Guid paymentId, CancellationToken ct)
     {
         var command = new RefundPaymentCommand(paymentId);
         var result = await sender.Send(command, ct);
@@ -125,9 +127,9 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [EndpointDescription("This endpoint rejects a payment with the payment gateway reference.")]
     [EndpointName("RejectPayment")]
     [MapToApiVersion("1.0")]
-     public async Task<IActionResult> RejectPayment([FromRoute] Guid paymentId, [FromBody] RejectPaymentRequest request, CancellationToken ct)
-     {
-         var command = new RejectPaymentCommand(paymentId, request.Reason);
+    public async Task<IActionResult> RejectPayment([FromRoute] Guid paymentId, [FromBody] RejectPaymentRequest request, CancellationToken ct)
+    {
+        var command = new RejectPaymentCommand(paymentId, request.Reason);
         var result = await sender.Send(command, ct);
         return result.Match(
             response => Ok(response),
@@ -162,7 +164,7 @@ public sealed class SubscriptionsController(ISender sender, IUser user) : ApiCon
     [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetPendingPayments(CancellationToken ct)
     {
-        var result = await sender.Send(new Application.Features.Subscriptions.Payments.Queries.GetPendingPayments.GetPendingPaymentsQuery(), ct);
+        var result = await sender.Send(new GetPendingPaymentsQuery(), ct);
         return result.Match(
             response => Ok(response),
             Problem);

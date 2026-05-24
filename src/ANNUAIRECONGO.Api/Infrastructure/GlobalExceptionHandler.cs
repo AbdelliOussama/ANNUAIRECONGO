@@ -5,8 +5,6 @@ namespace ANNUAIRECONGO.Api.Infrastructure;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
-
-    #region
     private readonly IProblemDetailsService _problemDetailsService;
     private readonly ILogger<GlobalExceptionHandler> _logger;
     private readonly IWebHostEnvironment _env;
@@ -54,6 +52,4 @@ public class GlobalExceptionHandler : IExceptionHandler
             }
         });
     }
-    #endregion
-
 }

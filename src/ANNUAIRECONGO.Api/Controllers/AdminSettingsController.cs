@@ -15,7 +15,7 @@ public class AdminSettingsController : ApiController
         { "contactEmail", "contact@annuairecongo.cg" },
         { "supportPhone", "+242 06 000 0000" },
         { "manualValidation", true },
-        { "publicRegistration", true }
+        { "publicRegistration", true },
     };
 
     [HttpGet]
@@ -39,6 +39,7 @@ public class AdminSettingsController : ApiController
         {
             _settings[kvp.Key] = kvp.Value;
         }
+
         return Ok(_settings);
     }
 }

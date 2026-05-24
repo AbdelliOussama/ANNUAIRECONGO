@@ -3,7 +3,7 @@ using ANNUAIRECONGO.Contracts.Common;
 
 namespace ANNUAIRECONGO.Contracts.Requests.Companies.Contacts;
 
-public  class UpdateContactRequest
+public class UpdateContactRequest
 {
     [Required(ErrorMessage = "ContactId is required")]
     public Guid ContactId { get; set; } = Guid.Empty;
@@ -11,5 +11,5 @@ public  class UpdateContactRequest
     public ContactType Type { get; set; }
     [Required(ErrorMessage = "Value is required")]
     public string Value { get; set; } = string.Empty;
-    public bool IsPrimary { get; set;} = true;
+    public bool IsPrimary { get; set; } = true;
 }
