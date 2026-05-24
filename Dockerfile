@@ -51,7 +51,7 @@ ENV ASPNETCORE_URLS=http://+:5000
 WORKDIR /app
 
 COPY --from=api-build /app/publish ./api
-COPY --from=client-build /client/dist/ANNUAIRECONGO.Client/browser /usr/share/nginx/html
+COPY --from=client-build /client/dist/annuaire-congo-frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
