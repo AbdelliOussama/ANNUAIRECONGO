@@ -9,6 +9,7 @@ import { TabsComponent, TabDescriptor } from '@shared/ui/tabs/tabs.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { CompanyService } from '@core/services/company.service';
+import { AuthService } from '@core/services/auth.service';
 import { Company, CompanyContact, CompanyDocument, ContactType, DocumentType as DocTypeEnum } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import * as L from 'leaflet';
@@ -246,7 +247,20 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
                       <strong>{{ getDocLabel(doc.docType) }}</strong>
                       <p>{{ doc.description || 'Document sans description' }}</p>
                     </div>
-                    <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
+                    @if (doc.fileUrl) {
+                      <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
+                    } @else {
+                      <div class="doc-locked">
+                        <span class="material-symbols-outlined doc-lock-icon" aria-hidden="true">lock</span>
+                        <span class="doc-lock-label">
+                          @if (!isAuthenticated()) {
+                            <a routerLink="/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
+                          } @else {
+                            <a routerLink="/espace/abonnement" class="doc-lock-link">Abonnez-vous</a> (plan payant requis)
+                          }
+                        </span>
+                      </div>
+                    }
                   </li>
                 } @empty {
                   <p class="muted">Cette fiche n'a pas encore publié de documents téléchargeables.</p>
@@ -471,6 +485,21 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     .doc-info strong { font-size: 14px; display: block; color: var(--color-on-surface); }
     .doc-info p { font-size: 12px; color: var(--color-on-surface-variant); margin: 2px 0 0; }
 
+    .doc-locked {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--color-surface-container);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-outline-variant);
+      white-space: nowrap;
+    }
+    .doc-lock-icon { font-size: 16px; color: var(--color-outline); flex-shrink: 0; }
+    .doc-lock-label { font-size: 12px; color: var(--color-on-surface-variant); }
+    .doc-lock-link { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+    .doc-lock-link:hover { text-decoration: underline; }
+
     .muted { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.6; }
     .mb-6 { margin-bottom: 24px; }
 
@@ -672,10 +701,14 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
 export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
+  private readonly auth           = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+
+  /** Exposed to template — drives the locked-state CTA copy. */
+  protected readonly isAuthenticated = this.auth.isAuthenticated;
 
   protected readonly showReportModal = signal(false);
   protected readonly reportReason = signal('');

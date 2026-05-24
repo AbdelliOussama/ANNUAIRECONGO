@@ -9,7 +9,7 @@ namespace ANNUAIRECONGO.Application.Features.Companies.Mappers;
 
 public static class CompanyMapper
 {
-    public static CompanyDto ToDto(this Company company)
+    public static CompanyDto ToDto(this Company company, bool viewerCanSeeDocuments = true)
     {
         // Locate the active subscription if it has been .Include()d on the query.
         // If the navigation collection wasn't loaded the field stays null and
@@ -98,7 +98,9 @@ public static class CompanyMapper
                 Id = d.Id,
                 CompanyId = d.CompanyId,
                 DocType = d.DocType,
-                FileUrl = d.FileUrl,
+                // FileUrl is stripped for viewers who do not have an active paid subscription.
+                // The document entry is still returned so the UI can show a locked-state CTA.
+                FileUrl = viewerCanSeeDocuments ? d.FileUrl : null,
                 IsPublic = d.IsPublic,
                 UploadedAt = d.UploadedAt
             }).ToList()
