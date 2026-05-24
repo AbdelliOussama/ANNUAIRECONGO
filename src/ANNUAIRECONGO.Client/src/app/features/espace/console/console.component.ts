@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, of, switchMap, catchError, map, tap, finalize } from 'rxjs';
-import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { of, switchMap, catchError } from 'rxjs';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { NotificationService } from '@core/services/notification.service';
 import { StatsService } from '@core/services/stats.service';
 import { AuthService } from '@core/services/auth.service';
+import { CompanyContextService } from '@core/services/company-context.service';
 import { Company, CompanyStatus, Subscription, Notification, PlanName, CompanyStats } from '@core/models/company.model';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
@@ -33,15 +33,28 @@ import { ModalService } from '@shared/services/modal.service';
         <div>
           <p class="eyebrow">Mon espace</p>
           <h1>Bonjour, {{ identity()?.firstName || identity()?.email || 'Utilisateur' }}</h1>
-          <p class="sub">Gérez la présence de votre entreprise sur l'annuaire national.</p>
+          <p class="sub">
+            @if (companyCount() > 1) {
+              Vous gérez <strong>{{ companyCount() }} entreprises</strong>. Entreprise active&nbsp;:
+              <strong>{{ company()?.name }}</strong>.
+            } @else {
+              Gérez la présence de votre entreprise sur l'annuaire national.
+            }
+          </p>
         </div>
 
-        @if (company()) {
-          <a routerLink="/espace/fiche/editer" class="btn btn-outline">
-            <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-            Modifier ma fiche
+        <div class="page-head-actions">
+          @if (company()) {
+            <a routerLink="/espace/fiche/editer" class="btn btn-outline">
+              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+              Modifier ma fiche
+            </a>
+          }
+          <a routerLink="/espace/fiche/creer" class="btn btn-primary">
+            <span class="material-symbols-outlined" aria-hidden="true">add</span>
+            Ajouter une entreprise
           </a>
-        }
+        </div>
       </header>
 
       @if (loading()) {
@@ -54,11 +67,11 @@ import { ModalService } from '@shared/services/modal.service';
         <ac-empty-state
           icon="business_center"
           title="Vous n'avez pas encore de fiche entreprise"
-          hint="Créez votre fiche officielle pour bénéficier d'une visibilité nationale, recevoir des appels d'offres et apparaître dans la cartographie."
+          hint="Créez votre première fiche officielle pour bénéficier d'une visibilité nationale, recevoir des appels d'offres et apparaître dans la cartographie."
         >
           <a routerLink="/espace/fiche/creer" class="btn btn-primary py-4 px-10 text-sm">
             <span class="material-symbols-outlined" aria-hidden="true">add</span>
-            Créer ma fiche
+            Créer ma première fiche
           </a>
         </ac-empty-state>
       } @else {
@@ -219,6 +232,7 @@ import { ModalService } from '@shared/services/modal.service';
       margin: 6px 0 4px;
     }
     .page-head .sub { color: var(--color-on-secondary-container); font-size: 14px; margin: 0; max-width: 560px; }
+    .page-head-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
 
     .kpi {
       display: flex;
@@ -358,69 +372,62 @@ import { ModalService } from '@shared/services/modal.service';
 })
 export class EspaceConsoleComponent {
   protected readonly FR = FR;
-  // Expose enum to template
   protected readonly CS = CompanyStatus;
-  private readonly boService   = inject(BusinessOwnerService);
-  private readonly subService  = inject(SubscriptionService);
-  private readonly notifService= inject(NotificationService);
-  private readonly statsService= inject(StatsService);
-  private readonly authService = inject(AuthService);
+
+  private readonly ctx            = inject(CompanyContextService);
+  private readonly subService     = inject(SubscriptionService);
+  private readonly notifService   = inject(NotificationService);
+  private readonly statsService   = inject(StatsService);
+  private readonly authService    = inject(AuthService);
   private readonly companyService = inject(CompanyService);
-  private readonly toast = inject(ToastService);
-  private readonly modal = inject(ModalService);
+  private readonly toast          = inject(ToastService);
+  private readonly modal          = inject(ModalService);
 
-  protected readonly identity = this.authService.currentUser;
-  protected readonly submitting = signal(false);
+  protected readonly identity     = this.authService.currentUser;
+  protected readonly submitting   = signal(false);
 
-  // Tracks whether the initial companies API call has completed (success or error).
-  // Using a dedicated signal avoids the race condition where loading() = false
-  // momentarily before identity() resolves, causing OnPush to render the wrong branch.
-  private readonly _dataLoaded = signal(false);
+  // ── Company from context (auto-updates when user switches company) ────────
+  protected readonly company      = this.ctx.selectedCompany;
+  protected readonly companyCount = computed(() => this.ctx.companies().length);
+  protected readonly loading      = computed(() => !this.ctx.loaded());
 
-  private readonly companyData = toSignal<Company | null>(
-    this.boService.getMyCompanies().pipe(
-      map(list => list[0] || null),
-      tap(() => this._dataLoaded.set(true)),
-      catchError(() => { this._dataLoaded.set(true); return of(null); })
-    ),
-    { initialValue: null }
-  );
-
-  protected readonly company = computed(() => this.companyData());
-
-  // Only show loading skeleton while the API call is in-flight.
-  protected readonly loading = computed(() => !this._dataLoaded());
-
+  // ── Subscriptions — re-fetch whenever selected company changes ────────────
+  // toObservable() converts the signal to an observable stream so switchMap
+  // can cancel the previous HTTP call and issue a new one on company switch.
   private readonly subData = toSignal(
-    this.boService.getMyCompanies().pipe(
-      switchMap(list => {
-        if (!list[0]) return of([] as Subscription[]);
-        return this.subService.getCompanySubscriptions(list[0].id);
-      }),
-      catchError(() => of([] as Subscription[]))
+    toObservable(this.ctx.selectedCompanyId).pipe(
+      switchMap(id => {
+        if (!id) return of([] as Subscription[]);
+        return this.subService.getCompanySubscriptions(id).pipe(
+          catchError(() => of([] as Subscription[]))
+        );
+      })
     ),
     { initialValue: [] as Subscription[] }
   );
 
-  protected readonly subscription = computed(() => {
-    return this.subData().find(s => s.isActive) || this.subData()[0] || null;
-  });
+  protected readonly subscription = computed(() =>
+    this.subData().find(s => s.isActive) ?? this.subData()[0] ?? null
+  );
 
+  // ── Notifications (not company-scoped) ───────────────────────────────────
   private readonly notifsData = toSignal(
     this.notifService.getMyNotifications().pipe(catchError(() => of([] as Notification[]))),
     { initialValue: [] as Notification[] }
   );
   protected readonly notifications = computed(() => this.notifsData().slice(0, 5));
 
-  private readonly statsData = toSignal<CompanyStats | null>(
-    this.boService.getMyCompanies().pipe(
-      switchMap(list => {
-        if (!list[0]) return of(null);
-        return this.statsService.getCompanyStats(list[0].id);
-      }),
-      catchError(() => of(null))
+  // ── Stats — re-fetch whenever selected company changes ───────────────────
+  private readonly statsData = toSignal(
+    toObservable(this.ctx.selectedCompanyId).pipe(
+      switchMap(id => {
+        if (!id) return of(null as CompanyStats | null);
+        return this.statsService.getCompanyStats(id).pipe(
+          catchError(() => of(null as CompanyStats | null))
+        );
+      })
     ),
-    { initialValue: null }
+    { initialValue: null as CompanyStats | null }
   );
   protected readonly stats = computed(() => this.statsData());
 
@@ -518,17 +525,18 @@ export class EspaceConsoleComponent {
 
     this.modal.confirm({
       title: 'Soumettre votre fiche ?',
-      body: 'Votre fiche sera examinée par un administrateur avant d\'être publiée sur l\'annuaire.',
+      body: "Votre fiche sera examinée par un administrateur avant d'être publiée sur l'annuaire.",
       tone: 'confirm',
       confirmLabel: 'Soumettre maintenant'
     }).then(({ confirmed }) => {
       if (!confirmed) return;
-      
+
       this.submitting.set(true);
       this.companyService.submitCompany(c.id).subscribe({
         next: () => {
           this.toast.success('Fiche soumise avec succès !');
-          window.location.reload(); 
+          this.ctx.refresh();
+          this.submitting.set(false);
         },
         error: () => {
           this.submitting.set(false);

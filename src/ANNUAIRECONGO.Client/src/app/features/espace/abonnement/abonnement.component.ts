@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, of, switchMap, catchError, map, Observable } from 'rxjs';
+import { of, switchMap, catchError, Observable } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { SubscriptionService } from '@core/services/subscription.service';
 import { PlanService } from '@core/services/plan.service';
-import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { CompanyContextService } from '@core/services/company-context.service';
 import { Plan, PlanName, Subscription, Company } from '@core/models/company.model';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
@@ -307,18 +308,16 @@ export class EspaceAbonnementComponent {
   protected readonly FR = FR;
   
   private readonly subService = inject(SubscriptionService);
+  private readonly ctx         = inject(CompanyContextService);
   private readonly planService = inject(PlanService);
-  private readonly boService   = inject(BusinessOwnerService);
   private readonly toast  = inject(ToastService);
   private readonly modal  = inject(ModalService);
   private readonly router = inject(Router);
 
   protected readonly selectedMethod = signal<number>(0);
 
-  private readonly company = toSignal<Company | null>(
-    this.boService.getMyCompanies().pipe(map(list => list[0] || null)),
-    { initialValue: null }
-  );
+  // ── Company from shared context ───────────────────────────────────────────
+  protected readonly company = this.ctx.selectedCompany;
 
   private readonly plansData = toSignal<Plan[] | null>(this.planService.getPlans(), { initialValue: null });
 
@@ -332,22 +331,26 @@ export class EspaceAbonnementComponent {
     return hasActiveSub ? plans.filter(p => p.price > 0) : plans;
   });
 
+  // ── Subscriptions — re-fetch on company switch ────────────────────────────
   private readonly subsData = toSignal<Subscription[] | null>(
-    this.boService.getMyCompanies().pipe(
-      switchMap((list: Company[]): Observable<Subscription[]> => {
-        if (!list[0]) return of([] as Subscription[]);
-        return this.subService.getCompanySubscriptions(list[0].id);
-      }),
-      catchError(() => of([] as Subscription[]))
+    toObservable(this.ctx.selectedCompanyId).pipe(
+      switchMap((id): Observable<Subscription[]> => {
+        if (!id) return of([] as Subscription[]);
+        return this.subService.getCompanySubscriptions(id).pipe(
+          catchError(() => of([] as Subscription[]))
+        );
+      })
     ),
     { initialValue: null }
   );
 
-  protected readonly subscription = computed(() => {
-    return this.subsData()?.find(s => s.isActive) || null;
-  });
+  protected readonly subscription = computed(() =>
+    this.subsData()?.find(s => s.isActive) ?? null
+  );
 
-  protected readonly loading = computed(() => this.company() === null && this.subsData() === null && this.plansData() === null);
+  protected readonly loading = computed(() =>
+    !this.ctx.loaded() || this.subsData() === null || this.plansData() === null
+  );
 
   protected goHistorique(): void {
     this.router.navigateByUrl('/espace/abonnement/historique');
@@ -469,7 +472,7 @@ export class EspaceAbonnementComponent {
     if (plan.searchPriority > 0) {
       features.push('Priorité d\'affichage dans les résultats');
     }
-    
+
     if (plan.name?.toLowerCase().includes('premium')) {
       features.push('Accès API et support dédié');
     } else if (plan.name?.toLowerCase().includes('pro')) {

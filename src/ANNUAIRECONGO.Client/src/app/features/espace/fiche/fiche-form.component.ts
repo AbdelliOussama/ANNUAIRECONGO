@@ -6,7 +6,7 @@ import { CompanyService } from '@core/services/company.service';
 import { SectorService } from '@core/services/sector.service';
 import { GeographyService } from '@core/services/geography.service';
 import { UploadService } from '@core/services/upload.service';
-import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { CompanyContextService } from '@core/services/company-context.service';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ToastService } from '@shared/services/toast.service';
@@ -547,11 +547,11 @@ export class FicheFormComponent {
 
   private readonly fb = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
-  private readonly sectorService = inject(SectorService);
-  private readonly geoService = inject(GeographyService);
-  private readonly uploadService = inject(UploadService);
-  private readonly boService = inject(BusinessOwnerService);
-  private readonly authService = inject(AuthService);
+  private readonly sectorService  = inject(SectorService);
+  private readonly geoService     = inject(GeographyService);
+  private readonly uploadService  = inject(UploadService);
+  private readonly ctx            = inject(CompanyContextService);
+  private readonly authService    = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
 
@@ -689,13 +689,9 @@ export class FicheFormComponent {
     this.servicesFormArray.removeAt(index);
   }
 
-  private readonly companyToEdit = toSignal(
-    this.boService.getMyCompanies().pipe(
-      map(list => list[0] || null),
-      catchError(() => of(null))
-    ),
-    { initialValue: null as Company | null }
-  );
+  // Edit mode reads the currently selected company from the shared context.
+  // When the user switches company in the sidebar the signal updates automatically.
+  private readonly companyToEdit = this.ctx.selectedCompany;
 
   constructor() {
     effect(() => {
@@ -948,6 +944,8 @@ export class FicheFormComponent {
       next: () => {
         this.submitting.set(false);
         this.toast.success(this.mode() === 'create' ? 'Fiche créée et soumise.' : 'Fiche mise à jour.');
+        // Refresh the company list so the sidebar switcher shows the new/updated company.
+        this.ctx.refresh();
         this.router.navigateByUrl('/espace');
       },
       error: (err) => {

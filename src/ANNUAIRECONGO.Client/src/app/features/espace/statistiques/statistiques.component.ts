@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { StatsService } from '@core/services/stats.service';
-import { BusinessOwnerService } from '@core/services/business-owner.service';
+import { CompanyContextService } from '@core/services/company-context.service';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { FR } from '@core/i18n/fr.constants';
 import { switchMap, of, catchError } from 'rxjs';
-import { BusinessOwner, CompanyStats } from '@core/models/company.model';
+import { CompanyStats } from '@core/models/company.model';
 
 @Component({
   selector: 'ac-espace-statistiques',
@@ -180,29 +180,22 @@ import { BusinessOwner, CompanyStats } from '@core/models/company.model';
 export class EspaceStatistiquesComponent {
   protected readonly FR = FR;
   private readonly statsService = inject(StatsService);
-  private readonly ownerService = inject(BusinessOwnerService);
+  private readonly ctx          = inject(CompanyContextService);
 
+  // ── Stats — re-fetch whenever selected company changes ───────────────────
   protected readonly stats = toSignal(
-    this.ownerService.getMyCompanies().pipe(
-      switchMap((companies) => {
-        if (!companies?.length) return of(null);
-        return this.statsService.getCompanyStats(companies[0].id);
-      }),
-      catchError(() => of(null))
+    toObservable(this.ctx.selectedCompanyId).pipe(
+      switchMap(id => {
+        if (!id) return of(null as CompanyStats | null);
+        return this.statsService.getCompanyStats(id).pipe(catchError(() => of(null)));
+      })
     ),
     { initialValue: null as CompanyStats | null }
   );
 
-  protected readonly loading = computed(() => this.stats() === null);
+  protected readonly loading   = computed(() => !this.ctx.loaded() || this.stats() === null);
   protected readonly exporting = signal(false);
-
-  protected readonly isPremium = computed(() => {
-    const owner = this.ownerService.getCurrentOwner() as any;
-    // Just a placeholder for the demo: checking if company is premium
-    // In real app, we check the actual subscription plan.
-    // Wait, let's use the actual signal value.
-    return true; // We'll assume true for the demo to show the button
-  });
+  protected readonly isPremium = computed(() => true); // stats always visible; premium check TBD
 
   protected readonly barWidth = 60;
   protected readonly gridLines = [40, 80, 120, 160, 200];
@@ -233,23 +226,21 @@ export class EspaceStatistiquesComponent {
   }
 
   protected exportCSV(): void {
-    this.ownerService.getMyCompanies().subscribe(companies => {
-      if (!companies?.length) return;
-      const companyId = companies[0].id;
-      
-      this.exporting.set(true);
-      this.statsService.exportCompanyStatsCSV(companyId).subscribe({
-        next: (blob) => {
-          this.exporting.set(false);
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `stats_${companyId}.csv`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-        },
-        error: () => this.exporting.set(false)
-      });
+    const companyId = this.ctx.selectedCompanyId();
+    if (!companyId) return;
+
+    this.exporting.set(true);
+    this.statsService.exportCompanyStatsCSV(companyId).subscribe({
+      next: (blob) => {
+        this.exporting.set(false);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `stats_${companyId}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.exporting.set(false)
     });
   }
 }
