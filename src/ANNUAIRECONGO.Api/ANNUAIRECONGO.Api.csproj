@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\ANNUAIRECONGO.Application\ANNUAIRECONGO.Application.csproj" />
@@ -8,19 +8,19 @@
 
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" />
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer"  />
-    <PackageReference Include="FluentValidation.AspNetCore"  />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="FluentValidation.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore"/>
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="Scalar.AspNetCore"  />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
@@ -29,6 +29,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>6871f401-ad93-41c2-9627-078524b5cf46</UserSecretsId>
   </PropertyGroup>
 
 </Project>
