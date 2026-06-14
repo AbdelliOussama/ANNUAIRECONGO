@@ -3,6 +3,7 @@ using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Domain.BusinessOwners;
 using ANNUAIRECONGO.Domain.Common.Results;
 using ANNUAIRECONGO.Domain.Identity;
+using ANNUAIRECONGO.Domain.UserProfiles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -178,6 +179,69 @@ public class IdentityService : IIdentityService
         }
 
         return businessOwnerResult.Value.Id;
+    }
+
+    // ── Regular-user registration ─────────────────────────────────────────
+
+    public async Task<Result<Guid>> RegisterRegularUserAsync(
+        string email,
+        string password,
+        string firstName,
+        string lastName,
+        string phoneNumber,
+        CancellationToken cancellationToken)
+    {
+        // 1. Ensure e-mail is not already taken
+        var existingUser = await _userManager.FindByEmailAsync(email);
+        if (existingUser != null)
+            return IdentityErrors.EmailAlreadyExists;
+
+        // 2. Create ASP.NET Identity user
+        var appUser = new AppUser
+        {
+            Id             = Guid.NewGuid().ToString(),
+            Email          = email,
+            UserName       = email,
+            EmailConfirmed = false
+        };
+
+        var createResult = await _userManager.CreateAsync(appUser, password);
+        if (!createResult.Succeeded)
+            return IdentityErrors.UserCreationFailed;
+
+        // 3. Ensure the RegularUser role exists, then assign it
+        var regularRole = await _roleManager.FindByNameAsync(nameof(Role.RegularUser));
+        if (regularRole is null)
+        {
+            regularRole = new IdentityRole(nameof(Role.RegularUser));
+            await _roleManager.CreateAsync(regularRole);
+        }
+        await _userManager.AddToRoleAsync(appUser, regularRole.Name!);
+
+        // 4. Create UserProfile domain entity (no Company, no CompanyPosition).
+        //    Stage it in the context — the caller (RegisterRegularUserCommandHandler)
+        //    performs the single SaveChangesAsync so UserProfile + UserSubscription
+        //    are committed atomically in one transaction.
+        var profileResult = UserProfile.Create(
+            Guid.Parse(appUser.Id),
+            firstName,
+            lastName,
+            email,
+            phoneNumber);
+
+        if (profileResult.IsError)
+        {
+            await _userManager.DeleteAsync(appUser);
+            return profileResult.Errors;
+        }
+
+        _context.UserProfiles.Add(profileResult.Value);
+
+        // NOTE: SaveChangesAsync is intentionally NOT called here.
+        // The command handler saves both UserProfile and UserSubscription together.
+        // If that save fails the handler is responsible for cleaning up the Identity user.
+
+        return profileResult.Value.Id;
     }
 
     public async Task<Result<Success>> ForgotPasswordAsync(string email, CancellationToken cancellationToken)

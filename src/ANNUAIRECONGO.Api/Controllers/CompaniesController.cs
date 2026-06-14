@@ -415,7 +415,7 @@ public sealed class CompaniesController(ISender sender) : ApiController
 [EndpointDescription("This endpoint add contact for a company by id.")]
 [EndpointName("AddContact")]
 [MapToApiVersion("1.0")]
-[Authorize(Roles ="EntrepriseOwner")]
+[Authorize(Roles = "Admin,EntrepriseOwner")]
 public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactRequest commandRequest, CancellationToken ct)
 {
         if (!ModelState.IsValid || commandRequest == null)
@@ -449,7 +449,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
 [EndpointDescription("This endpoint remove contact for a company by id.")]
 [EndpointName("RemoveContact")]
 [MapToApiVersion("1.0")]
-[Authorize(Roles ="EntrepriseOwner")]
+[Authorize(Roles = "Admin,EntrepriseOwner")]
      public async Task<IActionResult> RemoveContact(Guid id, Guid contactId, CancellationToken ct)
 {
     var command = new RemoveContactCommand(id, contactId);
@@ -467,7 +467,7 @@ public async Task<IActionResult> AddContact(Guid id, [FromBody] AddContactReques
 [EndpointDescription("This endpoint update contact for a company by id.")]
 [EndpointName("UpdateContact")]
 [MapToApiVersion("1.0")]
-[Authorize(Roles ="EntrepriseOwner")]
+[Authorize(Roles = "Admin,EntrepriseOwner")]
 public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactRequest commandRequest, CancellationToken ct)
 {
     var command = new UpdateContactCommand(id,commandRequest.ContactId,(Domain.Companies.Enums.ContactType)commandRequest.Type,commandRequest.Value,commandRequest.IsPrimary);
@@ -488,7 +488,7 @@ public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContact
 [EndpointDescription("This endpoint add service for a company by id.")]
 [EndpointName("AddService")]
 [MapToApiVersion("1.0")]
-[Authorize(Roles ="EntrepriseOwner")]
+[Authorize(Roles = "Admin,EntrepriseOwner")]
 public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceRequest commandRequest, CancellationToken ct)
 {
     var command = new AddServiceCommand(id,commandRequest.Title,commandRequest.Description);
@@ -507,7 +507,7 @@ public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceReques
 [EndpointDescription("This endpoint remove service for a company by id.")]
 [EndpointName("RemoveService")]
 [MapToApiVersion("1.0")]
-[Authorize(Roles ="EntrepriseOwner")]
+[Authorize(Roles = "Admin,EntrepriseOwner")]
       public async Task<IActionResult> RemoveService(Guid id, Guid serviceId, CancellationToken ct)
      {
          var command = new RemoveServiceCommand(id, serviceId);
@@ -588,7 +588,7 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
 [EndpointDescription("This endpoint add image for a company by id.")]
 [EndpointName("AddImage")]
 [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> AddImage(Guid id, [FromBody] AddImageRequest commandRequest, CancellationToken ct)
 {
     var result = await sender.Send(new AddImageCommand(id,commandRequest.ImageUrl,commandRequest.DisplayOrder,commandRequest.Caption), ct);
@@ -606,7 +606,7 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
     [EndpointDescription("This endpoint Remove image for a company by id.")]
     [EndpointName("RemoveImage")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
      public async Task<IActionResult> RemoveImage(Guid id, Guid imageId, CancellationToken ct)
      {
          var result = await sender.Send(new RemoveImageCommand(id, imageId), ct);
@@ -625,7 +625,7 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
     [EndpointDescription("This endpoint adds a document for a company by id.")]
     [EndpointName("AddDocument")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
     public async Task<IActionResult> AddDocument(Guid id, [FromBody] AddDocumentRequest commandRequest, CancellationToken ct)
     {
         if (!Enum.TryParse<DocumentType>(commandRequest.DocumentType, true, out var documentType))
@@ -648,7 +648,7 @@ public async Task<IActionResult> ProcessReport(Guid reportId, [FromBody] Process
     [EndpointDescription("This endpoint removes a document for a company by id.")]
     [EndpointName("RemoveDocument")]
     [MapToApiVersion("1.0")]
-    [Authorize(Roles ="EntrepriseOwner")]
+    [Authorize(Roles = "Admin,EntrepriseOwner")]
      public async Task<IActionResult> RemoveDocument(Guid id, Guid documentId, CancellationToken ct)
     {
         var command = new RemoveDocumentCommand(id, documentId);

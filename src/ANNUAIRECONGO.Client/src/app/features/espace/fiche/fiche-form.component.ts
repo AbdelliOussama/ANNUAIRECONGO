@@ -28,12 +28,14 @@ import { AuthService } from '@core/services/auth.service';
   template: `
     <div class="page">
       <header class="page-head">
-        <p class="eyebrow">{{ mode() === 'create' ? 'Nouvelle fiche' : 'Ma fiche entreprise' }}</p>
-        <h1>{{ mode() === 'create' ? 'Créer ma fiche entreprise' : 'Modifier ma fiche' }}</h1>
+        <p class="eyebrow">{{ mode() === 'create' ? 'Nouvelle fiche' : (authService.isAdmin() ? 'Fiche entreprise' : 'Ma fiche entreprise') }}</p>
+        <h1>{{ mode() === 'create' ? 'Créer ma fiche entreprise' : (authService.isAdmin() ? ('Modifier la fiche — ' + (companyToEdit()?.name || '')) : 'Modifier ma fiche') }}</h1>
         <p class="sub">
           @if (mode() === 'create') {
             Renseignez les informations essentielles. Votre fiche sera soumise à validation
             manuelle avant publication (sous 48 h ouvrées).
+          } @else if (authService.isAdmin()) {
+            Modification en tant qu'administrateur. Les changements sont appliqués immédiatement.
           } @else {
             Toute modification est soumise à une nouvelle validation par notre équipe avant
             d'être visible sur l'annuaire public.
@@ -307,7 +309,7 @@ import { AuthService } from '@core/services/auth.service';
         </fieldset>
 
         <div class="actions-bar">
-          <a routerLink="/espace" class="btn btn-ghost">Annuler</a>
+          <a [routerLink]="cancelLink()" class="btn btn-ghost">Annuler</a>
           <ac-button type="submit" [loading]="submitting()" iconRight="send">
             {{ mode() === 'create' ? 'Soumettre pour validation' : 'Enregistrer les modifications' }}
           </ac-button>
@@ -551,7 +553,7 @@ export class FicheFormComponent {
   private readonly geoService     = inject(GeographyService);
   private readonly uploadService  = inject(UploadService);
   private readonly ctx            = inject(CompanyContextService);
-  private readonly authService    = inject(AuthService);
+  protected readonly authService  = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
 
@@ -691,7 +693,17 @@ export class FicheFormComponent {
 
   // Edit mode reads the currently selected company from the shared context.
   // When the user switches company in the sidebar the signal updates automatically.
-  private readonly companyToEdit = this.ctx.selectedCompany;
+  protected readonly companyToEdit = this.ctx.selectedCompany;
+
+  /**
+   * Cancel navigation target: admin goes back to the company detail page,
+   * business owner goes to their /espace dashboard.
+   */
+  readonly cancelLink = computed(() =>
+    this.authService.isAdmin()
+      ? ['/admin/entreprises', this.companyToEdit()?.id ?? '']
+      : ['/espace']
+  );
 
   constructor() {
     effect(() => {
@@ -944,9 +956,18 @@ export class FicheFormComponent {
       next: () => {
         this.submitting.set(false);
         this.toast.success(this.mode() === 'create' ? 'Fiche créée et soumise.' : 'Fiche mise à jour.');
-        // Refresh the company list so the sidebar switcher shows the new/updated company.
-        this.ctx.refresh();
-        this.router.navigateByUrl('/espace');
+
+        if (this.authService.isAdmin()) {
+          // Admin: return to the company management page.
+          // Do NOT call ctx.refresh() — that calls getMyCompanies() which returns
+          // nothing for admin and would wipe the setAdminOverride() state.
+          const companyId = this.companyToEdit()?.id;
+          this.router.navigate(['/admin/entreprises', companyId]);
+        } else {
+          // Business owner: refresh the sidebar company list then go to the dashboard.
+          this.ctx.refresh();
+          this.router.navigateByUrl('/espace');
+        }
       },
       error: (err) => {
         this.submitting.set(false);

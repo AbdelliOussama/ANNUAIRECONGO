@@ -32,7 +32,8 @@ interface SidebarSection { label: string; links: SidebarLink[]; }
         <span class="brand-text">Mon Espace</span>
       </div>
 
-      <!-- Company Switcher -->
+      <!-- Company Switcher — EntrepriseOwner only -->
+      @if (isEntrepriseOwner()) {
       <div class="company-switcher">
         <!--
           Show the company name with a dropdown only when the user owns 2+ companies.
@@ -87,9 +88,10 @@ interface SidebarSection { label: string; links: SidebarLink[]; }
           </div>
         }
       </div>
+      } <!-- /isEntrepriseOwner company switcher -->
 
       <nav aria-label="Menu espace entreprise">
-        @for (section of sections; track section.label) {
+        @for (section of currentSections(); track section.label) {
           <p class="sidebar-section-label">{{ section.label }}</p>
           @for (link of section.links; track link.path) {
             <a
@@ -283,7 +285,8 @@ export class EspaceSidebarComponent {
   readonly open = input<boolean>(false);
   readonly navigate = output<void>();
 
-  protected readonly isAdmin    = computed(() => this.auth.isAdmin());
+  protected readonly isAdmin           = computed(() => this.auth.isAdmin());
+  protected readonly isEntrepriseOwner = computed(() => this.auth.isEntrepriseOwner());
   protected readonly switcherOpen = signal(false);
 
   protected toggleSwitcher(): void { this.switcherOpen.update(v => !v); }
@@ -299,34 +302,68 @@ export class EspaceSidebarComponent {
     this.navigate.emit();
   }
 
-  protected readonly sections: ReadonlyArray<SidebarSection> = [
-    {
-      label: 'Navigation',
-      links: [
-        { path: '/', label: 'Accueil', icon: 'home' },
-      ],
-    },
-    {
-      label: 'Mon entreprise',
-      links: [
-        { path: '/espace',               label: 'Console',            icon: 'space_dashboard' },
-        { path: '/espace/fiche/editer',  label: 'Ma fiche',           icon: 'business' },
-        { path: '/espace/statistiques',  label: 'Statistiques',       icon: 'analytics' },
-        { path: '/espace/notifications', label: FR.nav.notifications, icon: 'notifications' },
-      ],
-    },
-    {
-      label: 'Abonnement',
-      links: [
-        { path: '/espace/abonnement',            label: 'Mon abonnement', icon: 'workspace_premium' },
-        { path: '/espace/abonnement/historique', label: 'Historique',     icon: 'receipt_long' },
-      ],
-    },
-    {
-      label: 'Compte',
-      links: [
-        { path: '/espace/compte', label: FR.nav.profile, icon: 'person' },
-      ],
-    },
-  ];
+  /** Nav sections — differ between EntrepriseOwner and RegularUser. */
+  protected readonly currentSections = computed<ReadonlyArray<SidebarSection>>(() => {
+    const isEO = this.isEntrepriseOwner();
+    const common: SidebarSection[] = [
+      {
+        label: 'Navigation',
+        links: [
+          { path: '/', label: 'Accueil', icon: 'home' },
+        ],
+      },
+    ];
+
+    if (isEO) {
+      return [
+        ...common,
+        {
+          label: 'Mon entreprise',
+          links: [
+            { path: '/espace',               label: 'Console',            icon: 'space_dashboard' },
+            { path: '/espace/fiche/editer',  label: 'Ma fiche',           icon: 'business' },
+            { path: '/espace/statistiques',  label: 'Statistiques',       icon: 'analytics' },
+            { path: '/espace/notifications', label: FR.nav.notifications, icon: 'notifications' },
+          ],
+        },
+        {
+          label: 'Abonnement',
+          links: [
+            { path: '/espace/abonnement',            label: 'Mon abonnement', icon: 'workspace_premium' },
+            { path: '/espace/abonnement/historique', label: 'Historique',     icon: 'receipt_long' },
+          ],
+        },
+        {
+          label: 'Compte',
+          links: [
+            { path: '/espace/compte', label: FR.nav.profile, icon: 'person' },
+          ],
+        },
+      ];
+    }
+
+    // RegularUser — no fiche / statistiques; subscription shown as user-level plan
+    return [
+      ...common,
+      {
+        label: 'Mon espace',
+        links: [
+          { path: '/espace',               label: 'Tableau de bord',    icon: 'space_dashboard' },
+          { path: '/espace/notifications', label: FR.nav.notifications, icon: 'notifications' },
+        ],
+      },
+      {
+        label: 'Abonnement',
+        links: [
+          { path: '/espace/abonnement', label: 'Mon abonnement', icon: 'workspace_premium' },
+        ],
+      },
+      {
+        label: 'Compte',
+        links: [
+          { path: '/espace/compte', label: FR.nav.profile, icon: 'person' },
+        ],
+      },
+    ];
+  });
 }

@@ -21,7 +21,7 @@ interface FooterColumn {
       <div class="footer-inner">
         <div class="footer-top">
            <div class="brand-block">
-             <img src="/logo2.png" alt="" class="h-9 w-auto" width="160" height="36"/>
+             <img src="/logo2.png" alt="Logo" class="logo-mark"/>
              <p class="tagline">
               © {{ year }} République du Congo.<br/>
               Plateforme Numérique Officielle des Entreprises.
@@ -82,7 +82,7 @@ interface FooterColumn {
     }
 
     .brand-block { display: flex; flex-direction: column; gap: 12px; }
-     .logo-mark   { height: 24px; width: auto; }
+     .logo-mark   { height: 36px; width: auto; object-fit: contain; max-width: 160px; }
     .tagline     {
       color: rgba(255, 255, 255, 0.55);
       font-size: 14px;

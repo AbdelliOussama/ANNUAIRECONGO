@@ -15,25 +15,36 @@ public class CurrentUser : IUser
         _logger = logger;
     }
 
-    public string? Id 
+    public string? Id
     {
-        get 
+        get
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null) return null;
 
-            var id = user.FindFirstValue(ClaimTypes.NameIdentifier) 
+            var id = user.FindFirstValue(ClaimTypes.NameIdentifier)
                      ?? user.FindFirstValue("sub");
-            
+
             if (string.IsNullOrEmpty(id))
             {
                 var claims = string.Join(", ", user.Claims.Select(c => $"{c.Type}: {c.Value}"));
-                _logger.LogWarning("CurrentUser: User ID is null. IsAuthenticated: {IsAuthenticated}, Claims: {Claims}", 
+                _logger.LogWarning("CurrentUser: User ID is null. IsAuthenticated: {IsAuthenticated}, Claims: {Claims}",
                     user.Identity?.IsAuthenticated ?? false,
                     claims);
             }
-            
+
             return id;
         }
+    }
+
+    /// <summary>
+    /// Delegates directly to ClaimsPrincipal.IsInRole which checks
+    /// ClaimTypes.Role claims written by TokenProvider.
+    /// Returns false when there is no active HTTP context (e.g., background jobs).
+    /// </summary>
+    public bool IsInRole(string role)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.IsInRole(role) ?? false;
     }
 }

@@ -1,6 +1,8 @@
 using ANNUAIRECONGO.Application.Common.Interfaces;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.CreateCompanyForOwner;
 using ANNUAIRECONGO.Application.Features.Identity.Dtos;
 using ANNUAIRECONGO.Application.Features.Identity.Queries.GetUsers;
+using ANNUAIRECONGO.Contracts.Requests.Identity;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -38,6 +40,39 @@ public sealed class AdminController(ISender sender) : ApiController
         var result = await identityService.DeleteAccountAsync(userId, ct);
         return result.Match(
             _ => NoContent(),
+            Problem);
+    }
+
+    [HttpPost("companies/on-behalf")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Admin creates a company on behalf of a passive business owner.")]
+    [EndpointDescription(
+        "Creates a BusinessOwner contact record (no Identity user, no password) and a Company " +
+        "in a single atomic transaction. The company starts at Draft status and is auto-subscribed " +
+        "to the Free plan. The admin manages the company entirely — the owner has no system account.")]
+    [EndpointName("CreateCompanyForOwner")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> CreateCompanyForOwner(
+        [FromBody] CreateCompanyForOwnerRequest request,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(new CreateCompanyForOwnerCommand(
+            request.OwnerFirstName,
+            request.OwnerLastName,
+            request.OwnerPhone,
+            request.OwnerEmail,
+            request.OwnerPosition,
+            request.CompanyName,
+            request.CityId,
+            request.SectorIds,
+            request.Website,
+            request.Rccm,
+            request.Niu), ct);
+
+        return result.Match(
+            companyId => Created($"/api/v1/admin/companies/{companyId}", companyId),
             Problem);
     }
 }

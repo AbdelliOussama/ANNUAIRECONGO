@@ -27,11 +27,16 @@ public sealed record UpdateCompanyProfileCommandHandler(ILogger<UpdateCompanyPro
         if (company is null)
             return CompanyErrors.CompanyNotFound(request.companyId);
 
-        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwnedByCurrentUser)
+        // Admin Rule 0 — Admin can update any company's profile regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.companyId, _currentUser.Id);
-            return CompanyErrors.NotOwner;
+            var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwnedByCurrentUser)
+            {
+                _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}", request.companyId, _currentUser.Id);
+                return CompanyErrors.NotOwner;
+            }
         }
 
         var companyUpdateProfileResult = company.UpdateProfile(request.name, request.description, request.website, request.cityId, request.address, request.latitude, request.longitude, request.sectorIds, request.rccm, request.niu, request.yearFounded);

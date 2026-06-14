@@ -3,6 +3,7 @@ using ANNUAIRECONGO.Application.Features.Identity.Commands.ChangePassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.DeleteAccount;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ForgotPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.Register;
+using ANNUAIRECONGO.Application.Features.Identity.Commands.RegisterRegularUser;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ResendVerificationEmail;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.ResetPassword;
 using ANNUAIRECONGO.Application.Features.Identity.Commands.UpdateProfile;
@@ -112,6 +113,32 @@ public sealed class IdentityController(ISender sender) : ApiController
             request.Website,
             request.Rccm,
             request.Niu),
+            ct);
+
+        return result.Match(
+            userId => Created($"identity/{userId}", userId),
+            Problem);
+    }
+
+    // ── Regular-user registration ─────────────────────────────────────────
+
+    [HttpPost("register/user")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Registers a new regular (non-business-owner) user.")]
+    [EndpointDescription("Creates an AppUser with the RegularUser role and an associated UserProfile. No company is created.")]
+    [EndpointName("RegisterRegularUser")]
+    public async Task<IActionResult> RegisterRegularUser(
+        [FromBody] RegisterRegularUserRequest request,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(new RegisterRegularUserCommand(
+            request.Email,
+            request.Password,
+            request.FirstName,
+            request.LastName,
+            request.PhoneNumber),
             ct);
 
         return result.Match(

@@ -64,4 +64,24 @@ export class AdminService {
   processReport(reportId: string, dismiss: boolean): Observable<any> {
     return this.api.post<any>(`/api/v1/companies/reports/${reportId}/process`, { dismiss });
   }
+
+  /**
+   * Admin creates a company on behalf of a passive business owner (no user account).
+   * Returns the new Company Guid on success.
+   */
+  createCompanyForOwner(payload: {
+    ownerFirstName: string;
+    ownerLastName:  string;
+    ownerPhone:     string;
+    ownerEmail:     string;
+    ownerPosition?: string;
+    companyName:    string;
+    cityId:         string;
+    sectorIds:      string[];
+    website?:       string;
+    rccm?:          string;
+    niu?:           string;
+  }): Observable<string> {
+    return this.api.post<string>('/api/v1/admin/companies/on-behalf', payload);
+  }
 }

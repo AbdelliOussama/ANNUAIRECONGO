@@ -60,7 +60,8 @@ public sealed record GetCompanyBySlugQueryHandler(
     /// Returns true when the current caller is allowed to see document download URLs.
     ///
     /// Access rules (first match wins):
-    ///   1. Company owner  - always granted (they own the documents).
+    ///   0. Admin role         - always granted (platform admins oversee all content).
+    ///   1. Company owner      - always granted (they own the documents).
     ///   2. Authenticated viewer with an active paid subscription (Plan.Price > 0)
     ///      on any of their own companies - granted.
     ///   3. Everyone else (anonymous visitors, free-plan users) - denied.
@@ -68,6 +69,9 @@ public sealed record GetCompanyBySlugQueryHandler(
     /// </summary>
     private async Task<bool> ResolveDocumentAccessAsync(Company company, CancellationToken ct)
     {
+        // Rule 0 - platform admins always see all documents
+        if (_currentUser.IsInRole("Admin")) return true;
+
         var viewerId = _currentUser.Id;
         if (viewerId is null) return false; // anonymous
 
@@ -76,10 +80,21 @@ public sealed record GetCompanyBySlugQueryHandler(
         // Rule 1 - the company's own owner always sees their documents
         if (company.OwnerId == viewerGuid) return true;
 
-        // Rule 2 - any other authenticated user needs an active paid subscription
-        return await _context.Subscriptions
+        // Rule 2a - BusinessOwner with an active paid company subscription
+        var hasCompanySub = await _context.Subscriptions
             .AnyAsync(s =>
                 s.Company.OwnerId == viewerGuid &&
+                (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.ExpiringSoon) &&
+                s.Plan.Price > 0 &&
+                s.ExpiresAt > DateTimeOffset.UtcNow,
+                ct);
+
+        if (hasCompanySub) return true;
+
+        // Rule 2b - RegularUser with an active paid UserSubscription
+        return await _context.UserSubscriptions
+            .AnyAsync(s =>
+                s.UserId == viewerGuid &&
                 (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.ExpiringSoon) &&
                 s.Plan.Price > 0 &&
                 s.ExpiresAt > DateTimeOffset.UtcNow,

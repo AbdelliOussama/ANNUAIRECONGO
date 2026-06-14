@@ -22,11 +22,17 @@ public sealed record SubmitCompanyCommandHandler(ILogger<SubmitCompanyCommandHan
             _logger.LogWarning("Company with id = {CompanyId} Not found", request.companyId);
             return CompanyErrors.CompanyNotFound(request.companyId);
         }
-        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwnedByCurrentUser)
+        // Admin Rule 0 — Admin can submit any company regardless of OwnerId
+        // (used for admin-managed companies that have no user account owner).
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.companyId, _currentUser.Id);
-            return CompanyErrors.NotOwner;
+            var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwnedByCurrentUser)
+            {
+                _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}", request.companyId, _currentUser.Id);
+                return CompanyErrors.NotOwner;
+            }
         }
         var submitCompanyResult = company.Submit();
         if (submitCompanyResult.IsError)

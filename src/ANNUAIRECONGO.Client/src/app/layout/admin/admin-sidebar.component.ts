@@ -105,7 +105,6 @@ export class AdminSidebarComponent {
       label: 'Navigation',
       links: [
         { path: '/', label: 'Accueil', icon: 'home' },
-        { path: '/espace', label: 'Mon espace', icon: 'space_dashboard' },
       ],
     },
     {
@@ -118,11 +117,12 @@ export class AdminSidebarComponent {
     {
       label: 'Gestion',
       links: [
-        { path: '/admin/validation',     label: 'Validation fiches', icon: 'fact_check' },
-        { path: '/admin/entreprises',    label: 'Entreprises',       icon: 'apartment' },
-        { path: '/admin/paiements',      label: 'Paiements',         icon: 'payments' },
-        { path: '/admin/utilisateurs',   label: 'Utilisateurs',      icon: 'group',         superAdminOnly: true },
-        { path: '/admin/dirigeants',     label: 'Dirigeants',        icon: 'badge' },
+        { path: '/admin/validation',        label: 'Validation fiches', icon: 'fact_check' },
+        { path: '/admin/entreprises',       label: 'Entreprises',       icon: 'apartment' },
+        { path: '/admin/entreprises/creer', label: 'Créer une fiche',   icon: 'add_business' },
+        { path: '/admin/paiements',         label: 'Paiements',         icon: 'payments' },
+        { path: '/admin/utilisateurs',      label: 'Utilisateurs',      icon: 'group',         superAdminOnly: true },
+        { path: '/admin/dirigeants',        label: 'Dirigeants',        icon: 'badge' },
       ],
     },
     {

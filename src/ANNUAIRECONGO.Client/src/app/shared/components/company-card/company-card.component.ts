@@ -150,7 +150,7 @@ export interface CompanyCardData {
     }
     .sectors { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
     .sectors.inline { align-items: center; gap: 6px; margin: 4px 0 6px; }
-    .sector-badge { font-size: 10px; font-weight: 700; color: var(--color-primary); background: var(--color-primary-container); padding: 2px 8px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sector-badge { font-size: 10px; font-weight: 700; color: #ffffff; background: var(--color-primary-container); padding: 2px 8px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.04em; }
     .sep { color: var(--color-outline-variant); }
     .city-text { font-size: 11px; font-weight: 600; color: var(--color-on-secondary-container); }
     .desc {
@@ -197,6 +197,6 @@ export interface CompanyCardData {
   `],
 })
 export class CompanyCardComponent {
-  readonly data    = input.required<CompanyCardData>();
+  readonly data = input.required<CompanyCardData>();
   readonly variant = input<CompanyCardVariant>('grid');
 }

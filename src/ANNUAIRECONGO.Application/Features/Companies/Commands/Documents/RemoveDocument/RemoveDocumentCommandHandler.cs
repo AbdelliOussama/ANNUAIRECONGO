@@ -21,11 +21,16 @@ public sealed record RemoveDocumentCommandHandler(ILogger<RemoveDocumentCommandH
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        var isOwner = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwner)
+        // Admin Rule 0 — Admin can remove documents from any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
-            return CompanyErrors.NotOwner;
+            var isOwner = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwner)
+            {
+                _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
+                return CompanyErrors.NotOwner;
+            }
         }
         var document = company.Documents.FirstOrDefault(d => d.Id == request.DocumentId);
         if (document is null)        {

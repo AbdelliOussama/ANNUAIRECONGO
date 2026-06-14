@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { of, switchMap, catchError } from 'rxjs';
+import { of, switchMap, catchError, take } from 'rxjs';
 import { SubscriptionService } from '@core/services/subscription.service';
+import { UserSubscriptionService, UserSubscriptionDto } from '@core/services/user-subscription.service';
 import { NotificationService } from '@core/services/notification.service';
 import { StatsService } from '@core/services/stats.service';
 import { AuthService } from '@core/services/auth.service';
@@ -29,6 +30,119 @@ import { ModalService } from '@shared/services/modal.service';
   ],
   template: `
     <div class="page">
+
+      <!-- ─────────────────────────────────────────────────────────────────
+           REGULAR USER DASHBOARD
+      ───────────────────────────────────────────────────────────────── -->
+      @if (isRegularUser()) {
+        <header class="page-head">
+          <div>
+            <p class="eyebrow">Mon espace</p>
+            <h1>Bonjour, {{ identity()?.firstName || identity()?.email || 'Utilisateur' }}</h1>
+            <p class="sub">Explorez l'annuaire et accédez aux documents légaux grâce à votre abonnement.</p>
+          </div>
+          <div class="page-head-actions">
+            <a routerLink="/annuaire" class="btn btn-primary">
+              <span class="material-symbols-outlined" aria-hidden="true">search</span>
+              Explorer l'annuaire
+            </a>
+          </div>
+        </header>
+
+        <!-- Subscription status card -->
+        @if (userSubscription()) {
+          <section class="two-col">
+            <article class="panel kpi-banner">
+              <header class="panel-head">
+                <div>
+                  <p class="panel-eyebrow">Mon abonnement</p>
+                  <h2>Forfait {{ getPlanLabel(userSubscription()!.planName) }}</h2>
+                </div>
+                <span [class]="userSubStatusClass(userSubscription()!.status)">
+                  {{ userSubscription()!.status }}
+                </span>
+              </header>
+              <dl class="kv">
+                <div><dt>Statut</dt><dd>{{ userSubscription()!.status }}</dd></div>
+                <div><dt>Expiration</dt><dd>{{ userSubscription()!.expiresAt | date:'dd/MM/yyyy' }}</dd></div>
+              </dl>
+              <div class="panel-actions">
+                <a routerLink="/espace/abonnement" class="btn btn-primary btn-sm">Gérer mon abonnement</a>
+              </div>
+            </article>
+
+            <!-- Quick-access tiles -->
+            <article class="panel">
+              <header class="panel-head">
+                <div>
+                  <p class="panel-eyebrow">Accès rapide</p>
+                  <h2>Explorer</h2>
+                </div>
+              </header>
+              <div class="quick-tiles">
+                <a routerLink="/annuaire" class="quick-tile">
+                  <span class="material-symbols-outlined" aria-hidden="true">domain</span>
+                  <span>Annuaire</span>
+                </a>
+                <a routerLink="/registre" class="quick-tile">
+                  <span class="material-symbols-outlined" aria-hidden="true">article</span>
+                  <span>Registre</span>
+                </a>
+                <a routerLink="/cartographie" class="quick-tile">
+                  <span class="material-symbols-outlined" aria-hidden="true">map</span>
+                  <span>Carte</span>
+                </a>
+                <a routerLink="/secteurs" class="quick-tile">
+                  <span class="material-symbols-outlined" aria-hidden="true">category</span>
+                  <span>Secteurs</span>
+                </a>
+              </div>
+            </article>
+          </section>
+        } @else {
+          <ac-empty-state
+            icon="workspace_premium"
+            title="Aucun abonnement actif"
+            hint="Souscrivez à un forfait pour accéder aux documents légaux et aux fiches complètes des entreprises."
+          >
+            <a routerLink="/espace/abonnement" class="btn btn-primary py-4 px-10 text-sm">
+              <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+              Choisir un forfait
+            </a>
+          </ac-empty-state>
+        }
+
+        <!-- Notifications -->
+        <section class="panel">
+          <header class="panel-head">
+            <div>
+              <p class="panel-eyebrow">Activité récente</p>
+              <h2>Dernières notifications</h2>
+            </div>
+            <a routerLink="/espace/notifications" class="link">{{ FR.actions.viewAll }}</a>
+          </header>
+          @if (notifications().length === 0) {
+            <p class="muted">Aucune notification pour le moment.</p>
+          } @else {
+            <ul class="notif-list">
+              @for (n of notifications(); track n.id) {
+                <li class="notif-item tone-info">
+                  <span class="notif-dot" aria-hidden="true"></span>
+                  <div class="notif-body">
+                    <p class="notif-title">{{ n.title }}</p>
+                    <p class="notif-text">{{ n.body }}</p>
+                  </div>
+                  <span class="notif-date">{{ n.createdAt | date:'dd/MM/yyyy' }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+      } @else {
+      <!-- ─────────────────────────────────────────────────────────────────
+           ENTREPRISE OWNER DASHBOARD (unchanged)
+      ───────────────────────────────────────────────────────────────── -->
       <header class="page-head">
         <div>
           <p class="eyebrow">Mon espace</p>
@@ -184,7 +298,7 @@ import { ModalService } from '@shared/services/modal.service';
           </article>
         </section>
 
-        <!-- Recent notifications -->
+        <!-- Recent notifications (BO) -->
         <section class="panel">
           <header class="panel-head">
             <div>
@@ -211,6 +325,7 @@ import { ModalService } from '@shared/services/modal.service';
           }
         </section>
       }
+      } <!-- /else BO dashboard -->
     </div>
   `,
   styles: [`
@@ -368,6 +483,31 @@ import { ModalService } from '@shared/services/modal.service';
     .status-en-attente{ background: var(--color-tertiary-fixed); color: var(--color-on-tertiary-fixed); }
     .status-rejetee   { background: var(--color-error-container); color: var(--color-on-error-container); }
     .status-brouillon { background: var(--color-surface-container-highest); color: var(--color-on-surface-variant); }
+
+    /* ── RegularUser extras ── */
+    .quick-tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 640px) { .quick-tiles { grid-template-columns: repeat(2, 1fr); } }
+    .quick-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      background: var(--color-surface-container-low);
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: var(--color-on-surface);
+      font-size: 12px;
+      font-weight: 600;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .quick-tile:hover { background: var(--color-primary-fixed); border-color: var(--color-primary); }
+    .quick-tile .material-symbols-outlined { font-size: 22px; color: var(--color-primary); }
   `],
 })
 export class EspaceConsoleComponent {
@@ -376,6 +516,7 @@ export class EspaceConsoleComponent {
 
   private readonly ctx            = inject(CompanyContextService);
   private readonly subService     = inject(SubscriptionService);
+  private readonly userSubSvc     = inject(UserSubscriptionService);
   private readonly notifService   = inject(NotificationService);
   private readonly statsService   = inject(StatsService);
   private readonly authService    = inject(AuthService);
@@ -383,8 +524,35 @@ export class EspaceConsoleComponent {
   private readonly toast          = inject(ToastService);
   private readonly modal          = inject(ModalService);
 
-  protected readonly identity     = this.authService.currentUser;
-  protected readonly submitting   = signal(false);
+  protected readonly identity      = this.authService.currentUser;
+  protected readonly isRegularUser = computed(() => this.authService.isRegularUser());
+  protected readonly submitting    = signal(false);
+
+  // ── RegularUser: UserSubscription ────────────────────────────────────────
+  // Guard the call so EntrepriseOwner users never fire a 403 against this endpoint.
+  private readonly userSubData = toSignal<UserSubscriptionDto | null>(
+    toObservable(this.isRegularUser).pipe(
+      take(1),
+      switchMap(isRU => isRU
+        ? this.userSubSvc.getMySubscription().pipe(catchError(() => of(null)))
+        : of(null)
+      )
+    ),
+    { initialValue: null }
+  );
+  protected readonly userSubscription = computed<UserSubscriptionDto | null>(() =>
+    this.userSubData() ?? null
+  );
+
+  protected userSubStatusClass(status: string): string {
+    switch (status) {
+      case 'Active':        return 'badge badge-verified';
+      case 'ExpiringSoon':  return 'badge badge-pending';
+      case 'Expired':       return 'badge badge-rejected';
+      case 'Cancelled':     return 'badge badge-rejected';
+      default:              return 'badge badge-pending';
+    }
+  }
 
   // ── Company from context (auto-updates when user switches company) ────────
   protected readonly company      = this.ctx.selectedCompany;

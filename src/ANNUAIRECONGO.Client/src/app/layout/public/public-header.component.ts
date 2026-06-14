@@ -67,7 +67,9 @@ template: `
           <!-- Desktop CTAs for authenticated users -->
           @if (isAuthenticated()) {
             <div class="hidden lg:flex items-center gap-3">
-              <a routerLink="/espace" class="nav-link">{{ FR.nav.espace }}</a>
+              @if (!isAdmin()) {
+                <a routerLink="/espace" class="nav-link">{{ FR.nav.espace }}</a>
+              }
               @if (isAdmin()) {
                 <a routerLink="/admin" class="nav-link">{{ FR.nav.admin }}</a>
               }
@@ -114,7 +116,9 @@ template: `
                   <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
                   <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
                 } @else {
-                  <a routerLink="/espace" class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.espace }}</a>
+                  @if (!isAdmin()) {
+                    <a routerLink="/espace" class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.espace }}</a>
+                  }
                   @if (isAdmin()) {
                     <a routerLink="/admin" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.admin }}</a>
                   }

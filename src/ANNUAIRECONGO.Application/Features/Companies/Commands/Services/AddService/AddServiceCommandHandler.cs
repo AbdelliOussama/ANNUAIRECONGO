@@ -24,12 +24,16 @@ public sealed record AddServiceCommandHandler(IAppDbContext Context, ILogger<Add
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        var IsOwnedBy = company.IsOwnedBy(_user.Id);
-
-        if (!IsOwnedBy)
+        // Admin Rule 0 — Admin can add services to any company regardless of OwnerId.
+        var isAdmin = _user.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _user.Id, request.CompanyId);
-            return CompanyErrors.NotOwner;
+            var IsOwnedBy = company.IsOwnedBy(_user.Id);
+            if (!IsOwnedBy)
+            {
+                _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _user.Id, request.CompanyId);
+                return CompanyErrors.NotOwner;
+            }
         }
         if(company.Services.Any(s => s.Title == request.Title))
         {

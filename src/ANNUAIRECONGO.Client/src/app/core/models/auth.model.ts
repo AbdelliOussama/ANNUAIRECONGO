@@ -57,3 +57,12 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+/** Request body for POST /identity/register/user (RegularUser path). */
+export interface RegisterRegularUserRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}

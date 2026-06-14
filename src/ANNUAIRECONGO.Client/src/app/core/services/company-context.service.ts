@@ -86,6 +86,18 @@ export class CompanyContextService {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
+  /**
+   * Admin override — injects a single arbitrary company into context without
+   * calling getMyCompanies(). Used by AdminFicheEditerComponent so the shared
+   * FicheFormComponent can edit any company as if the admin were the owner.
+   * The override is ephemeral: it lasts until the next auth state change.
+   */
+  setAdminOverride(company: Company): void {
+    this._companies.set([company]);
+    this._selectedId.set(company.id);
+    this._loaded.set(true);
+  }
+
   /** Switch the active company and persist the choice under this user's key. */
   selectCompany(id: string): void {
     this._selectedId.set(id);

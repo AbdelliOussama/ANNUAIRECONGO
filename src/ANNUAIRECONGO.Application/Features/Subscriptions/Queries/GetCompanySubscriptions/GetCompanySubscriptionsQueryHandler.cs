@@ -17,27 +17,34 @@ public sealed class GetCompanySubscriptionsQueryHandler(ILogger<GetCompanySubscr
 
     public async Task<Result<List<SubscriptionDto>>> Handle(GetCompanySubscriptionsQuery request, CancellationToken cancellationToken)
     {
-        var userId = request.UserId ?? _currentUser.Id;
-        _logger.LogInformation("GetCompanySubscriptions: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}", 
-            request.CompanyId, userId);
+        // Admin Rule 0 — Admin can query subscriptions for any company regardless of OwnerId.
+        // Admin-managed companies have a BusinessOwner contact GUID as OwnerId which will
+        // never match any Identity user ID, so the normal ownership check would always fail.
+        var isAdmin = _currentUser.IsInRole("Admin");
 
-        if (!Guid.TryParse(userId, out var ownerGuid))
+        if (!isAdmin)
         {
-            _logger.LogWarning("Invalid User ID format: {UserId}", userId);
-            return CompanyErrors.NotOwner;
-        }
-
-        var isOwner = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
-        
-        if (!isOwner)
-        {
-             _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}", 
+            var userId = request.UserId ?? _currentUser.Id;
+            _logger.LogInformation("GetCompanySubscriptions: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}",
                 request.CompanyId, userId);
-             
-             // Check if company exists at all to return 404 vs 403
-             var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
-             return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+
+            if (!Guid.TryParse(userId, out var ownerGuid))
+            {
+                _logger.LogWarning("Invalid User ID format: {UserId}", userId);
+                return CompanyErrors.NotOwner;
+            }
+
+            var isOwner = await _context.Companies
+                .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
+
+            if (!isOwner)
+            {
+                _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}",
+                    request.CompanyId, userId);
+
+                var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
+                return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+            }
         }
 
         var subscriptions = await _context.Subscriptions

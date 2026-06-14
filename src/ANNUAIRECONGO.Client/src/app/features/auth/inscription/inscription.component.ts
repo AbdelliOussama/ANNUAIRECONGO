@@ -13,15 +13,18 @@ import { GeographyService } from '@core/services/geography.service';
 import { City } from '@core/models/geography.model';
 import { Sector } from '@core/models/company.model';
 
+type UserType = 'BusinessOwner' | 'RegularUser';
+
 /**
- * /auth/inscription — registration in 3 explicit steps.
+ * /auth/inscription — role-choice-first registration.
  *
- * Audit fixes baked in:
- *  - C3 / C10 : real <form> + Reactive Forms (no broken HTML form)
- *  - C4       : submit intercepted, no default GET fallback
- *  - C1 / M2  : every label & message in French; uses design system fonts
- *  - P5       : "S'inscrire" everywhere (verb pronominal)
- *  - Senior   : dynamic sector/city selection + unified registration
+ * Step 0 : Choose account type (BusinessOwner | RegularUser)
+ * Step 1 : Personal information (common to both paths)
+ * Step 2 : Company information  (BusinessOwner only — skipped for RegularUser)
+ * Step 3 : Email verification   (confirmation screen, both paths)
+ *
+ * Zero breaking changes: existing BO form + auth.register() call is untouched;
+ * RegularUser calls auth.registerAsUser() and jumps from step 1 directly to step 3.
  */
 @Component({
   selector: 'ac-inscription',
@@ -37,14 +40,69 @@ import { Sector } from '@core/models/company.model';
   template: `
     <div class="auth-card">
       <header class="head">
-        <ac-stepper [steps]="steps" [activeIndex]="step()" />
-        <h1 class="title">{{ headings[step()] }}</h1>
-        <p class="subtitle">{{ subtitles[step()] }}</p>
+        <ac-stepper [steps]="currentSteps()" [activeIndex]="stepperIndex()" />
+        <h1 class="title">{{ currentHeading() }}</h1>
+        <p class="subtitle">{{ currentSubtitle() }}</p>
       </header>
 
-      <!-- Step 1 — compte personnel -->
+      <!-- ─────────────────────────────────────────────────────────────
+           STEP 0 — Choose account type
+      ───────────────────────────────────────────────────────────── -->
       @if (step() === 0) {
-        <form [formGroup]="accountForm" (ngSubmit)="nextFromAccount()" novalidate aria-label="Étape 1 — informations personnelles" class="form">
+        <div class="type-chooser" role="group" aria-label="Choisissez un type de compte">
+          <button
+            type="button"
+            class="type-card"
+            [class.is-selected]="userType() === 'BusinessOwner'"
+            (click)="selectType('BusinessOwner')"
+            [attr.aria-pressed]="userType() === 'BusinessOwner'"
+          >
+            <span class="type-icon material-symbols-outlined" aria-hidden="true">store</span>
+            <strong class="type-title">Propriétaire d'entreprise</strong>
+            <p class="type-desc">
+              Inscrivez votre entreprise dans l'annuaire, gérez votre fiche,
+              vos documents et vos abonnements.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            class="type-card"
+            [class.is-selected]="userType() === 'RegularUser'"
+            (click)="selectType('RegularUser')"
+            [attr.aria-pressed]="userType() === 'RegularUser'"
+          >
+            <span class="type-icon material-symbols-outlined" aria-hidden="true">person_search</span>
+            <strong class="type-title">Utilisateur / Consultant</strong>
+            <p class="type-desc">
+              Consultez les fiches d'entreprises et accédez aux documents légaux
+              grâce à un abonnement.
+            </p>
+          </button>
+        </div>
+
+        <ac-button
+          type="button"
+          iconRight="arrow_forward"
+          [fullWidth]="true"
+          [disabled]="!userType()"
+          (click)="nextFromTypeChoice()"
+        >
+          {{ FR.actions.next }}
+        </ac-button>
+
+        <p class="alt">
+          {{ FR.auth.hasAccount }}
+          <a routerLink="/auth/connexion">{{ FR.auth.loginAction }}</a>
+        </p>
+      }
+
+      <!-- ─────────────────────────────────────────────────────────────
+           STEP 1 — Personal information (common)
+      ───────────────────────────────────────────────────────────── -->
+      @if (step() === 1) {
+        <form [formGroup]="accountForm" (ngSubmit)="nextFromAccount()" novalidate
+              aria-label="Étape — informations personnelles" class="form">
           <div class="grid-2">
             <ac-input
               formControlName="firstName"
@@ -119,15 +177,36 @@ import { Sector } from '@core/models/company.model';
             </span>
           </label>
 
-          <ac-button type="submit" iconRight="arrow_forward" [fullWidth]="true">
-            {{ FR.actions.next }}
-          </ac-button>
+          <div class="actions-row">
+            <ac-button type="button" variant="ghost" iconLeft="arrow_back" (click)="goBack()">
+              {{ FR.actions.previous }}
+            </ac-button>
+            @if (userType() === 'RegularUser') {
+              <!-- RU: submit directly from step 1 (no company step) -->
+              <ac-button type="submit" iconRight="check" [loading]="submitting()" [fullWidth]="true">
+                {{ FR.auth.registerAction }}
+              </ac-button>
+            } @else {
+              <!-- BO: advance to company step -->
+              <ac-button type="submit" iconRight="arrow_forward" [fullWidth]="true">
+                {{ FR.actions.next }}
+              </ac-button>
+            }
+          </div>
         </form>
+
+        <p class="alt">
+          {{ FR.auth.hasAccount }}
+          <a routerLink="/auth/connexion">{{ FR.auth.loginAction }}</a>
+        </p>
       }
 
-      <!-- Step 2 — entreprise -->
-      @if (step() === 1) {
-        <form [formGroup]="companyForm" (ngSubmit)="submitRegistration()" novalidate aria-label="Étape 2 — informations entreprise" class="form">
+      <!-- ─────────────────────────────────────────────────────────────
+           STEP 2 — Company information (BusinessOwner only)
+      ───────────────────────────────────────────────────────────── -->
+      @if (step() === 2 && userType() === 'BusinessOwner') {
+        <form [formGroup]="companyForm" (ngSubmit)="submitRegistration()" novalidate
+              aria-label="Étape — informations entreprise" class="form">
           <ac-input
             formControlName="companyName"
             label="Raison sociale"
@@ -211,10 +290,17 @@ import { Sector } from '@core/models/company.model';
             </ac-button>
           </div>
         </form>
+
+        <p class="alt">
+          {{ FR.auth.hasAccount }}
+          <a routerLink="/auth/connexion">{{ FR.auth.loginAction }}</a>
+        </p>
       }
 
-      <!-- Step 3 — vérification email -->
-      @if (step() === 2) {
+      <!-- ─────────────────────────────────────────────────────────────
+           STEP 3 — Email verification (final confirmation, both paths)
+      ───────────────────────────────────────────────────────────── -->
+      @if (step() === 3) {
         <div class="confirm">
           <div class="confirm-icon" aria-hidden="true">
             <span class="material-symbols-outlined icon-filled">mark_email_read</span>
@@ -233,13 +319,6 @@ import { Sector } from '@core/models/company.model';
             <a routerLink="/auth/connexion" class="btn btn-primary">{{ FR.auth.loginAction }}</a>
           </div>
         </div>
-      }
-
-      @if (step() < 2) {
-        <p class="alt">
-          {{ FR.auth.hasAccount }}
-          <a routerLink="/auth/connexion">{{ FR.auth.loginAction }}</a>
-        </p>
       }
     </div>
   `,
@@ -263,6 +342,56 @@ import { Sector } from '@core/models/company.model';
     }
     .subtitle { color: var(--color-on-secondary-container); font-size: 14px; margin: 0; }
 
+    /* ── Type chooser (Step 0) ── */
+    .type-chooser {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 480px) { .type-chooser { grid-template-columns: 1fr; } }
+
+    .type-card {
+      all: unset;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 20px;
+      border: 2px solid var(--color-outline-variant);
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .type-card:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-fixed);
+    }
+    .type-card.is-selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-container);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+    .type-icon {
+      font-size: 28px;
+      color: var(--color-primary);
+    }
+    .type-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-on-surface);
+    }
+    .type-desc {
+      font-size: 13px;
+      color: var(--color-on-surface-variant);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ── Shared form styles ── */
     .form { display: flex; flex-direction: column; gap: 16px; }
     .grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 640px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
@@ -281,11 +410,7 @@ import { Sector } from '@core/models/company.model';
     .cgu a { color: var(--color-primary); font-weight: 600; }
     .cgu a:hover { text-decoration: underline; }
 
-    .actions-row {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
-    }
+    .actions-row { display: flex; gap: 12px; margin-top: 8px; }
 
     .alt {
       margin-top: 24px;
@@ -296,7 +421,7 @@ import { Sector } from '@core/models/company.model';
     .alt a { color: var(--color-primary); font-weight: 700; }
     .alt a:hover { text-decoration: underline; }
 
-    /* Step 3 */
+    /* ── Confirmation (Step 3) ── */
     .confirm { text-align: center; padding: 12px 0; }
     .confirm-icon {
       width: 72px; height: 72px;
@@ -341,28 +466,72 @@ export class InscriptionComponent {
   private readonly toast  = inject(ToastService);
   private readonly router = inject(Router);
 
-  protected readonly step = signal<0 | 1 | 2>(0);
+  // ── State ──────────────────────────────────────────────────────────
+  /** Current wizard step: 0=type, 1=account, 2=company(BO only), 3=verify */
+  protected readonly step       = signal<0 | 1 | 2 | 3>(0);
+  protected readonly userType   = signal<UserType | null>(null);
   protected readonly submitting = signal(false);
-  protected readonly sectors = signal<Sector[]>([]);
-  protected readonly cities  = signal<City[]>([]);
+  protected readonly sectors    = signal<Sector[]>([]);
+  protected readonly cities     = signal<City[]>([]);
 
-  protected readonly steps: StepDescriptor[] = [
+  // ── Stepper descriptors ────────────────────────────────────────────
+  private readonly boSteps: StepDescriptor[] = [
+    { id: 'type',         label: 'Type de compte' },
     { id: 'compte',       label: FR.auth.stepperAccount },
     { id: 'entreprise',   label: FR.auth.stepperCompany },
     { id: 'verification', label: FR.auth.stepperVerification },
   ];
 
-  protected readonly headings = [
-    FR.auth.registerTitle,
-    'Informations sur votre entreprise',
-    FR.auth.verifyEmailTitle,
-  ];
-  protected readonly subtitles = [
-    'Étape 1 sur 3 — informations personnelles',
-    'Étape 2 sur 3 — fiche entreprise',
-    'Étape 3 sur 3 — confirmation par e-mail',
+  private readonly ruSteps: StepDescriptor[] = [
+    { id: 'type',         label: 'Type de compte' },
+    { id: 'compte',       label: FR.auth.stepperAccount },
+    { id: 'verification', label: FR.auth.stepperVerification },
   ];
 
+  /** Active step descriptors change based on selected role. */
+  protected readonly currentSteps = computed<StepDescriptor[]>(() =>
+    this.userType() === 'RegularUser' ? this.ruSteps : this.boSteps
+  );
+
+  /**
+   * Maps internal step number to the visual stepper index.
+   * For RegularUser, step 3 (verify) maps to index 2 (there is no index 3).
+   */
+  protected readonly stepperIndex = computed(() => {
+    const s = this.step();
+    if (this.userType() === 'RegularUser') {
+      return s === 3 ? 2 : s;
+    }
+    return s;
+  });
+
+  // ── Dynamic headings / subtitles ───────────────────────────────────
+  protected readonly currentHeading = computed(() => {
+    switch (this.step()) {
+      case 0:  return 'Créer un compte';
+      case 1:  return FR.auth.registerTitle;
+      case 2:  return 'Informations sur votre entreprise';
+      case 3:  return FR.auth.verifyEmailTitle;
+      default: return 'Créer un compte';
+    }
+  });
+
+  protected readonly currentSubtitle = computed(() => {
+    const isBO = this.userType() === 'BusinessOwner';
+    switch (this.step()) {
+      case 0:  return 'Choisissez le type de compte qui vous correspond';
+      case 1:  return isBO
+        ? 'Étape 2 sur 4 — informations personnelles'
+        : 'Étape 2 sur 3 — informations personnelles';
+      case 2:  return 'Étape 3 sur 4 — fiche entreprise';
+      case 3:  return isBO
+        ? 'Étape 4 sur 4 — confirmation par e-mail'
+        : 'Étape 3 sur 3 — confirmation par e-mail';
+      default: return '';
+    }
+  });
+
+  // ── Forms ──────────────────────────────────────────────────────────
   protected readonly accountForm = this.fb.nonNullable.group(
     {
       firstName:       ['', [Validators.required, Validators.minLength(2)]],
@@ -378,9 +547,7 @@ export class InscriptionComponent {
 
   protected readonly companyForm = this.fb.nonNullable.group({
     companyName: ['', [Validators.required, Validators.minLength(2)]],
-    // RCCM and NIU are optional at registration — the admin validates them during company review.
-    // A permissive pattern accepts both the official format (CG-BZV-2025-A-1234) and
-    // simpler internal references used during seeding/testing (e.g. RCCM-12345).
+    // RCCM and NIU are optional — admin validates during review.
     rccm:        ['', [Validators.pattern(/^[A-Za-z0-9][A-Za-z0-9\-]{2,29}$/)]],
     niu:         ['', [Validators.minLength(4), Validators.maxLength(30)]],
     sectorId:    ['', Validators.required],
@@ -390,13 +557,14 @@ export class InscriptionComponent {
   });
 
   constructor() {
-    const sectorService = inject(SectorService);
+    const sectorService    = inject(SectorService);
     const geographyService = inject(GeographyService);
 
     sectorService.getSectors().subscribe(s => this.sectors.set(s));
     geographyService.getCities().subscribe(c => this.cities.set(c));
   }
 
+  // ── Error helpers ──────────────────────────────────────────────────
   protected readonly confirmPasswordError = computed(() => {
     const c = this.accountForm.get('confirmPassword');
     if (!c || !c.touched) return null;
@@ -408,12 +576,12 @@ export class InscriptionComponent {
   protected errorFor(form: AbstractControl, name: string): string | null {
     const c = form.get(name);
     if (!c || !c.touched || !c.errors) return null;
-    if (c.errors['required'])  return FR.errors.required;
-    if (c.errors['email'])     return FR.errors.email;
-    if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
-    if (c.errors['pattern'])   {
-      if (name === 'phone') return FR.errors.phoneCG;
-      if (name === 'rccm')  return 'Format invalide. Exemple : CG-BZV-2025-A-1234 ou RCCM-12345';
+    if (c.errors['required'])     return FR.errors.required;
+    if (c.errors['email'])        return FR.errors.email;
+    if (c.errors['minlength'])    return `Minimum ${c.errors['minlength'].requiredLength} caractères.`;
+    if (c.errors['pattern']) {
+      if (name === 'phone')   return FR.errors.phoneCG;
+      if (name === 'rccm')    return 'Format invalide. Exemple : CG-BZV-2025-A-1234 ou RCCM-12345';
       if (name === 'website') return 'URL invalide. Exemple : https://exemple.cg';
       return FR.errors.pattern;
     }
@@ -421,20 +589,44 @@ export class InscriptionComponent {
     return FR.errors.validation;
   }
 
+  // ── Navigation ─────────────────────────────────────────────────────
+  protected selectType(type: UserType): void {
+    this.userType.set(type);
+  }
+
+  protected nextFromTypeChoice(): void {
+    if (!this.userType()) return;
+    this.step.set(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /**
+   * Called when Step 1 form is submitted.
+   * - BusinessOwner → advance to Step 2 (company form)
+   * - RegularUser   → submit registration immediately, then go to Step 3
+   */
   protected nextFromAccount(): void {
     if (this.accountForm.invalid) {
       this.accountForm.markAllAsTouched();
       return;
     }
-    this.step.set(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (this.userType() === 'RegularUser') {
+      this.submitRegularUser();
+    } else {
+      this.step.set(2);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   protected goBack(): void {
-    this.step.set(0);
+    const prev = Math.max(0, this.step() - 1) as 0 | 1 | 2 | 3;
+    this.step.set(prev);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ── Submission ─────────────────────────────────────────────────────
+
+  /** BusinessOwner path: called from Step 2 company form submit. */
   protected submitRegistration(): void {
     if (this.companyForm.invalid) {
       this.companyForm.markAllAsTouched();
@@ -445,23 +637,49 @@ export class InscriptionComponent {
 
     this.submitting.set(true);
     this.auth.register({
-      firstName: account.firstName,
-      lastName:  account.lastName,
-      email:     account.email,
-      phoneNumber: account.phone,
-      password:  account.password,
+      firstName:       account.firstName,
+      lastName:        account.lastName,
+      email:           account.email,
+      phoneNumber:     account.phone,
+      password:        account.password,
       companyPosition: company.position,
-      companyName: company.companyName,
-      cityId:    company.cityId,
-      sectorIds: [company.sectorId],
-      website:   company.website || undefined,
-      rccm:      company.rccm,
-      niu:       company.niu
+      companyName:     company.companyName,
+      cityId:          company.cityId,
+      sectorIds:       [company.sectorId],
+      website:         company.website || undefined,
+      rccm:            company.rccm,
+      niu:             company.niu,
     }).subscribe({
       next: () => {
         this.submitting.set(false);
         this.toast.success(FR.toast.registerSuccess);
-        this.step.set(2);
+        this.step.set(3);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: (err) => {
+        this.submitting.set(false);
+        const message = err?.error?.title || err?.error?.message || FR.errors.serverError;
+        this.toast.error(message);
+      },
+    });
+  }
+
+  /** RegularUser path: called from Step 1 when userType is RegularUser. */
+  private submitRegularUser(): void {
+    const account = this.accountForm.getRawValue();
+
+    this.submitting.set(true);
+    this.auth.registerAsUser({
+      firstName:   account.firstName,
+      lastName:    account.lastName,
+      email:       account.email,
+      phoneNumber: account.phone,
+      password:    account.password,
+    }).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.toast.success(FR.toast.registerSuccess);
+        this.step.set(3);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
       error: (err) => {
@@ -473,7 +691,10 @@ export class InscriptionComponent {
   }
 
   protected resend(): void {
-    // Mock until backend supports email resend
+    const email = this.accountForm.value.email;
+    if (email) {
+      this.auth.resendVerification(email).subscribe();
+    }
     this.toast.info('Un nouvel e-mail de confirmation vous a été envoyé.');
   }
 }

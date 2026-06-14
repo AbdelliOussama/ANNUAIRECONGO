@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, publicGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, publicGuard, entrepriseOwnerGuard } from './core/guards/auth.guard';
 
 /**
  * Annuaire Congo — route table.
@@ -194,18 +194,21 @@ export const routes: Routes = [
       },
       {
         path: 'fiche/creer',
+        canActivate: [entrepriseOwnerGuard],
         loadComponent: () =>
           import('./features/espace/fiche/fiche-creer.component').then((m) => m.FicheCreerComponent),
         title: 'Créer ma fiche — Annuaire Congo',
       },
       {
         path: 'fiche/editer',
+        canActivate: [entrepriseOwnerGuard],
         loadComponent: () =>
           import('./features/espace/fiche/fiche-editer.component').then((m) => m.FicheEditerComponent),
         title: 'Modifier ma fiche — Annuaire Congo',
       },
       {
         path: 'fiche/editer/:id',
+        canActivate: [entrepriseOwnerGuard],
         loadComponent: () =>
           import('./features/espace/fiche/fiche-editer.component').then((m) => m.FicheEditerComponent),
         title: 'Modifier ma fiche — Annuaire Congo',
@@ -243,6 +246,7 @@ export const routes: Routes = [
       },
       {
         path: 'statistiques',
+        canActivate: [entrepriseOwnerGuard],
         loadComponent: () =>
           import('./features/espace/statistiques/statistiques.component').then((m) => m.EspaceStatistiquesComponent),
         title: 'Statistiques — Mon espace',
@@ -295,6 +299,26 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/entreprises/admin-entreprises.component').then((m) => m.AdminEntreprisesComponent),
         title: 'Entreprises — Admin',
+      },
+      {
+        // Must come before :id to avoid being shadowed
+        path: 'entreprises/creer',
+        loadComponent: () =>
+          import('./features/admin/entreprises/admin-create-company.component').then((m) => m.AdminCreateCompanyComponent),
+        title: 'Créer une fiche — Admin',
+      },
+      {
+        // Must come before entreprises/:id to avoid :id swallowing "editer"
+        path: 'entreprises/:id/editer',
+        loadComponent: () =>
+          import('./features/admin/entreprises/admin-fiche-editer.component').then((m) => m.AdminFicheEditerComponent),
+        title: 'Éditer la fiche — Admin',
+      },
+      {
+        path: 'entreprises/:id',
+        loadComponent: () =>
+          import('./features/admin/entreprises/admin-company-detail.component').then((m) => m.AdminCompanyDetailComponent),
+        title: 'Gestion entreprise — Admin',
       },
       {
         path: 'utilisateurs',

@@ -72,7 +72,8 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
                   </td>
                   <td class="actions-col">
                       <div class="actions-group">
-                        <a [routerLink]="['/annuaire', c.slug]" class="link">Voir</a>
+                        <a [routerLink]="['/admin/entreprises', c.id]" class="link link-manage">Gérer</a>
+                        <a [routerLink]="['/annuaire', c.slug]" class="link" style="font-weight: normal;">Voir</a>
                         <a [routerLink]="['/admin/audit']" [queryParams]="{targetType: 'Company', targetId: c.id}" class="link" style="font-weight: normal; font-size: 11px;">Logs</a>
                         @if (c.status === 'Active' && !c.isVerified) {
                           <button (click)="verify(c)" class="btn-action verify">Vérifier</button>
@@ -121,6 +122,8 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
     .actions-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
     .link { color: var(--color-primary); font-weight: 700; }
     .link:hover { text-decoration: underline; }
+    .link-manage { background: var(--color-primary); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+    .link-manage:hover { text-decoration: none; opacity: .88; }
 
     .btn-action {
       background: none; border: 1px solid var(--color-outline-variant);

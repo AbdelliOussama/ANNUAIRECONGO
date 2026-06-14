@@ -2,7 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { ApiService } from './api.service';
-import { TokenResponse, User, LoginRequest, RegisterRequest } from '../models/auth.model';
+import { TokenResponse, User, LoginRequest, RegisterRequest, RegisterRegularUserRequest } from '../models/auth.model';
 
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -24,6 +24,8 @@ export class AuthService {
   readonly isAdmin = computed(() => this._currentUser()?.roles?.some(role =>
   role.toLowerCase() === 'admin' || role.toLowerCase() === 'super-admin') ?? false);
   readonly isEntrepriseOwner = computed(() => this._currentUser()?.roles?.includes('EntrepriseOwner') ?? false);
+  /** True when the currently authenticated user has the RegularUser role. */
+  readonly isRegularUser     = computed(() => this._currentUser()?.roles?.includes('RegularUser')     ?? false);
 
   getUserId(): string | null {
     const user = this._currentUser();
@@ -70,6 +72,11 @@ export class AuthService {
 
   register(data: RegisterRequest): Observable<{ value: string }> {
     return this.api.post<{ value: string }>('/identity/register', data);
+  }
+
+  /** Registers a RegularUser (no company). Calls POST /identity/register/user. */
+  registerAsUser(data: RegisterRegularUserRequest): Observable<{ value: string }> {
+    return this.api.post<{ value: string }>('/identity/register/user', data);
   }
 
   logout(): void {

@@ -24,6 +24,19 @@ public interface IIdentityService
         string? companyPosition,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Registers a regular (non-business-owner) user. Creates the Identity user,
+    /// assigns the <c>RegularUser</c> role, and persists a <see cref="Domain.UserProfiles.UserProfile"/>.
+    /// No Company or Company-Subscription is created.
+    /// </summary>
+    Task<Result<Guid>> RegisterRegularUserAsync(
+        string email,
+        string password,
+        string firstName,
+        string lastName,
+        string phoneNumber,
+        CancellationToken cancellationToken);
+
     Task<Result<Success>> ForgotPasswordAsync(string email, CancellationToken cancellationToken);
 
     Task<Result<Success>> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken);

@@ -16,6 +16,6 @@ Source asset: `logo2.png` from the maquette can be used as a starting point —
 crop with safe area for the maskable variant.
 
 **Brand reference:**
-- Primary: `#004e34`
+- Primary: `#00943e`
 - On-primary: `#ffffff`
 - Background: `#f7f9fb`

@@ -11,6 +11,8 @@ using ANNUAIRECONGO.Domain.Sectors;
 using ANNUAIRECONGO.Domain.Subscriptions;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans;
+using ANNUAIRECONGO.Domain.UserProfiles;
+using ANNUAIRECONGO.Domain.UserSubscriptions;
 using ANNUAIRECONGO.Infrastructure.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -42,6 +44,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, IMediator medi
     public DbSet<Payment> Payments => Set<Payment>();
 
     public DbSet<Plan> Plans => Set<Plan>();
+
+    // ── Regular-user feature ──────────────────────────────────────
+    public DbSet<UserProfile>      UserProfiles      => Set<UserProfile>();
+    public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

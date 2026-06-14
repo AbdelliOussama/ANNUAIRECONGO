@@ -31,11 +31,16 @@ public sealed record AddImageCommandHandler(ILogger<AddImageCommandHandler> logg
         // rather than blocking the user entirely.
         int maxImagesAllowed = subscription?.Plan?.MaxImages ?? 3; 
 
-        var isOwner =company.IsOwnedBy(_currentUser.Id);
-        if (!isOwner)
+        // Admin Rule 0 — Admin can add images to any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
-            return CompanyErrors.NotOwner;
+            var isOwner = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwner)
+            {
+                _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
+                return CompanyErrors.NotOwner;
+            }
         }
 
         if(company.Images.Count >= maxImagesAllowed)

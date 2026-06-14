@@ -21,29 +21,45 @@ public sealed record SubscribeCommandHandler(
     public async Task<Result<SubscriptionWithPaymentDto>> Handle(
         SubscribeCommand request, CancellationToken ct)
     {
-        if (!Guid.TryParse(currentUser.Id, out var ownerGuid))
-        {
-            logger.LogWarning("Invalid User ID format: {UserId}", currentUser.Id);
-            return CompanyErrors.NotOwner;
-        }
+        // Admin Rule 0 — Admin can subscribe any company regardless of OwnerId.
+        // Admin-managed companies have a BusinessOwner contact record whose Guid
+        // does NOT match any user ID, so the normal ownership query would always fail.
+        var isAdmin = currentUser.IsInRole("Admin");
 
-        // 1. Validate company exists and belongs to current user
-        var company = await context.Companies
-            .FirstOrDefaultAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, ct);
-        
-        if (company is null)
+        Company? company;
+
+        if (isAdmin)
         {
-             // Check if company exists at all to return 404 vs 403
-             var exists = await context.Companies.AnyAsync(c => c.Id == request.CompanyId, ct);
-             
-             if (exists)
-             {
-                 logger.LogWarning("Ownership check failed for Company {CompanyId}. CurrentUserId: {CurrentUserId}", 
-                    request.CompanyId, currentUser.Id);
-                 return CompanyErrors.NotOwner;
-             }
-             
-             return CompanyErrors.CompanyNotFound(request.CompanyId);
+            // Admin path: load by company ID only, no ownership filter
+            company = await context.Companies
+                .FirstOrDefaultAsync(c => c.Id == request.CompanyId, ct);
+
+            if (company is null)
+                return CompanyErrors.CompanyNotFound(request.CompanyId);
+        }
+        else
+        {
+            if (!Guid.TryParse(currentUser.Id, out var ownerGuid))
+            {
+                logger.LogWarning("Invalid User ID format: {UserId}", currentUser.Id);
+                return CompanyErrors.NotOwner;
+            }
+
+            // 1. Validate company exists and belongs to current user
+            company = await context.Companies
+                .FirstOrDefaultAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, ct);
+
+            if (company is null)
+            {
+                var exists = await context.Companies.AnyAsync(c => c.Id == request.CompanyId, ct);
+                if (exists)
+                {
+                    logger.LogWarning("Ownership check failed for Company {CompanyId}. CurrentUserId: {CurrentUserId}",
+                        request.CompanyId, currentUser.Id);
+                    return CompanyErrors.NotOwner;
+                }
+                return CompanyErrors.CompanyNotFound(request.CompanyId);
+            }
         }
 
         // 2. Validate plan exists and is active

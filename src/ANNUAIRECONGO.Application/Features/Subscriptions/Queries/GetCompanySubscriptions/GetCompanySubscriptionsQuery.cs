@@ -1,14 +1,11 @@
-using ANNUAIRECONGO.Application.Common.Interfaces;
 using ANNUAIRECONGO.Application.Features.Subscriptions.Dtos;
 using ANNUAIRECONGO.Domain.Common.Results;
+using MediatR;
 
 namespace ANNUAIRECONGO.Application.Features.Subscriptions.Queries.GetCompanySubscriptions;
 
-public sealed record GetCompanySubscriptionsQuery(Guid CompanyId, string? UserId) : ICachedQuery<Result<List<SubscriptionDto>>>
-{
-    public string CacheKey => $"company-subscriptions-{CompanyId}-{UserId}";
-    
-    public string[] Tags => ["company", "subscriptions"];
-    
-    public TimeSpan Expiration => TimeSpan.FromMinutes(10);
-}
+// NOTE: Previously implemented ICachedQuery<Result<List<SubscriptionDto>>> but HybridCache
+// cannot serialize the Result<T> discriminated union → unhandled exception → HTTP 500.
+// Subscription data changes on every payment so caching is not needed here.
+public sealed record GetCompanySubscriptionsQuery(Guid CompanyId, string? UserId)
+    : IRequest<Result<List<SubscriptionDto>>>;

@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { of, switchMap, catchError, Observable } from 'rxjs';
+import { of, switchMap, catchError, take, Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { SubscriptionService } from '@core/services/subscription.service';
+import { UserSubscriptionService, UserSubscriptionDto } from '@core/services/user-subscription.service';
 import { PlanService } from '@core/services/plan.service';
 import { CompanyContextService } from '@core/services/company-context.service';
+import { AuthService } from '@core/services/auth.service';
 import { Plan, PlanName, Subscription, Company } from '@core/models/company.model';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
@@ -43,42 +45,77 @@ import { DatePipe } from '@angular/common';
         <div style="margin-top: 24px;">
           <ac-skeleton shape="card" height="280px" />
         </div>
-      } @else if (!subscription()) {
-        <div class="panel">
-          <p>Vous n'avez pas encore d'abonnement actif pour votre entreprise.</p>
-          <p class="muted">Choisissez un forfait ci-dessous pour commencer.</p>
-        </div>
+
+      } @else if (isRegularUser()) {
+        <!-- ── RegularUser subscription panel ── -->
+        @if (!userSubscription()) {
+          <div class="panel">
+            <p>Vous n'avez pas encore d'abonnement actif.</p>
+            <p class="muted">Choisissez un forfait ci-dessous pour commencer.</p>
+          </div>
+        } @else {
+          <section class="current">
+            <div class="current-meta">
+              <span class="eyebrow">Forfait actuel</span>
+              <h2>{{ getPlanLabel(userSubscription()!.planName) }}</h2>
+              <p class="muted">Abonnement personnel actif</p>
+              <ul class="meta-list">
+                <li>
+                  <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                  Expire le {{ userSubscription()!.expiresAt | date:'dd/MM/yyyy' }}
+                </li>
+                <li>
+                  <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                  Statut: <strong>{{ userSubscription()!.status }}</strong>
+                </li>
+              </ul>
+            </div>
+            <div class="current-actions">
+              @if (userSubscription()!.status === 'Active' || userSubscription()!.status === 'ExpiringSoon') {
+                <ac-button variant="ghost" iconLeft="cancel" (click)="cancel()">
+                  Résilier l'abonnement
+                </ac-button>
+              }
+            </div>
+          </section>
+        }
+
       } @else {
-        <!-- Current subscription -->
-        <section class="current">
-          <div class="current-meta">
-            <span class="eyebrow">Forfait actuel</span>
-            <h2>{{ getPlanLabel(subscription()!.planName) }}</h2>
-            <p class="muted">
-              Forfait actif
-            </p>
-            <ul class="meta-list">
-              <li>
-                <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                Expire le {{ subscription()!.expiresAt | date:'dd/MM/yyyy' }}
-              </li>
-              <li>
-                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-                Statut: <strong>{{ subscription()!.isActive ? 'Actif' : 'Inactif' }}</strong>
-              </li>
-            </ul>
+        <!-- ── BusinessOwner subscription panel ── -->
+        @if (!subscription()) {
+          <div class="panel">
+            <p>Vous n'avez pas encore d'abonnement actif pour votre entreprise.</p>
+            <p class="muted">Choisissez un forfait ci-dessous pour commencer.</p>
           </div>
-          <div class="current-actions">
-            <ac-button variant="outline" iconLeft="receipt_long" (click)="goHistorique()">
-              Historique de paiement
-            </ac-button>
-            @if (subscription()!.isActive) {
-              <ac-button variant="ghost" iconLeft="cancel" (click)="cancel()">
-                Résilier l'abonnement
+        } @else {
+          <section class="current">
+            <div class="current-meta">
+              <span class="eyebrow">Forfait actuel</span>
+              <h2>{{ getPlanLabel(subscription()!.planName) }}</h2>
+              <p class="muted">Forfait actif</p>
+              <ul class="meta-list">
+                <li>
+                  <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                  Expire le {{ subscription()!.expiresAt | date:'dd/MM/yyyy' }}
+                </li>
+                <li>
+                  <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                  Statut: <strong>{{ subscription()!.isActive ? 'Actif' : 'Inactif' }}</strong>
+                </li>
+              </ul>
+            </div>
+            <div class="current-actions">
+              <ac-button variant="outline" iconLeft="receipt_long" (click)="goHistorique()">
+                Historique de paiement
               </ac-button>
-            }
-          </div>
-        </section>
+              @if (subscription()!.isActive) {
+                <ac-button variant="ghost" iconLeft="cancel" (click)="cancel()">
+                  Résilier l'abonnement
+                </ac-button>
+              }
+            </div>
+          </section>
+        }
       }
 
       <!-- Plans switcher -->
@@ -306,32 +343,36 @@ import { DatePipe } from '@angular/common';
 })
 export class EspaceAbonnementComponent {
   protected readonly FR = FR;
-  
-  private readonly subService = inject(SubscriptionService);
-  private readonly ctx         = inject(CompanyContextService);
-  private readonly planService = inject(PlanService);
-  private readonly toast  = inject(ToastService);
-  private readonly modal  = inject(ModalService);
-  private readonly router = inject(Router);
+
+  private readonly auth         = inject(AuthService);
+  private readonly subService   = inject(SubscriptionService);
+  private readonly userSubSvc   = inject(UserSubscriptionService);
+  private readonly ctx          = inject(CompanyContextService);
+  private readonly planService  = inject(PlanService);
+  private readonly toast        = inject(ToastService);
+  private readonly modal        = inject(ModalService);
+  private readonly router       = inject(Router);
 
   protected readonly selectedMethod = signal<number>(0);
 
-  // ── Company from shared context ───────────────────────────────────────────
+  /** True when the logged-in user is a RegularUser (not a BusinessOwner). */
+  protected readonly isRegularUser = computed(() => this.auth.isRegularUser());
+
+  // ── Company context (BO only) ─────────────────────────────────────────────
   protected readonly company = this.ctx.selectedCompany;
 
   private readonly plansData = toSignal<Plan[] | null>(this.planService.getPlans(), { initialValue: null });
 
-  // Show only paid plans (Pro, Premium) when the company already has an active
-  // subscription (the Free plan is auto-applied on registration and should no
-  // longer appear as a selectable option — it would be a confusing downgrade path).
-  // Non-subscribed companies still see all three plans.
+  // Show only paid plans when the user already has an active subscription.
   protected readonly allPlans = computed(() => {
     const plans = (this.plansData() || []).filter(p => p.isActive);
-    const hasActiveSub = this.subscription() !== null;
+    const hasActiveSub = this.isRegularUser()
+      ? this.userSubscription() !== null
+      : this.subscription() !== null;
     return hasActiveSub ? plans.filter(p => p.price > 0) : plans;
   });
 
-  // ── Subscriptions — re-fetch on company switch ────────────────────────────
+  // ── BusinessOwner: company subscriptions ─────────────────────────────────
   private readonly subsData = toSignal<Subscription[] | null>(
     toObservable(this.ctx.selectedCompanyId).pipe(
       switchMap((id): Observable<Subscription[]> => {
@@ -348,15 +389,44 @@ export class EspaceAbonnementComponent {
     this.subsData()?.find(s => s.isActive) ?? null
   );
 
-  protected readonly loading = computed(() =>
-    !this.ctx.loaded() || this.subsData() === null || this.plansData() === null
+  // ── RegularUser: user subscriptions ──────────────────────────────────────
+  // Guard the call so EntrepriseOwner users never trigger a 403 on this endpoint.
+  private readonly userSubData = toSignal<UserSubscriptionDto | null>(
+    toObservable(this.isRegularUser).pipe(
+      take(1),
+      switchMap(isRU => isRU
+        ? this.userSubSvc.getMySubscription().pipe(catchError(() => of(null)))
+        : of(null)
+      )
+    ),
+    { initialValue: null }
   );
+
+  protected readonly userSubscription = computed<UserSubscriptionDto | null>(() =>
+    this.userSubData() ?? null
+  );
+
+  protected readonly loading = computed(() => {
+    if (this.isRegularUser()) {
+      return this.plansData() === null;
+    }
+    return !this.ctx.loaded() || this.subsData() === null || this.plansData() === null;
+  });
 
   protected goHistorique(): void {
     this.router.navigateByUrl('/espace/abonnement/historique');
   }
 
+  /** Cancel — delegates to the correct API depending on the user's role. */
   protected async cancel(): Promise<void> {
+    if (this.isRegularUser()) {
+      await this.cancelUserSubscription();
+    } else {
+      await this.cancelCompanySubscription();
+    }
+  }
+
+  private async cancelCompanySubscription(): Promise<void> {
     const s = this.subscription();
     if (!s) return;
     const { confirmed } = await this.modal.confirm({
@@ -369,8 +439,6 @@ export class EspaceAbonnementComponent {
     this.subService.cancelSubscription(s.id).subscribe({
       next: () => {
         this.toast.success('Votre abonnement a été résilié.');
-        // Navigate away then back so Angular re-initialises the component and
-        // re-subscribes all signals, fetching fresh data from the server.
         this.router.navigate(['/espace'], { replaceUrl: true }).then(() =>
           this.router.navigate(['/espace/abonnement'], { replaceUrl: true })
         );
@@ -382,13 +450,45 @@ export class EspaceAbonnementComponent {
     });
   }
 
+  private async cancelUserSubscription(): Promise<void> {
+    const s = this.userSubscription();
+    if (!s) return;
+    const { confirmed } = await this.modal.confirm({
+      title: 'Résilier votre abonnement ?',
+      body: 'Votre forfait sera annulé immédiatement. Vous pourrez souscrire à nouveau à tout moment.',
+      confirmLabel: 'Résilier',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+    this.userSubSvc.cancel(s.id).subscribe({
+      next: () => {
+        this.toast.success('Votre abonnement a été résilié.');
+        this.router.navigate(['/espace'], { replaceUrl: true }).then(() =>
+          this.router.navigate(['/espace/abonnement'], { replaceUrl: true })
+        );
+      },
+      error: (err) => {
+        const msg = err?.error?.detail || err?.error?.title || 'Erreur lors de la résiliation.';
+        this.toast.error(msg);
+      }
+    });
+  }
+
+  /** Change plan — delegates to the correct API depending on the user's role. */
   protected async changePlan(plan: Plan): Promise<void> {
+    if (this.isRegularUser()) {
+      await this.changeUserPlan(plan);
+    } else {
+      await this.changeCompanyPlan(plan);
+    }
+  }
+
+  private async changeCompanyPlan(plan: Plan): Promise<void> {
     const c = this.company();
     if (!c) {
       this.toast.error('Aucune entreprise trouvée pour cet utilisateur.');
       return;
     }
-
     const { confirmed } = await this.modal.confirm({
       title: `Choisir le forfait ${this.getPlanLabel(plan.name)} ?`,
       body: plan.price === 0
@@ -399,7 +499,6 @@ export class EspaceAbonnementComponent {
     });
     if (!confirmed) return;
 
-    // Use selected method
     this.subService.createSubscription({
       companyId: c.id,
       planId: plan.id,
@@ -410,6 +509,35 @@ export class EspaceAbonnementComponent {
         this.router.navigate(['/espace/abonnement/succes'], {
           queryParams: { paymentId: res.paymentId }
         });
+      },
+      error: (err: any) => {
+        const msg = err?.error?.detail || err?.error?.title || 'Erreur lors de la création de l\'abonnement.';
+        this.toast.error(msg);
+      }
+    });
+  }
+
+  private async changeUserPlan(plan: Plan): Promise<void> {
+    const { confirmed } = await this.modal.confirm({
+      title: `Choisir le forfait ${this.getPlanLabel(plan.name)} ?`,
+      body: plan.price === 0
+        ? `Votre compte basculera au forfait gratuit.`
+        : `Vous serez facturé ${new Intl.NumberFormat('fr-FR').format(plan.price)} XAF.`,
+      confirmLabel: 'Continuer',
+      tone: 'confirm',
+    });
+    if (!confirmed) return;
+
+    this.userSubSvc.subscribe({ planId: plan.id, method: this.selectedMethod() }).subscribe({
+      next: () => {
+        this.toast.success(
+          plan.price === 0
+            ? 'Forfait gratuit activé.'
+            : 'Demande d\'abonnement créée. Elle sera confirmée après validation du paiement.'
+        );
+        this.router.navigate(['/espace'], { replaceUrl: true }).then(() =>
+          this.router.navigate(['/espace/abonnement'], { replaceUrl: true })
+        );
       },
       error: (err: any) => {
         const msg = err?.error?.detail || err?.error?.title || 'Erreur lors de la création de l\'abonnement.';

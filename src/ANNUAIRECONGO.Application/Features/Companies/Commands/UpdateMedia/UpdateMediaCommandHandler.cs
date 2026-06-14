@@ -26,11 +26,16 @@ IRequestHandler<UpdateMediaCommand, Result<Updated>>
             _logger.LogWarning("Company with id {id} not found", request.id);
             return CompanyErrors.CompanyNotFound(request.id);
         }
-        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwnedByCurrentUser)
+        // Admin Rule 0 — Admin can update media for any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.id, _currentUser.Id);
-            return CompanyErrors.NotOwner;
+            var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwnedByCurrentUser)
+            {
+                _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}", request.id, _currentUser.Id);
+                return CompanyErrors.NotOwner;
+            }
         }
         var UpdateMediaResult = company.UpdateMedia(request.logoUrl, request.coverUrl);
         if(UpdateMediaResult.IsError)

@@ -30,11 +30,16 @@ public sealed record AddDocumentCommandHandler(ILogger<AddDocumentCommandHandler
         
         int maxDocsAllowed = subscription?.Plan?.MaxDocuments ?? 1;
 
-        var isOwner = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwner)
+        // Admin Rule 0 — Admin can add documents to any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
-            return CompanyErrors.NotOwner;
+            var isOwner = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwner)
+            {
+                _logger.LogWarning("User with id {UserId} is not the owner of company with id {CompanyId}", _currentUser.Id, request.CompanyId);
+                return CompanyErrors.NotOwner;
+            }
         }
 
         // Check if the company has reached the maximum number of documents allowed

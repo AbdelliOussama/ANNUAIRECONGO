@@ -29,11 +29,16 @@ public sealed record AddContactCommandHandler(
             _logger.LogWarning("Company with id {CompanyId} not found", request.CompanyId);
             return CompanyErrors.CompanyNotFound(request.CompanyId);
         }
-        var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
-        if (!isOwnedByCurrentUser)
+        // Admin Rule 0 — Admin can add contacts to any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
+        if (!isAdmin)
         {
-            _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}",    request.CompanyId, _currentUser.Id);
-            return CompanyErrors.NotOwner;
+            var isOwnedByCurrentUser = company.IsOwnedBy(_currentUser.Id);
+            if (!isOwnedByCurrentUser)
+            {
+                _logger.LogWarning("Company with id = {CompanyId} is not owned by the current user with id = {UserId}", request.CompanyId, _currentUser.Id);
+                return CompanyErrors.NotOwner;
+            }
         }
         if(company.Contacts.Any(c => c.Value == request.Value && c.Type == request.Type))
         {

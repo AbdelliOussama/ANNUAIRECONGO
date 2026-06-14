@@ -17,27 +17,32 @@ public sealed class GetCompanyPaymentsQueryHandler(ILogger<GetCompanyPaymentsQue
     private readonly IUser _currentUser = currentUser;
     public async Task<Result<List<PaymentDto>>> Handle(GetCompanyPaymentsQuery request, CancellationToken cancellationToken)
     {
-        var userId = request.UserId ?? _currentUser.Id;
-        _logger.LogInformation("GetCompanyPayments: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}", 
-            request.CompanyId, userId);
+        // Admin Rule 0 — Admin can query payments for any company regardless of OwnerId.
+        var isAdmin = _currentUser.IsInRole("Admin");
 
-        if (!Guid.TryParse(userId, out var ownerGuid))
+        if (!isAdmin)
         {
-            _logger.LogWarning("Invalid User ID format: {UserId}", userId);
-            return CompanyErrors.NotOwner;
-        }
-
-        var isOwner = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
-        
-        if (!isOwner)
-        {
-             _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}", 
+            var userId = request.UserId ?? _currentUser.Id;
+            _logger.LogInformation("GetCompanyPayments: Checking ownership. CompanyId: {CompanyId}, CurrentUserId: {CurrentUserId}",
                 request.CompanyId, userId);
-             
-             // Check if company exists at all to return 404 vs 403
-             var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
-             return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+
+            if (!Guid.TryParse(userId, out var ownerGuid))
+            {
+                _logger.LogWarning("Invalid User ID format: {UserId}", userId);
+                return CompanyErrors.NotOwner;
+            }
+
+            var isOwner = await _context.Companies
+                .AnyAsync(c => c.Id == request.CompanyId && c.OwnerId == ownerGuid, cancellationToken);
+
+            if (!isOwner)
+            {
+                _logger.LogWarning("Ownership check failed for Company {CompanyId}. Resolved UserId: {CurrentUserId}",
+                    request.CompanyId, userId);
+
+                var exists = await _context.Companies.AnyAsync(c => c.Id == request.CompanyId, cancellationToken);
+                return exists ? CompanyErrors.NotOwner : CompanyErrors.CompanyNotFound(request.CompanyId);
+            }
         }
 
         var payments = await _context.Payments

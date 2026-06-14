@@ -9,6 +9,8 @@ using ANNUAIRECONGO.Domain.Sectors;
 using ANNUAIRECONGO.Domain.Subscriptions;
 using ANNUAIRECONGO.Domain.Subscriptions.Payments;
 using ANNUAIRECONGO.Domain.Subscriptions.Plans;
+using ANNUAIRECONGO.Domain.UserProfiles;
+using ANNUAIRECONGO.Domain.UserSubscriptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ANNUAIRECONGO.Application.Common.Interfaces;
@@ -36,7 +38,9 @@ public interface IAppDbContext
     public DbSet<Payment> Payments { get; }
     public DbSet<Plan> Plans { get; }
 
-
+    // ── Regular-user feature ──────────────────────────────────────
+    public DbSet<UserProfile>      UserProfiles      { get; }
+    public DbSet<UserSubscription> UserSubscriptions { get; }
 
 
 
