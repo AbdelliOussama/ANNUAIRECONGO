@@ -83,8 +83,8 @@ export type SectorTileTheme = 'primary' | 'tertiary' | 'neutral';
     .ac-content { padding: 28px; width: 100%; }
     .ac-content.is-sm { padding: 22px; }
 
-    .ac-overlay.theme-primary  { background: linear-gradient(135deg, rgba(0, 78, 52, 0.10), rgba(0, 78, 52, 0.04)); }
-    .ac-overlay.theme-tertiary { background: linear-gradient(135deg, rgba(255, 223, 154, 0.20), transparent); }
+    .ac-overlay.theme-primary  { background: linear-gradient(135deg, rgba(0, 149, 67, 0.10), rgba(0, 149, 67, 0.04)); }
+    .ac-overlay.theme-tertiary { background: linear-gradient(135deg, rgba(251, 222, 74, 0.20), transparent); }
     .ac-overlay.theme-neutral  { background: transparent; }
 
     .ac-icon-bubble {
@@ -93,7 +93,7 @@ export type SectorTileTheme = 'primary' | 'tertiary' | 'neutral';
       display: inline-flex; align-items: center; justify-content: center;
       transition: transform 0.3s;
     }
-    .ac-icon-bubble.theme-primary  { background: rgba(0, 78, 52, 0.10); color: var(--color-primary); }
+    .ac-icon-bubble.theme-primary  { background: rgba(0, 149, 67, 0.10); color: var(--color-primary); }
     .ac-icon-bubble.theme-tertiary { background: var(--color-tertiary-fixed); color: var(--color-tertiary); }
     .ac-icon-bubble.theme-neutral  { background: var(--color-surface-container); color: var(--color-on-secondary-container); }
     a:hover .ac-icon-bubble { transform: scale(1.1); }

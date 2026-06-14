@@ -6,16 +6,16 @@
    ============================================================ */
 
 :root {
-  /* Primary */
-  --color-primary:                   #00943e;
-  --color-primary-container:         #006847;
+  /* Primary  — Congo flag green #009543 */
+  --color-primary:                   #009543;
+  --color-primary-container:         #006B30;
   --color-on-primary:                #ffffff;
-  --color-on-primary-container:      #90e4ba;
-  --color-primary-fixed:             #9ff4c9;
-  --color-primary-fixed-dim:         #84d7ae;
-  --color-on-primary-fixed:          #002114;
-  --color-on-primary-fixed-variant:  #005237;
-  --color-inverse-primary:           #84d7ae;
+  --color-on-primary-container:      #92E6BD;
+  --color-primary-fixed:             #A2F6CC;
+  --color-primary-fixed-dim:         #86D9B0;
+  --color-on-primary-fixed:          #002115;
+  --color-on-primary-fixed-variant:  #00543A;
+  --color-inverse-primary:           #86D9B0;
 
   /* Secondary */
   --color-secondary:                 #515f74;
@@ -23,13 +23,13 @@
   --color-on-secondary:              #ffffff;
   --color-on-secondary-container:    #57657a;
 
-  /* Tertiary */
-  --color-tertiary:                  #564000;
-  --color-tertiary-container:        #735600;
-  --color-on-tertiary-container:     #fbd24b;
-  --color-tertiary-fixed:            #ffdf9a;
-  --color-tertiary-fixed-dim:        #fbd24b;
-  --color-on-tertiary-fixed:         #251a00;
+  /* Tertiary — Congo flag yellow #FBDE4A */
+  --color-tertiary:                  #695D00;
+  --color-tertiary-container:        #867600;
+  --color-on-tertiary-container:     #FBDE4A;
+  --color-tertiary-fixed:            #FDE88C;
+  --color-tertiary-fixed-dim:        #FBDE4A;
+  --color-on-tertiary-fixed:         #211B00;
 
   /* Error */
   --color-error:                     #ba1a1a;

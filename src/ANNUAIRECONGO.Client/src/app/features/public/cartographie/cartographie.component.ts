@@ -239,8 +239,8 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
       
       const marker = L.circleMarker([p.lat, p.lng], {
         radius,
-        color: '#00943e',
-        fillColor: '#00943e',
+        color: '#009543',
+        fillColor: '#009543',
         fillOpacity: 0.5,
         weight: 1.5,
       });
@@ -262,8 +262,8 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
     return `
       <div style="font-family: 'Inter', sans-serif; min-width: 220px; padding: 4px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <strong style="font-family:'DM Serif Display', serif; font-size:18px; color:#00943e;">${p.regionName}</strong>
-          <span style="font-size:10px; font-weight:700; background:#00943e; color:#fff; padding:2px 8px; border-radius:20px; text-transform:uppercase;">Département</span>
+          <strong style="font-family:'DM Serif Display', serif; font-size:18px; color:#009543;">${p.regionName}</strong>
+          <span style="font-size:10px; font-weight:700; background:#009543; color:#fff; padding:2px 8px; border-radius:20px; text-transform:uppercase;">Département</span>
         </div>
         
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
@@ -277,18 +277,18 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
           </div>
         </div>
 
-        <div style="font-size:12px; color:#515f74; margin-bottom:16px; padding:8px; background:rgba(0, 148, 62, 0.05); border-radius:8px;">
+        <div style="font-size:12px; color:#515f74; margin-bottom:16px; padding:8px; background:rgba(0, 149, 67, 0.05); border-radius:8px;">
           <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
             <span>Densité d'entreprises :</span>
-            <strong style="color:#00943e;">${densityFixed} / 10k</strong>
+            <strong style="color:#009543;">${densityFixed} / 10k</strong>
           </div>
           <div style="height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
-            <div style="height:100%; width:${Math.min(density * 15, 100)}%; background:#00943e;"></div>
+            <div style="height:100%; width:${Math.min(density * 15, 100)}%; background:#009543;"></div>
           </div>
         </div>
 
         <a href="/annuaire?${queryParams}"
-           style="display:block; text-align:center; padding:12px; background:#00943e; color:#fff; border-radius:12px; font-size:13px; text-decoration:none; font-weight:700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 148, 62, 0.2);">
+           style="display:block; text-align:center; padding:12px; background:#009543; color:#fff; border-radius:12px; font-size:13px; text-decoration:none; font-weight:700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 149, 67, 0.2);">
           Voir le département
         </a>
       </div>
