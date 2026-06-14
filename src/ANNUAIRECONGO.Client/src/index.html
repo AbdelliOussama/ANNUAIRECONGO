@@ -40,6 +40,16 @@
 </head>
 <body class="bg-surface font-body text-on-surface page-transition">
   <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('ac-theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <app-root></app-root>
 </body>
 </html>

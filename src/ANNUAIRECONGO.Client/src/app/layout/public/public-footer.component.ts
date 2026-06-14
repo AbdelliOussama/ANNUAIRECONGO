@@ -62,8 +62,8 @@ interface FooterColumn {
     :host { display: block; }
 
     .footer {
-      background: #191c1e;
-      color: rgba(255, 255, 255, 0.65);
+      background: var(--color-footer-bg);
+      color: var(--color-footer-text);
       padding: 48px 24px;
       margin-top: 64px;
     }
@@ -84,7 +84,7 @@ interface FooterColumn {
     .brand-block { display: flex; flex-direction: column; gap: 12px; }
      .logo-mark   { height: 36px; width: auto; object-fit: contain; max-width: 160px; }
     .tagline     {
-      color: rgba(255, 255, 255, 0.55);
+      color: var(--color-footer-text-muted);
       font-size: 14px;
       max-width: 320px;
       line-height: 1.5;
@@ -97,7 +97,7 @@ interface FooterColumn {
     }
     .column-title {
       font-family: var(--font-body);
-      color: #fff;
+      color: var(--color-footer-text-title);
       font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
@@ -106,14 +106,14 @@ interface FooterColumn {
     }
     .column-links { display: flex; flex-direction: column; gap: 8px; }
     .link {
-      color: rgba(255, 255, 255, 0.55);
+      color: var(--color-footer-text-muted);
       font-size: 14px;
       transition: color 0.15s;
     }
-    .link:hover { color: #fff; }
+    .link:hover { color: var(--color-footer-text-title); }
 
     .footer-bottom {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--color-footer-border);
       padding-top: 24px;
       display: flex;
       flex-direction: column;
@@ -124,19 +124,19 @@ interface FooterColumn {
     @media (min-width: 768px) {
       .footer-bottom { flex-direction: row; }
     }
-    .signature { font-size: 12px; color: rgba(255, 255, 255, 0.4); margin: 0; }
+    .signature { font-size: 12px; color: var(--color-footer-signature); margin: 0; }
     .socials { display: flex; gap: 12px; }
     .social {
       width: 32px; height: 32px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--color-footer-social-bg);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: var(--color-footer-social-text);
       transition: background 0.15s;
     }
-    .social:hover { background: var(--color-primary); }
+    .social:hover { background: var(--color-primary); color: #fff; }
     .social .material-symbols-outlined { font-size: 18px; }
   `],
 })

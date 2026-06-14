@@ -83,4 +83,76 @@
   --shadow-editorial: 0 8px 32px rgba(25, 28, 30, 0.06);
   --shadow-modal:     0 24px 60px rgba(0, 0, 0, 0.25);
   --shadow-toast:     0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Header/footer chrome — dark in light mode (current default) */
+  --color-header-bg:            #191c1e;
+  --color-header-text:          #ffffff;
+  --color-header-text-muted:    rgba(255, 255, 255, 0.65);
+  --color-header-border:        rgba(255, 255, 255, 0.1);
+  --color-header-hover-bg:      rgba(255, 255, 255, 0.1);
+
+  --color-footer-bg:            #191c1e;
+  --color-footer-text:          rgba(255, 255, 255, 0.65);
+  --color-footer-text-title:    #ffffff;
+  --color-footer-text-muted:    rgba(255, 255, 255, 0.55);
+  --color-footer-border:        rgba(255, 255, 255, 0.1);
+  --color-footer-social-bg:     rgba(255, 255, 255, 0.06);
+  --color-footer-social-text:   #ffffff;
+  --color-footer-signature:     rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================================
+   Dark mode overrides
+   Activated by the `.dark` class on <html> (set by ThemeService).
+   Inverts the chrome (header/footer become light) and darkens
+   the body/surface tokens.
+   ============================================================ */
+html.dark {
+  /* Surface — dark body */
+  --color-background:                #1a1d21;
+  --color-on-background:             #e0e3e5;
+  --color-surface:                   #1a1d21;
+  --color-surface-container-lowest:  #111315;
+  --color-surface-container-low:     #1e2124;
+  --color-surface-container:         #262a2d;
+  --color-surface-container-high:    #303437;
+  --color-surface-container-highest: #3b3f42;
+  --color-surface-variant:           #3b3f42;
+  --color-on-surface:                #e0e3e5;
+  --color-on-surface-variant:        #bec9c1;
+
+  /* Secondary (text) */
+  --color-secondary:                 #b9c7df;
+  --color-secondary-container:       #3a485b;
+  --color-on-secondary-container:    #d5e3fc;
+
+  /* Outline */
+  --color-outline:                   #8a958d;
+  --color-outline-variant:           #4a524d;
+
+  /* Inverse */
+  --color-inverse-surface:           #e0e3e5;
+  --color-inverse-on-surface:        #191c1e;
+
+  /* Elevation */
+  --shadow-card:      0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-editorial: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-modal:     0 24px 60px rgba(0, 0, 0, 0.5);
+  --shadow-toast:     0 8px 32px rgba(0, 0, 0, 0.35);
+
+  /* Header/footer chrome — light in dark mode (inverted) */
+  --color-header-bg:            #f7f9fb;
+  --color-header-text:          #191c1e;
+  --color-header-text-muted:    rgba(25, 28, 30, 0.65);
+  --color-header-border:        rgba(25, 28, 30, 0.1);
+  --color-header-hover-bg:      rgba(25, 28, 30, 0.08);
+
+  --color-footer-bg:            #f7f9fb;
+  --color-footer-text:          rgba(25, 28, 30, 0.65);
+  --color-footer-text-title:    #191c1e;
+  --color-footer-text-muted:    rgba(25, 28, 30, 0.55);
+  --color-footer-border:        rgba(25, 28, 30, 0.1);
+  --color-footer-social-bg:     rgba(25, 28, 30, 0.06);
+  --color-footer-social-text:   #191c1e;
+  --color-footer-signature:     rgba(25, 28, 30, 0.4);
 }

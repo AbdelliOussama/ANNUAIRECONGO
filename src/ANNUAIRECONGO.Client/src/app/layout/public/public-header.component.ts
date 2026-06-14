@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
+import { ThemeService } from '@core/services/theme.service';
 import { FR } from '@core/i18n/fr.constants';
 
 interface NavItem {
@@ -29,7 +30,7 @@ interface NavItem {
 template: `
     <header>
         <nav
-         class="bg-[#191c1e] border-b border-white/10 sticky top-0 z-50"
+         class="header-nav sticky top-0 z-50"
          aria-label="Navigation principale"
        >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between h-16">
@@ -77,26 +78,40 @@ template: `
             </div>
           }
 
-          <!-- Mobile hamburger -->
-          <button
-             type="button"
-             class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white/10 transition-colors"
-             [attr.aria-expanded]="mobileOpen()"
-             aria-controls="ac-mobile-menu"
-             [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
-             (click)="toggleMobile()"
-           >
-             <span class="material-symbols-outlined text-white" aria-hidden="true">
-               {{ mobileOpen() ? 'close' : 'menu' }}
-             </span>
-           </button>
+          <!-- Theme toggle (desktop & mobile) -->
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="theme-toggle"
+              (click)="onToggleTheme()"
+              [attr.aria-label]="isDarkMode() ? 'Activer le mode clair' : 'Activer le mode sombre'"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">
+                {{ isDarkMode() ? 'light_mode' : 'dark_mode' }}
+              </span>
+            </button>
+
+            <!-- Mobile hamburger -->
+            <button
+               type="button"
+               class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl hover-bg transition-colors"
+               [attr.aria-expanded]="mobileOpen()"
+               aria-controls="ac-mobile-menu"
+               [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
+               (click)="toggleMobile()"
+             >
+               <span class="material-symbols-outlined nav-text" aria-hidden="true">
+                 {{ mobileOpen() ? 'close' : 'menu' }}
+               </span>
+             </button>
+          </div>
         </div>
 
         <!-- Mobile drawer — hidden on lg+, opens via signal on smaller screens -->
          @if (mobileOpen()) {
            <div
              id="ac-mobile-menu"
-             class="lg:hidden flex flex-col bg-[#191c1e] border-t border-white/10 py-3"
+             class="lg:hidden flex flex-col mobile-menu py-3"
              role="menu"
              aria-label="Menu mobile"
            >
@@ -106,12 +121,12 @@ template: `
                  routerLinkActive="active"
                  [routerLinkActiveOptions]="item.path === '/' ? { exact: true } : { exact: false }"
                  ariaCurrentWhenActive="page"
-                 class="px-6 py-3 text-sm font-bold uppercase tracking-wider text-white/65 hover:text-white hover:bg-white/5 transition-colors"
+                 class="px-6 py-3 text-sm font-bold uppercase tracking-wider nav-link transition-colors"
                  role="menuitem"
                  (click)="closeMobile()"
                >{{ item.label }}</a>
              }
-<div class="flex items-center gap-3 border-t border-white/10 mt-2 pt-3 px-6 pb-2">
+<div class="flex items-center gap-3 mobile-menu-border mt-2 pt-3 px-6 pb-2">
                 @if (!isAuthenticated()) {
                   <a routerLink="/auth/connexion"   class="btn btn-ghost flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.login }}</a>
                   <a routerLink="/auth/inscription" class="btn btn-primary flex-1 justify-center" (click)="closeMobile()">{{ FR.nav.register }}</a>
@@ -132,10 +147,60 @@ template: `
    styles: [`
     :host { display: block; }
     .flex-1 { flex: 1; }
-    .nav-link { color: rgba(255,255,255,0.65); }
-    .nav-link:hover { color: #fff; }
+    
+    .header-nav {
+      background: var(--color-header-bg);
+      border-bottom: 1px solid var(--color-header-border);
+    }
+    
+    .nav-text {
+      color: var(--color-header-text);
+    }
+    
+    .hover-bg:hover {
+      background: var(--color-header-hover-bg);
+    }
+    
+    .mobile-menu {
+      background: var(--color-header-bg);
+      border-top: 1px solid var(--color-header-border);
+    }
+    
+    .mobile-menu-border {
+      border-top: 1px solid var(--color-header-border);
+    }
+    
+    .nav-link { 
+      color: var(--color-header-text-muted); 
+    }
+    .nav-link:hover { 
+      color: var(--color-header-text); 
+      background: var(--color-header-hover-bg);
+    }
     .nav-link.active,
-    .nav-link[aria-current='page'] { color: #fff !important; }
+    .nav-link[aria-current='page'] { 
+      color: var(--color-header-text) !important; 
+    }
+    
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-xl);
+      background: transparent;
+      border: none;
+      color: var(--color-header-text);
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .theme-toggle:hover {
+      background: var(--color-header-hover-bg);
+    }
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
   `],
 })
 export class PublicHeaderComponent {
@@ -152,6 +217,9 @@ export class PublicHeaderComponent {
     { path: '/tarifs',       label: FR.nav.tarifs },
   ];
 
+  private readonly themeService = inject(ThemeService);
+  protected readonly isDarkMode = this.themeService.isDarkMode;
+
   protected readonly isAuthenticated = computed(() => this.auth.isAuthenticated());
   protected readonly isAdmin = computed(() => this.auth.isAdmin());
 
@@ -166,6 +234,10 @@ export class PublicHeaderComponent {
   protected closeMobile(): void  { this.mobileOpen.set(false); }
   protected onLogout(): void {
     this.auth.logout();
+  }
+  
+  protected onToggleTheme(): void {
+    this.themeService.toggle();
   }
 
   @HostListener('document:keydown.escape')
