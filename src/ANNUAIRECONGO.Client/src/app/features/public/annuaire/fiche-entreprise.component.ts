@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, AfterViewInit, computed, inject, signal, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild, AfterViewInit, computed, inject, signal, effect, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of, catchError, map, tap } from 'rxjs';
 import { Params } from '@angular/router';
-import { TabsComponent, TabDescriptor } from '@shared/ui/tabs/tabs.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { CompanyService } from '@core/services/company.service';
@@ -40,7 +39,6 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'Madingou': { lat: -4.1536, lng: 13.5500 },
 };
 
-type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation' | 'documents' | 'dirigeants';
 
 @Component({
   selector: 'ac-fiche-entreprise',
@@ -48,7 +46,6 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    TabsComponent,
     EmptyStateComponent,
     SkeletonComponent,
     FormsModule,
@@ -129,150 +126,196 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
           </div>
         </header>
 
-        <!-- Tabs -->
-        <ac-tabs
-          [tabs]="tabs"
-          [active]="activeTab()"
-          (activeChange)="setTab($event)"
-          ariaLabel="Sections de la fiche entreprise"
-        />
-
-        <!-- Tab panels -->
-        <section [id]="'panel-' + activeTab()" role="tabpanel"
-                 [attr.aria-labelledby]="'tab-' + activeTab()" class="panel">
-          @switch (activeTab()) {
-            @case ('apropos') {
-              <h2 class="panel-title">À propos de {{ fiche()!.name }}</h2>
+        <!-- Content Grid (Main + Sidebar) -->
+        <div class="content-grid">
+          <!-- Main Content Column -->
+          <div class="main-column">
+            
+            <!-- À Propos Section -->
+            <section class="section-card" aria-labelledby="sec-apropos">
+              <h2 id="sec-apropos" class="panel-title">À propos de {{ fiche()!.name }}</h2>
               <p class="lead">{{ fiche()!.description }}</p>
               <dl class="kv">
                 <div><dt>Année de création</dt><dd>{{ fiche()!.yearFounded || 'N/A' }}</dd></div>
                 <div><dt>Numéro RCCM</dt><dd>{{ fiche()!.rccm || 'N/A' }}</dd></div>
                 <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
-                <div><dt>Secteur</dt><dd>{{ fiche()!.sectorLabel }}</dd></div>
               </dl>
 
               @if (fiche()!.trustScore !== undefined && fiche()!.trustScore !== null) {
-                <div style="margin-top: 32px; padding: 24px; background: var(--color-surface-container-low); border: 1px solid var(--color-outline-variant); border-radius: var(--radius-xl);">
-                  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-                    <div style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; background: conic-gradient(var(--color-primary) {{ fiche()!.trustScore }}%, var(--color-surface-container-highest) 0);">
-                      <div style="width: 52px; height: 52px; background: var(--color-surface-container-low); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-on-surface);">
-                        {{ fiche()!.trustScore }}
-                      </div>
+                <div class="trust-score-box">
+                  <div class="trust-score-header">
+                    <div class="trust-score-circle" [style.background]="'conic-gradient(var(--color-primary) ' + fiche()!.trustScore + '%, var(--color-surface-container-highest) 0)'">
+                      <div class="trust-score-inner">{{ fiche()!.trustScore }}</div>
                     </div>
                     <div>
-                      <h3 style="font-size: 18px; font-weight: 800; font-family: var(--font-headline); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                      <h3 class="trust-score-title">
                         Score de Fiabilité Économique
-                        <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 18px;">verified_user</span>
+                        <span class="material-symbols-outlined trust-score-icon">verified_user</span>
                       </h3>
-                      <p style="font-size: 13px; color: var(--color-secondary); margin: 0;">Évaluation générée par IA basée sur la complétude administrative et opérationnelle.</p>
+                      <p class="trust-score-desc">Évaluation générée par IA basée sur la complétude administrative et opérationnelle.</p>
                     </div>
                   </div>
                   @if (fiche()!.trustScoreAnalysis) {
-                    <div class="markdown-body" style="font-size: 14px; line-height: 1.6; color: var(--color-on-surface-variant); padding-top: 16px; border-top: 1px solid var(--color-outline-variant);">
+                    <div class="trust-score-body markdown-body">
                       @for (p of getTrustParagraphs(); track $index) {
-                        <p style="margin-bottom: 12px;">{{ p }}</p>
+                        <p>{{ p }}</p>
                       }
                     </div>
                   }
                 </div>
               }
-            }
-            @case ('services') {
-              <h2 class="panel-title">Services & Produits</h2>
-              <div class="services-grid">
-                @for (s of fiche()!.services; track s.id) {
-                  <div class="service-card">
-                    <span class="material-symbols-outlined text-primary" aria-hidden="true">check_circle</span>
-                    <div class="service-content">
-                      <h3 class="service-name">{{ s.title }}</h3>
-                      <p class="service-desc">{{ s.description }}</p>
+            </section>
+
+            <!-- Équipe / Dirigeants -->
+            <section class="section-card" aria-labelledby="sec-equipe">
+              <h2 id="sec-equipe" class="panel-title">Équipe (Dirigeants)</h2>
+              <p class="muted">Les dirigeants seront affichés dès que l'entreprise les aura déclarés sur la plateforme.</p>
+            </section>
+
+            <!-- Services & Produits -->
+            <section class="section-card" aria-labelledby="sec-services">
+              <h2 id="sec-services" class="panel-title">Services & Produits</h2>
+              @if (fiche()!.services.length > 0) {
+                <div class="services-grid">
+                  @for (s of fiche()!.services; track s.id) {
+                    <div class="service-card">
+                      <span class="material-symbols-outlined text-primary" aria-hidden="true">check_circle</span>
+                      <div class="service-content">
+                        <h3 class="service-name">{{ s.title }}</h3>
+                        <p class="service-desc">{{ s.description }}</p>
+                      </div>
                     </div>
-                  </div>
-                } @empty {
-                  <p class="muted">Aucun service spécifique n'a été listé pour le moment.</p>
-                }
-              </div>
+                  }
+                </div>
+              } @else {
+                <p class="muted">Aucun service spécifique n'a été listé pour le moment.</p>
+              }
+            </section>
+
+            <!-- Galerie -->
+            @if (fiche()!.gallery.length > 0) {
+              <section class="section-card" aria-labelledby="sec-galerie">
+                <h2 id="sec-galerie" class="panel-title">Galerie</h2>
+                <div class="gallery-grid">
+                  @for (img of fiche()!.gallery; track img.id) {
+                    <div class="gallery-item">
+                      <img [src]="img.imageUrl" [alt]="img.caption || fiche()!.name" loading="lazy" />
+                      @if (img.caption) { <p class="caption">{{ img.caption }}</p> }
+                    </div>
+                  }
+                </div>
+              </section>
             }
-            @case ('contacts') {
-              <h2 class="panel-title">Contacts</h2>
+
+            <!-- Documents Légaux -->
+            <section class="section-card" aria-labelledby="sec-docs">
+              <h2 id="sec-docs" class="panel-title">Documents légaux</h2>
+              @if (fiche()!.publicDocuments.length > 0) {
+                <ul class="doc-list">
+                  @for (doc of fiche()!.publicDocuments; track doc.id) {
+                    <li>
+                      <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                      <div class="doc-info">
+                        <strong>{{ getDocLabel(doc.docType) }}</strong>
+                        <p>{{ doc.description || 'Document sans description' }}</p>
+                      </div>
+                      @if (doc.fileUrl) {
+                        <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
+                      } @else {
+                        <div class="doc-locked">
+                          <span class="material-symbols-outlined doc-lock-icon" aria-hidden="true">lock</span>
+                          <span class="doc-lock-label">
+                            @if (!isAuthenticated()) {
+                              <a routerLink="/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
+                            } @else {
+                              <a routerLink="/espace/abonnement" class="doc-lock-link">Abonnez-vous</a> (plan payant requis)
+                            }
+                          </span>
+                        </div>
+                      }
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="muted">Cette fiche n'a pas encore publié de documents téléchargeables.</p>
+              }
+            </section>
+          </div>
+
+          <!-- Sidebar Column -->
+          <aside class="sidebar-column">
+            
+            <!-- Coordonnées -->
+            <div class="sidebar-card">
+              <h2 class="sidebar-title">Coordonnées</h2>
               <ul class="contact-list">
-                @for (c of fiche()!.allContacts; track c.id) {
-                  <li>
-                    <span class="material-symbols-outlined text-primary" aria-hidden="true">{{ getContactIcon(c.type) }}</span>
-                    @if (c.type === 0) {
-                      <a [href]="'tel:' + c.value" (click)="trackClick(0)">{{ c.value }}</a>
-                    } @else if (c.type === 1) {
-                      <a [href]="'mailto:' + c.value" (click)="trackClick(1)">{{ c.value }}</a>
-                    } @else {
-                      <a [href]="c.value" target="_blank" rel="noopener" (click)="trackClick(c.type)">{{ c.value }}</a>
-                    }
-                  </li>
-                } @empty {
-                  <p class="muted">Aucun contact public renseigné.</p>
-                }
                 <li>
-                  <span class="material-symbols-outlined text-primary" aria-hidden="true">location_on</span>
-                  {{ fiche()!.address }}, {{ fiche()!.city }}
-                </li>
-              </ul>
-            }
-            @case ('galerie') {
-              <h2 class="panel-title">Galerie</h2>
-              <div class="gallery-grid">
-                @for (img of fiche()!.gallery; track img.id) {
-                  <div class="gallery-item">
-                    <img [src]="img.imageUrl" [alt]="img.caption || fiche()!.name" loading="lazy" />
-                    @if (img.caption) { <p class="caption">{{ img.caption }}</p> }
+                  <div class="contact-icon-wrap"><span class="material-symbols-outlined text-primary" aria-hidden="true">location_on</span></div>
+                  <div>
+                    <span class="contact-label">Adresse</span>
+                    <span class="contact-value">{{ fiche()!.address }}, {{ fiche()!.city }}</span>
                   </div>
-                } @empty {
-                  <p class="muted">Aucune photo n'a encore été déposée par cette entreprise.</p>
+                </li>
+                @for (c of directContacts(); track c.id) {
+                  <li>
+                    <div class="contact-icon-wrap"><span class="material-symbols-outlined text-primary" aria-hidden="true">{{ getContactIcon(c.type) }}</span></div>
+                    <div>
+                      <span class="contact-label">{{ getContactIcon(c.type) === 'call' ? 'Téléphone' : (getContactIcon(c.type) === 'mail' ? 'Email' : 'Contact') }}</span>
+                      @if (c.type === 0) {
+                        <a [href]="'tel:' + c.value" class="contact-value link" (click)="trackClick(0)">{{ c.value }}</a>
+                      } @else if (c.type === 1) {
+                        <a [href]="'mailto:' + c.value" class="contact-value link" (click)="trackClick(1)">{{ c.value }}</a>
+                      } @else {
+                        <a [href]="c.value" target="_blank" rel="noopener" class="contact-value link" (click)="trackClick(c.type)">{{ c.value }}</a>
+                      }
+                    </div>
+                  </li>
                 }
-              </div>
-            }
-            @case ('localisation') {
-              <h2 class="panel-title">Localisation</h2>
-              <p class="muted mb-6">{{ fiche()!.address }}, {{ fiche()!.city }}, {{ fiche()!.region }}.</p>
+                @if (fiche()!.website) {
+                  <li>
+                    <div class="contact-icon-wrap"><span class="material-symbols-outlined text-primary" aria-hidden="true">language</span></div>
+                    <div>
+                      <span class="contact-label">Site web</span>
+                      <a [href]="fiche()!.website" target="_blank" rel="noopener" class="contact-value link">{{ fiche()!.website }}</a>
+                    </div>
+                  </li>
+                }
+              </ul>
               
-              <div class="map-wrap">
+              <!-- Map inserted directly below contacts in the same card -->
+              <div class="map-wrap sidebar-map mt-6">
                 <div #mapContainer class="map-el" id="fiche-map"></div>
               </div>
+            </div>
+
+            <!-- Réseaux Sociaux -->
+            @if (socialContacts().length > 0) {
+              <div class="sidebar-card">
+                <h2 class="sidebar-title">Réseaux sociaux</h2>
+                <div class="socials-grid">
+                  @for (c of socialContacts(); track c.id) {
+                    <a [href]="c.value" target="_blank" rel="noopener" class="social-btn" [attr.aria-label]="c.type" (click)="trackClick(c.type)">
+                      <span class="material-symbols-outlined" aria-hidden="true">link</span>
+                      <!-- We use a generic link icon as material symbols doesn't have brand icons. 
+                           Ideally we'd use SVG icons for brands, but we stick to the existing system. -->
+                    </a>
+                  }
+                </div>
+              </div>
             }
-            @case ('documents') {
-              <h2 class="panel-title">Documents légaux</h2>
-              <ul class="doc-list">
-                @for (doc of fiche()!.publicDocuments; track doc.id) {
-                  <li>
-                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                    <div class="doc-info">
-                      <strong>{{ getDocLabel(doc.docType) }}</strong>
-                      <p>{{ doc.description || 'Document sans description' }}</p>
-                    </div>
-                    @if (doc.fileUrl) {
-                      <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
-                    } @else {
-                      <div class="doc-locked">
-                        <span class="material-symbols-outlined doc-lock-icon" aria-hidden="true">lock</span>
-                        <span class="doc-lock-label">
-                          @if (!isAuthenticated()) {
-                            <a routerLink="/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
-                          } @else {
-                            <a routerLink="/espace/abonnement" class="doc-lock-link">Abonnez-vous</a> (plan payant requis)
-                          }
-                        </span>
-                      </div>
-                    }
-                  </li>
-                } @empty {
-                  <p class="muted">Cette fiche n'a pas encore publié de documents téléchargeables.</p>
+
+            <!-- Secteur -->
+            <div class="sidebar-card">
+              <h2 class="sidebar-title">Secteur d'activité</h2>
+              <div class="badges mt-2">
+                @for (s of fiche()!.allSectors; track s.id) {
+                  <span class="badge badge-premium" style="font-size: 11px; padding: 6px 12px;"><span class="material-symbols-outlined" style="font-size: 14px;">{{s.iconUrl || 'business'}}</span> {{ s.name }}</span>
                 }
-              </ul>
-            }
-            @case ('dirigeants') {
-              <h2 class="panel-title">Dirigeants</h2>
-              <p class="muted">Les dirigeants seront affichés dès que l'entreprise les aura déclarés sur la plateforme.</p>
-            }
-          }
-        </section>
+              </div>
+            </div>
+
+          </aside>
+        </div>
       </article>
 
       <!-- Similar Companies Section -->
@@ -421,26 +464,85 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .actions .btn { padding: 12px 20px; }
 
-    .panel {
+    /* Layout Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      margin-top: 32px;
+      align-items: start;
+    }
+    @media (min-width: 1024px) {
+      .content-grid { grid-template-columns: 2fr 1fr; }
+    }
+
+    /* Main Column Sections */
+    .section-card {
       background: var(--color-surface-container-lowest);
       border-radius: var(--radius-2xl);
       padding: 32px;
-      margin-top: 16px;
       box-shadow: var(--shadow-card);
-      animation: ac-fade-in 0.25s ease;
+      margin-bottom: 24px;
+      animation: ac-fade-in 0.4s ease forwards;
     }
     .panel-title {
       font-family: var(--font-headline);
       font-size: 22px;
+      font-weight: 800;
+      color: var(--color-on-surface);
+      margin: 0 0 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-outline-variant);
+    }
+    
+    /* Sidebar */
+    .sidebar-card {
+      background: var(--color-surface-container-lowest);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 24px;
+    }
+    .sidebar-title {
+      font-family: var(--font-headline);
+      font-size: 18px;
       font-weight: 700;
       color: var(--color-on-surface);
       margin: 0 0 16px;
     }
+
+    /* Trust Score Box */
+    .trust-score-box {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--color-surface-container-low);
+      border: 1px solid var(--color-outline-variant);
+      border-radius: var(--radius-xl);
+    }
+    .trust-score-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .trust-score-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .trust-score-inner {
+      width: 52px; height: 52px; background: var(--color-surface-container-low);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; color: var(--color-on-surface);
+    }
+    .trust-score-title {
+      font-size: 18px; font-weight: 800; font-family: var(--font-headline);
+      margin: 0 0 4px; display: flex; align-items: center; gap: 6px;
+    }
+    .trust-score-icon { color: var(--color-primary); font-size: 18px; }
+    .trust-score-desc { font-size: 13px; color: var(--color-secondary); margin: 0; }
+    .trust-score-body { font-size: 14px; line-height: 1.6; color: var(--color-on-surface-variant); padding-top: 16px; border-top: 1px solid var(--color-outline-variant); }
+    .trust-score-body p { margin-bottom: 12px; }
+    .trust-score-body p:last-child { margin-bottom: 0; }
+
     .lead {
       font-size: 16px;
       line-height: 1.7;
       color: var(--color-on-surface-variant);
-      max-width: 760px;
       margin-bottom: 24px;
     }
     .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
@@ -459,10 +561,26 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
       margin: 0;
     }
 
-    .contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-    .contact-list li { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-    .contact-list a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
-    .contact-list a:hover { text-decoration: underline; }
+    .contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+    .contact-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; }
+    .contact-icon-wrap { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-container); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .contact-icon-wrap .material-symbols-outlined { font-size: 18px; }
+    .contact-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-outline); letter-spacing: 0.05em; margin-bottom: 2px; }
+    .contact-value { color: var(--color-on-surface); font-weight: 600; word-break: break-all; }
+    a.contact-value.link { color: var(--color-primary); text-decoration: none; }
+    a.contact-value.link:hover { text-decoration: underline; }
+
+    .socials-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .social-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--color-surface-container-low);
+      color: var(--color-on-surface-variant);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      border: 1px solid var(--color-outline-variant);
+    }
+    .social-btn:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); transform: translateY(-2px); }
+
 
     .services-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 640px) { .services-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -500,17 +618,18 @@ type FicheTab = 'apropos' | 'services' | 'contacts' | 'galerie' | 'localisation'
     .doc-lock-link { color: var(--color-primary); font-weight: 600; text-decoration: none; }
     .doc-lock-link:hover { text-decoration: underline; }
 
-    .muted { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.6; }
-    .mb-6 { margin-bottom: 24px; }
+    .muted { color: var(--color-on-surface-variant); font-size: 14px; line-height: 1.6; margin: 0; }
+    .mt-6 { margin-top: 24px; }
+    .mt-2 { margin-top: 8px; }
 
     .map-wrap {
-      height: 400px;
+      height: 260px; /* Shorter for sidebar */
       border-radius: var(--radius-xl);
       overflow: hidden;
       border: 1px solid var(--color-outline-variant);
       background: var(--color-surface-container-low);
     }
-    .map-el { width: 100%; height: 100%; }
+    .map-el { width: 100%; height: 100%; z-index: 1; }
 
     @keyframes ac-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -709,6 +828,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
 
   /** Exposed to template — drives the locked-state CTA copy. */
   protected readonly isAuthenticated = this.auth.isAuthenticated;
+  private readonly injector = inject(Injector);
 
   protected readonly showReportModal = signal(false);
   protected readonly reportReason = signal('');
@@ -751,16 +871,23 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   private map?: L.Map;
   private marker?: L.Marker;
 
-  protected readonly tabs: TabDescriptor[] = [
-    { id: 'apropos', label: 'À propos', icon: 'description' },
-    { id: 'services', label: 'Services', icon: 'category' },
-    { id: 'contacts', label: 'Contacts', icon: 'contact_page' },
-    { id: 'galerie', label: 'Galerie', icon: 'photo_library' },
-    { id: 'localisation', label: 'Localisation', icon: 'location_on' },
-    { id: 'documents', label: 'Documents', icon: 'folder' },
-    { id: 'dirigeants', label: 'Dirigeants', icon: 'badge' },
-  ];
-  protected readonly activeTab = signal<FicheTab>('apropos');
+  protected readonly socialContacts = computed(() => {
+    // ContactType: Phone=0, Email=1, WhatsApp=2, Facebook=3, LinkedIn=4, Instagram=5, Twitter=6
+    // The API may also return string names due to JsonStringEnumConverter — handle both
+    return this.fiche()?.allContacts.filter(c => {
+      const t = c.type as unknown;
+      return t === ContactType.Facebook || t === ContactType.LinkedIn || t === ContactType.Instagram || t === ContactType.Twitter
+          || t === 'Facebook' || t === 'LinkedIn' || t === 'Instagram' || t === 'Twitter';
+    }) || [];
+  });
+
+  protected readonly directContacts = computed(() => {
+    return this.fiche()?.allContacts.filter(c => {
+      const t = c.type as unknown;
+      return t === ContactType.Phone || t === ContactType.Email || t === ContactType.WhatsApp
+          || t === 'Phone' || t === 'Email' || t === 'WhatsApp';
+    }) || [];
+  });
   protected readonly loading = signal(true);
   private readonly companyData = toSignal<Company | null>(
     this.route.params.pipe(
@@ -841,9 +968,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
     return raw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
   }
 
-  protected setTab(id: string): void {
-    this.activeTab.set(id as FicheTab);
-  }
+
 
   protected getContactIcon(type: number | string): string {
     const t = typeof type === 'string' ? type : (ContactType as any)[type];
@@ -879,13 +1004,12 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // The map is inside a tab, so we need to observe when the 'localisation' tab becomes active
+    // The map is now always in the sidebar, so we initialize it as soon as we have data
     effect(() => {
-      if (this.activeTab() === 'localisation') {
-        // Wait for DOM
-        setTimeout(() => this.initMap(), 50);
+      if (this.fiche()) {
+        setTimeout(() => this.initMap(), 100);
       }
-    });
+    }, { injector: this.injector });
   }
 
   ngOnDestroy(): void {
