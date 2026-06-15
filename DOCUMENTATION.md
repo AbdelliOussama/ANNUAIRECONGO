@@ -1,49 +1,49 @@
-# ANNUAIRE CONGO — Documentation Complète
+# ANNUAIRE CONGO — Complete Documentation
 
-> **Projet de Fin d'Études (PFE)**  
-> Plateforme d'annuaire professionnel pour la République du Congo  
-> Technologies : .NET 10 · Angular 19 · SQL Server  
-
----
-
-## Table des matières
-
-### Documentation Technique
-
-1. [Vue d'ensemble de l'architecture](#1-vue-densemble-de-larchitecture)
-2. [Technologies utilisées](#2-technologies-utilisées)
-3. [Prérequis techniques](#3-prérequis-techniques)
-4. [Installation et configuration](#4-installation-et-configuration)
-5. [Variables d'environnement et configuration](#5-variables-denvironnement-et-configuration)
-6. [Structure du projet](#6-structure-du-projet)
-7. [Base de données et migrations](#7-base-de-données-et-migrations)
-8. [API REST — Référence des endpoints](#8-api-rest--référence-des-endpoints)
-9. [Système de cache](#9-système-de-cache)
-10. [Système de fichiers et stockage](#10-système-de-fichiers-et-stockage)
-11. [Observabilité et journalisation](#11-observabilité-et-journalisation)
-12. [Exécution en environnement local](#12-exécution-en-environnement-local)
-
-### Documentation Fonctionnelle
-
-13. [Objectifs de la plateforme](#13-objectifs-de-la-plateforme)
-14. [Rôles et profils utilisateurs](#14-rôles-et-profils-utilisateurs)
-15. [Fonctionnalités disponibles](#15-fonctionnalités-disponibles)
-16. [Parcours utilisateurs](#16-parcours-utilisateurs)
-17. [Cycle de vie d'une fiche entreprise](#17-cycle-de-vie-dune-fiche-entreprise)
-18. [Système d'abonnements et de plans](#18-système-dabonnements-et-de-plans)
-19. [Procédures d'utilisation](#19-procédures-dutilisation)
+> **End of Studies Project (PFE)**  
+> Professional directory platform for the Republic of the Congo  
+> Technologies: .NET 10 · Angular 19 · SQL Server  
 
 ---
 
-# DOCUMENTATION TECHNIQUE
+## Table of Contents
+
+### Technical Documentation
+
+1. [Architectural Overview](#1-architectural-overview)
+2. [Technologies Used](#2-technologies-used)
+3. [Technical Prerequisites](#3-technical-prerequisites)
+4. [Installation and Configuration](#4-installation-and-configuration)
+5. [Environment Variables and Configuration](#5-environment-variables-and-configuration)
+6. [Project Structure](#6-project-structure)
+7. [Database and Migrations](#7-database-and-migrations)
+8. [REST API — Endpoint Reference](#8-rest-api--endpoint-reference)
+9. [Caching System](#9-caching-system)
+10. [File System and Storage](#10-file-system-and-storage)
+11. [Observability and Logging](#11-observability-and-logging)
+12. [Execution in Local Environment](#12-execution-in-local-environment)
+
+### Functional Documentation
+
+13. [Platform Objectives](#13-platform-objectives)
+14. [User Roles and Profiles](#14-user-roles-and-profiles)
+15. [Available Features](#15-available-features)
+16. [User Journeys](#16-user-journeys)
+17. [Company Listing Lifecycle](#17-company-listing-lifecycle)
+18. [Subscriptions and Plans System](#18-subscriptions-and-plans-system)
+19. [Usage Procedures](#19-usage-procedures)
 
 ---
 
-## 1. Vue d'ensemble de l'architecture
+# TECHNICAL DOCUMENTATION
 
-### 1.1 Principes architecturaux
+---
 
-ANNUAIRE CONGO repose sur une **Clean Architecture** stricte côté backend, associée à une application frontend **Angular** en architecture par fonctionnalités. L'ensemble applique les principes SOLID, garantissant la séparation des responsabilités et la testabilité à chaque couche.
+## 1. Architectural Overview
+
+### 1.1 Architectural Principles
+
+ANNUAIRE CONGO is built on a strict **Clean Architecture** on the backend, paired with a feature-driven **Angular** frontend application. The entire project applies SOLID principles, ensuring separation of concerns and testability at each layer.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -60,7 +60,7 @@ ANNUAIRE CONGO repose sur une **Clean Architecture** stricte côté backend, ass
                            │
 ┌──────────────────────────▼──────────────────────────────────┐
 │                   APPLICATION LAYER                          │
-│         CQRS · MediatR 12 · FluentValidation · Handlers      │
+│         CQRS · MediatR 14 · FluentValidation · Handlers      │
 └──────────────────────────┬──────────────────────────────────┘
                            │
 ┌─────────────┬────────────▼────────────┬────────────────────┐
@@ -72,22 +72,22 @@ ANNUAIRE CONGO repose sur une **Clean Architecture** stricte côté backend, ass
 └─────────────┴─────────────────────────┴────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────────┐
-│                       BASE DE DONNÉES                        │
-│               SQL Server · EF Core 9 Code First              │
+│                        DATABASE                              │
+│              SQL Server · EF Core 10 Code First              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Pattern CQRS avec MediatR
+### 1.2 CQRS Pattern with MediatR
 
-Toutes les opérations applicatives sont exprimées en **Commandes** (mutations d'état) et **Requêtes** (lectures). MediatR dispatch ces objets vers leurs handlers correspondants. Des **Pipeline Behaviors** transversaux sont insérés automatiquement :
+All application operations are expressed as **Commands** (state mutations) and **Queries** (reads). MediatR dispatches these objects to their corresponding handlers. Cross-cutting **Pipeline Behaviors** are automatically inserted:
 
-- **ValidationBehavior** — exécute FluentValidation avant chaque handler
-- **LoggingBehavior** — journalise l'entrée et la sortie de chaque opération
-- **CachingBehavior** — met en cache les résultats des requêtes implémentant `ICachedQuery<T>`
+- **ValidationBehavior** — executes FluentValidation rules before each handler.
+- **LoggingBehavior** — logs the input and output of every operation.
+- **CachingBehavior** — caches query results for queries implementing `ICachedQuery<T>`.
 
-### 1.3 Règle Admin 0
+### 1.3 Admin Rule 0
 
-Les handlers de contenu appliquent une règle transversale : si l'utilisateur courant possède le rôle `Admin`, la vérification de propriété (`IsOwnedBy`) est contournée. Cela est nécessaire car les fiches créées par un administrateur ont pour `OwnerId` un GUID `BusinessOwner` qui ne correspond jamais à l'identifiant Identity d'un administrateur.
+Content handlers apply a cross-cutting rule: if the current user has the `Admin` role, the ownership check (`IsOwnedBy`) is bypassed. This is necessary because listings created by an administrator have an `OwnerId` corresponding to a `BusinessOwner` GUID that never matches the Identity ID of the administrator.
 
 ```csharp
 var isAdmin = _currentUser.IsInRole("Admin");
@@ -100,86 +100,86 @@ if (!isAdmin)
 
 ---
 
-## 2. Technologies utilisées
+## 2. Technologies Used
 
 ### 2.1 Backend (.NET 10)
 
-| Composant | Technologie | Version |
+| Component | Technology | Version |
 |-----------|-------------|---------|
-| Framework | ASP.NET Core | .NET 10 |
-| ORM | Entity Framework Core | 9.x |
-| Messagerie interne | MediatR | 12.x |
+| Framework | ASP.NET Core | .NET 10.0 |
+| ORM | Entity Framework Core | 10.0.x |
+| Internal Messaging | MediatR | 14.1.x |
 | Validation | FluentValidation | Latest |
-| Authentification | ASP.NET Core Identity + JWT Bearer | Latest |
-| Cache | Microsoft.Extensions.Caching.Hybrid | Latest |
-| Génération PDF | QuestPDF | Latest |
-| Journalisation | Serilog + Serilog.Sinks.Seq | Latest |
-| Observabilité | OpenTelemetry + Prometheus | Latest |
-| Documentation API | Scalar / Swashbuckle | Latest |
-| Versionnage API | Asp.Versioning | Latest |
-| Traitement images | SixLabors.ImageSharp | Latest |
-| IA générative | Grok API (xAI) — llama-3.3-70b-versatile | Latest |
+| Authentication | ASP.NET Core Identity + JWT Bearer | Latest |
+| Cache | Microsoft.Extensions.Caching.Hybrid | 10.4.x |
+| PDF Generation | QuestPDF | 2026.5.x |
+| Logging | Serilog + Serilog.Sinks.Seq | Latest |
+| Observability | OpenTelemetry + Prometheus | Latest |
+| API Documentation | Scalar / Swashbuckle | Latest |
+| API Versioning | Asp.Versioning | Latest |
+| Image Processing | SixLabors.ImageSharp | Latest |
+| Generative AI | Grok API (xAI) — llama-3.3-70b-versatile | Latest |
 
 ### 2.2 Frontend (Angular 19)
 
-| Composant | Technologie | Version |
+| Component | Technology | Version |
 |-----------|-------------|---------|
 | Framework | Angular | 19.2.x |
-| Langage | TypeScript | 5.7.x |
-| Styles | TailwindCSS | 3.4.x |
-| Réactivité | RxJS | 7.8.x |
-| État UI | Angular Signals | Natif |
-| Cartographie | Leaflet | 1.9.4 |
-| Schéma de styles | SCSS | — |
+| Language | TypeScript | 5.7.x |
+| Styling | TailwindCSS | 3.4.x |
+| Reactivity | RxJS | 7.8.x |
+| UI State | Angular Signals | Native |
+| Cartography | Leaflet | 1.9.4 |
+| Styles Schema | SCSS | — |
 
-### 2.3 Base de données et infrastructure
+### 2.3 Database and Infrastructure
 
-| Composant | Technologie |
+| Component | Technology |
 |-----------|-------------|
-| Base de données | SQL Server (LocalDB en dev) |
+| Database | SQL Server (LocalDB in dev) |
 | Migrations | EF Core Code First |
-| Stockage fichiers | Système de fichiers local (`wwwroot/uploads/`) |
-| Logs centralisés | Seq (http://ops.seq:5341) |
-| Métriques | Prometheus (endpoint `/metrics`) |
+| File Storage | Local File System (`wwwroot/uploads/`) |
+| Centralized Logs | Seq (http://ops.seq:5341) |
+| Metrics | Prometheus (endpoint `/metrics`) |
 
 ---
 
-## 3. Prérequis techniques
+## 3. Technical Prerequisites
 
-Avant de démarrer le projet, les outils suivants doivent être installés sur la machine de développement :
+Before starting the project, the following tools must be installed on the development machine:
 
 ### 3.1 Backend
 
-- **.NET SDK 10.0** ou supérieur — [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
-- **SQL Server** (version 2019 ou supérieure) ou SQL Server Express / LocalDB
-- **SQL Server Management Studio** (optionnel, pour inspection de la base)
-- **EF Core CLI** : `dotnet tool install --global dotnet-ef`
+- **.NET SDK 10.0** or higher — [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+- **SQL Server** (version 2019 or higher) or SQL Server Express / LocalDB
+- **SQL Server Management Studio** (optional, for database inspection)
+- **EF Core CLI**: `dotnet tool install --global dotnet-ef`
 
 ### 3.2 Frontend
 
-- **Node.js 20 LTS** ou supérieur — [https://nodejs.org](https://nodejs.org)
-- **npm 10+** (inclus avec Node.js)
-- **Angular CLI** : `npm install -g @angular/cli`
+- **Node.js 20 LTS** or higher — [https://nodejs.org](https://nodejs.org)
+- **npm 10+** (included with Node.js)
+- **Angular CLI**: `npm install -g @angular/cli`
 
-### 3.3 Infrastructure (optionnel en développement)
+### 3.3 Infrastructure (optional in development)
 
-- **Docker** (pour Seq et autres services) : `docker run -d -p 5341:80 datalust/seq`
-- **Seq** — agrégateur de logs structurés
+- **Docker** (for Seq and other services): `docker run -d -p 5341:80 datalust/seq`
+- **Seq** — structured log aggregator
 
 ---
 
-## 4. Installation et configuration
+## 4. Installation and Configuration
 
-### 4.1 Cloner le dépôt
+### 4.1 Clone the Repository
 
 ```bash
-git clone <url-du-depot>
+git clone <repository-url>
 cd ANNUAIRECONGO
 ```
 
-### 4.2 Configuration de la base de données
+### 4.2 Database Configuration
 
-Créer ou vérifier la chaîne de connexion dans `src/ANNUAIRECONGO.Api/appsettings.json` :
+Create or verify the connection string in `src/ANNUAIRECONGO.Api/appsettings.json`:
 
 ```json
 "ConnectionStrings": {
@@ -187,68 +187,68 @@ Créer ou vérifier la chaîne de connexion dans `src/ANNUAIRECONGO.Api/appsetti
 }
 ```
 
-Appliquer les migrations et seeder les données initiales :
+Apply migrations and seed initial data:
 
 ```bash
 cd src/ANNUAIRECONGO.Api
 dotnet ef database update
 ```
 
-L'initialisation de la base est effectuée automatiquement au démarrage via `InitialiseDatabaseAsync()`, ce qui crée :
-- 3 utilisateurs Admin
-- 11 utilisateurs EntrepriseOwner
-- 3 plans d'abonnement (Free, Pro, Premium)
-- 15 entreprises de démonstration (entreprises congolaises réelles)
+The database initialization is automatically executed at startup via `InitialiseDatabaseAsync()`, which creates:
+- 3 Admin users
+- 11 EntrepriseOwner users
+- 3 subscription plans (Free, Pro, Premium)
+- 15 demo companies (real Congolese companies)
 
-### 4.3 Démarrer le backend
+### 4.3 Start the Backend
 
 ```bash
 cd src/ANNUAIRECONGO.Api
 dotnet run
 ```
 
-L'API sera disponible sur `https://localhost:7139`. La documentation interactive Scalar est accessible à `https://localhost:7139/scalar`.
+The API will be available at `https://localhost:7139`. The interactive Scalar documentation is accessible at `https://localhost:7139/scalar`.
 
-### 4.4 Installer les dépendances frontend
+### 4.4 Install Frontend Dependencies
 
 ```bash
 cd src/ANNUAIRECONGO.Client
 npm install
 ```
 
-### 4.5 Démarrer le frontend
+### 4.5 Start the Frontend
 
 ```bash
 ng serve
-# ou
+# or
 npm start
 ```
 
-L'application Angular sera disponible sur `http://localhost:4200`.
+The Angular application will be available at `http://localhost:4200`.
 
-### 4.6 Démarrer Seq (optionnel)
+### 4.6 Start Seq (optional)
 
 ```bash
 docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
 ```
 
-Le tableau de bord Seq est accessible sur `http://localhost:5341`.
+The Seq dashboard is accessible at `http://localhost:5341`.
 
 ---
 
-## 5. Variables d'environnement et configuration
+## 5. Environment Variables and Configuration
 
-L'ensemble de la configuration se trouve dans `src/ANNUAIRECONGO.Api/appsettings.json`. En production, ces valeurs doivent être surchargées via `appsettings.Production.json` ou des variables d'environnement système.
+All configuration is located in `src/ANNUAIRECONGO.Api/appsettings.json`. In production, these values must be overridden via `appsettings.Production.json` or system environment variables.
 
-### 5.1 Connexion base de données
+### 5.1 Database Connection
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "<chaîne de connexion SQL Server>"
+  "DefaultConnection": "<SQL Server Connection String>"
 }
 ```
 
-### 5.2 Paramètres de l'application
+### 5.2 Application Settings
 
 ```json
 "AppSettings": {
@@ -262,20 +262,20 @@ L'ensemble de la configuration se trouve dans `src/ANNUAIRECONGO.Api/appsettings
 }
 ```
 
-### 5.3 Authentification JWT
+### 5.3 JWT Authentication
 
 ```json
 "JwtSettings": {
-  "Secret": "<clé secrète HMAC-256 — min. 64 caractères>",
+  "Secret": "<HMAC-256 Secret Key — min. 64 characters>",
   "TokenExpirationInMinutes": 60,
   "Issuer": "localhost",
   "Audience": "localhost"
 }
 ```
 
-Le token d'accès expire après **60 minutes**. Un token de rafraîchissement (refresh token) permet d'obtenir un nouveau token sans ressaisie des identifiants.
+The access token expires after **60 minutes**. A refresh token allows retrieving a new access token without re-entering credentials.
 
-### 5.4 Stockage de fichiers
+### 5.4 File Storage
 
 ```json
 "StorageSettings": {
@@ -284,13 +284,13 @@ Le token d'accès expire après **60 minutes**. Un token de rafraîchissement (r
 }
 ```
 
-Les fichiers sont stockés dans `wwwroot/uploads/{dossier}/{guid}{extension}` et servis en tant que fichiers statiques. Les dossiers autorisés sont : `logos`, `covers`, `documents`, `services`, `images`, `invoices`.
+Files are stored in `wwwroot/uploads/{folder}/{guid}{extension}` and served as static files. The authorized folders are: `logos`, `covers`, `documents`, `services`, `images`, `invoices`.
 
-Extensions acceptées par type :
-- **Images** : `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`
-- **Documents** : `.pdf`, `.doc`, `.docx`, `.xls`, `.xlsx`, `.png`, `.jpg`, `.jpeg`
+Accepted extensions by type:
+- **Images**: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`
+- **Documents**: `.pdf`, `.doc`, `.docx`, `.xls`, `.xlsx`, `.png`, `.jpg`, `.jpeg`
 
-### 5.5 Intelligence artificielle (Grok)
+### 5.5 Artificial Intelligence (Grok)
 
 ```json
 "GrokSettings": {
@@ -298,9 +298,9 @@ Extensions acceptées par type :
 }
 ```
 
-La clé API Grok doit être configurée séparément dans les secrets de l'application (`dotnet user-secrets` ou variable d'environnement `GrokSettings__ApiKey`).
+The Grok API key must be configured separately in the application secrets (`dotnet user-secrets` or environment variable `GrokSettings__ApiKey`).
 
-### 5.6 Journalisation (Serilog)
+### 5.6 Logging (Serilog)
 
 ```json
 "Serilog": {
@@ -314,25 +314,25 @@ La clé API Grok doit être configurée séparément dans les secrets de l'appli
 
 ---
 
-## 6. Structure du projet
+## 6. Project Structure
 
-### 6.1 Solution Backend (5 projets)
+### 6.1 Backend Solution (5 Projects)
 
 ```
 ANNUAIRECONGO/
 ├── src/
-│   ├── ANNUAIRECONGO.Api/                    # Couche présentation
-│   │   ├── Controllers/                      # Contrôleurs REST
-│   │   ├── Middlewares/                      # Middlewares personnalisés
-│   │   ├── Extensions/                       # Extensions de services
-│   │   ├── Program.cs                        # Point d'entrée
+│   ├── ANNUAIRECONGO.Api/                    # Presentation Layer
+│   │   ├── Controllers/                      # REST Controllers
+│   │   ├── Middlewares/                      # Custom Middlewares
+│   │   ├── Extensions/                       # Service Extensions
+│   │   ├── Program.cs                        # Entry Point
 │   │   └── appsettings.json                  # Configuration
 │   │
-│   ├── ANNUAIRECONGO.Application/            # Couche application (CQRS)
+│   ├── ANNUAIRECONGO.Application/            # Application Layer (CQRS)
 │   │   ├── Common/
-│   │   │   ├── Behaviors/                    # Pipeline MediatR
+│   │   │   ├── Behaviors/                    # MediatR Pipeline
 │   │   │   ├── Interfaces/                   # Abstractions (IAppDbContext, IUser…)
-│   │   │   └── Models/                       # Modèles partagés
+│   │   │   └── Models/                       # Shared Models
 │   │   └── Features/
 │   │       ├── AdminLogs/
 │   │       ├── Ai/
@@ -354,15 +354,15 @@ ANNUAIRECONGO/
 │   │       ├── Subscriptions/
 │   │       └── UserSubscriptions/
 │   │
-│   ├── ANNUAIRECONGO.Contracts/              # DTOs partagés (entrée/sortie)
+│   ├── ANNUAIRECONGO.Contracts/              # Shared Input/Output DTOs
 │   │
-│   ├── ANNUAIRECONGO.Domain/                 # Couche domaine (entités pures)
+│   ├── ANNUAIRECONGO.Domain/                 # Domain Layer (Pure Entities)
 │   │   ├── Analytics/
 │   │   ├── BusinessOwners/
 │   │   ├── Companies/
-│   │   │   ├── Company.cs                    # Agrégat principal
+│   │   │   ├── Company.cs                    # Main Aggregate
 │   │   │   ├── Enums/CompanyStatus.cs        # Draft, Pending, Active, Rejected, Suspended
-│   │   │   └── Events/                       # Événements de domaine
+│   │   │   └── Events/                       # Domain Events
 │   │   ├── Geography/                        # Region, City
 │   │   ├── Identity/                         # Role (Admin, EntrepriseOwner, RegularUser)
 │   │   ├── Logs/
@@ -370,15 +370,15 @@ ANNUAIRECONGO/
 │   │   ├── Sectors/
 │   │   ├── Subscriptions/
 │   │   │   ├── Plans/                        # Plan, PlanName (Free/Pro/Premium)
-│   │   │   └── Payments/                     # Payment, événements
+│   │   │   └── Payments/                     # Payment, events
 │   │   ├── UserProfiles/
 │   │   └── UserSubscriptions/
 │   │
-│   └── ANNUAIRECONGO.Infrastructure/         # Couche infrastructure
+│   └── ANNUAIRECONGO.Infrastructure/         # Infrastructure Layer
 │       ├── Data/
-│       │   ├── AppDbContext.cs               # 30 DbSets
-│       │   ├── Configurations/               # Fluent API par entité
-│       │   ├── Migrations/                   # 11 migrations EF Core
+│       │   ├── AppDbContext.cs               # Entity Framework Database Context (22 DbSets)
+│       │   ├── Configurations/               # Fluent API Configuration per entity
+│       │   ├── Migrations/                   # 12 EF Core Database Migrations
 │       │   ├── Interceptors/                 # AuditableEntityInterceptor
 │       │   └── Seeders/                      # PlanSeeder, CompanySeeder…
 │       ├── Services/
@@ -391,642 +391,619 @@ ANNUAIRECONGO/
 │           └── AnalyticsAggregationBackgroundService.cs
 ```
 
-### 6.2 Application Frontend (Angular 19)
+### 6.2 Frontend Application (Angular 19)
 
 ```
 src/ANNUAIRECONGO.Client/src/app/
 ├── core/
-│   ├── guards/                               # AuthGuard, RoleGuard
+│   ├── guards/                               # AuthGuard, RoleGuard, EspaceGuard
 │   ├── interceptors/                         # auth.interceptor.ts (JWT auto-attach)
 │   ├── services/                             # ApiService, AuthService, CompanyService…
-│   └── models/                              # Interfaces TypeScript (Company, User…)
+│   └── models/                              # TypeScript Interfaces (Company, User…)
 │
 ├── features/
-│   ├── admin/                                # Espace administrateur
-│   │   ├── abonnements/                      # Gestion des abonnements
-│   │   ├── audit/                            # Journaux d'audit
-│   │   ├── dashboard/                        # Tableau de bord admin
-│   │   ├── dirigeants/                       # Gestion des BusinessOwners
-│   │   ├── entreprises/                      # Liste + détail + édition des fiches
-│   │   ├── forfaits/                         # Gestion des plans
-│   │   ├── geographie/                       # Régions et villes
-│   │   ├── logs/                             # Journaux système
-│   │   ├── notifications/                    # Centre de notifications admin
-│   │   ├── parametres/                       # Paramètres de la plateforme
-│   │   ├── secteurs/                         # Gestion des secteurs d'activité
-│   │   ├── signalements/                     # Modération des signalements
-│   │   ├── statistiques/                     # Analytiques globaux
-│   │   ├── utilisateurs/                     # Gestion des comptes
-│   │   └── validation/                       # File de validation des fiches
+│   ├── admin/                                # Administrator Space
+│   │   ├── abonnements/                      # Subscription Management
+│   │   ├── audit/                            # Audit Logs
+│   │   ├── dashboard/                        # Admin Dashboard
+│   │   ├── dirigeants/                       # BusinessOwners Management
+│   │   ├── entreprises/                      # List + Detail + Edition of Company sheets
+│   │   ├── forfaits/                         # Plans Management
+│   │   ├── geographie/                       # Regions and Cities
+│   │   ├── logs/                             # System Logs
+│   │   ├── notifications/                    # Admin Notification Center
+│   │   ├── parametres/                       # Platform Settings
+│   │   ├── secteurs/                         # Activity Sectors Management
+│   │   ├── signalements/                     # Reports Moderation
+│   │   ├── statistiques/                     # Global Analytics
+│   │   ├── utilisateurs/                     # Accounts Management
+│   │   └── validation/                       # Validation Queue
 │   │
-│   ├── auth/                                 # Authentification
+│   ├── auth/                                 # Authentication
 │   │   ├── login/
 │   │   ├── register/
 │   │   ├── forgot-password/
 │   │   ├── reset-password/
 │   │   └── verify-email/
 │   │
-│   ├── espace/                               # Espace propriétaire d'entreprise
-│   │   ├── abonnement/                       # Souscription et gestion de l'abonnement
-│   │   ├── compte/                           # Profil du compte
-│   │   ├── console/                          # Tableau de bord entreprise
-│   │   ├── fiche/                            # Édition de la fiche entreprise
-│   │   ├── notifications/                    # Notifications de l'entreprise
-│   │   └── statistiques/                     # Statistiques de la fiche
+│   ├── espace/                               # Company Owner Space
+│   │   ├── abonnement/                       # Subscription management
+│   │   ├── compte/                           # Profile Account details
+│   │   ├── console/                          # Company Dashboard Console
+│   │   ├── fiche/                            # Company Profile Editor
+│   │   ├── notifications/                    # Company Notifications
+│   │   └── statistiques/                     # Business Listing Stats
 │   │
-│   └── public/                               # Pages publiques (non authentifiées)
-│       ├── accueil/                          # Page d'accueil
-│       ├── annuaire/                         # Recherche et liste des entreprises
-│       ├── cartographie/                     # Carte interactive (Leaflet)
-│       ├── contact/                          # Formulaire de contact
-│       ├── extras/                           # Pages supplémentaires
-│       ├── legal/                            # Mentions légales, CGU
-│       ├── not-found/                        # Page 404
-│       ├── registre/                         # Registre des entreprises
-│       ├── secteurs/                         # Navigation par secteur
-│       ├── support/                          # Aide et FAQ
-│       └── tarifs/                           # Page des offres/plans
+│   └── public/                               # Public Pages (Anonymous)
+│       ├── accueil/                          # Homepage
+│       ├── annuaire/                         # Company Search and Directory List
+│       ├── cartographie/                     # Interactive Map (Leaflet)
+│       ├── contact/                          # Contact Form
+│       ├── extras/                           # Supplementary Pages
+│       ├── legal/                            # Legal Notices, T&Cs
+│       ├── not-found/                        # 404 Error Page
+│       ├── registre/                         # National Registry
+│       ├── secteurs/                         # Sector Navigation
+│       ├── support/                          # Help and FAQ
+│       └── tarifs/                           # Pricing and Plans Page
 │
 ├── layout/
-│   ├── admin/                                # Shell de l'espace admin
-│   ├── auth/                                 # Shell des pages d'authentification
-│   ├── espace/                               # Shell de l'espace propriétaire
-│   └── public/                               # Shell des pages publiques (navbar + footer)
+│   ├── admin/                                # Admin Space Shell
+│   ├── auth/                                 # Authentication Pages Shell
+│   ├── espace/                               # Company Owner Space Shell
+│   └── public/                               # Public Pages Shell (Navbar + Footer)
 │
 └── shared/
-    ├── ui/                                   # Composants réutilisables
-    ├── services/                             # Services partagés
-    └── pipes/                               # Pipes Angular custom
+    ├── ui/                                   # Reusable UI Components
+    ├── services/                             # Shared Utilities Services
+    └── pipes/                               # Custom Angular Pipes
 ```
 
 ---
 
-## 7. Base de données et migrations
+## 7. Database and Migrations
 
-### 7.1 DbContext et entités
+### 7.1 DbContext and Entities
 
-Le `AppDbContext` expose **30 DbSets** correspondant aux entités du domaine :
+The `AppDbContext` exposes **22 DbSets** corresponding to domain and system entities:
 
 | DbSet | Description |
 |-------|-------------|
-| `Companies` | Fiches entreprises (agrégat central) |
-| `BusinessOwners` | Profils des propriétaires d'entreprise |
-| `Contacts` | Coordonnées (téléphone, email, réseaux…) |
-| `Images` | Galerie d'images de la fiche |
-| `Documents` | Documents officiels attachés |
-| `Services` | Services proposés par l'entreprise |
-| `Sectors` | Secteurs d'activité |
-| `Regions` | Régions géographiques du Congo |
-| `Cities` | Villes par région |
-| `Subscriptions` | Abonnements des entreprises |
-| `Payments` | Paiements liés aux abonnements |
-| `Plans` | Plans tarifaires (Free, Pro, Premium) |
-| `UserProfiles` | Profils des utilisateurs réguliers |
-| `UserSubscriptions` | Abonnements des utilisateurs particuliers |
-| `Notifications` | Notifications système |
-| `RefreshTokens` | Tokens de rafraîchissement JWT |
-| `Analytics` | Données analytiques brutes |
-| `Reports` | Signalements d'entreprises |
+| `RefreshTokens` | Tokens used for JWT access token renewals |
+| `BusinessOwners` | Profiles of registered company owners (EO) |
+| `Regions` | Geographical departments/regions of Congo |
+| `Cities` | Municipalities and cities within departments |
+| `Companies` | Company listings (central aggregate) |
+| `Sectors` | Activity domains (Maritime, Logistics, etc.) |
+| `CompanyContacts` | Addresses, phone, email, and social networks |
+| `CompanySectors` | Cross-mapping table between companies and sectors |
+| `CompanyImages` | Gallery assets belonging to company sheets |
+| `CompanyDocuments` | Official documents attached (RCCM, NIU, etc.) |
+| `CompanyServices` | Catalog of services offered by listed companies |
+| `CompanyReports` | User-submitted flags for inappropriate content |
+| `AnalyticsDailySummaries` | Aggregated analytics performance metrics |
+| `ContactClicks` | Track actions on contact details |
+| `ProfileViews` | Track daily views per company listing |
+| `AdminLogs` | System records for administrative changes |
+| `Notifications` | Dynamic real-time communications queue |
+| `Subscriptions` | Subscriptions bought by companies |
+| `Payments` | Financial records of bought plans |
+| `Plans` | Catalog of packages (Free, Pro, Premium) |
+| `UserProfiles` | B2C profiles of regular users |
+| `UserSubscriptions` | Subscriptions bought by individual users |
 
-Un **`AuditableEntityInterceptor`** ajoute automatiquement `CreatedAt`, `UpdatedAt` et `CreatedBy` à toutes les entités auditables.
+An **`AuditableEntityInterceptor`** automatically appends `CreatedAt`, `UpdatedAt`, and `CreatedBy` properties to all auditable entity inserts and updates.
 
-### 7.2 Historique des migrations
+### 7.2 Database Migrations History
 
-| # | Nom | Date |
-|---|-----|------|
-| 01 | InitialCreate | Mars 2026 |
-| 02 | AddRefreshTokens | Mars 2026 |
-| 03 | AddUserProfile | Avril 2026 |
-| 04 | AddSubscriptions | Avril 2026 |
-| 05 | AddPayments | Avril 2026 |
-| 06 | AddNotifications | Avril 2026 |
-| 07 | AddAnalytics | Mai 2026 |
-| 08 | AddReports | Mai 2026 |
-| 09 | AddSectors | Mai 2026 |
-| 10 | AddUserSubscription | Juin 2026 |
-| 11 | AddUserProfileAndUserSubscription | Juin 2026 |
+The database is built sequentially using Entity Framework Core. Below is the list of active migrations:
 
----
-
-## 8. API REST — Référence des endpoints
-
-L'API est versionnée (`v1`) et préfixée par `/api/v1/`. La documentation interactive est disponible via Scalar à `https://localhost:7139/scalar`.
-
-### 8.1 Authentification (`/api/v1/auth`)
-
-| Méthode | Endpoint | Rôle requis | Description |
-|---------|----------|-------------|-------------|
-| POST | `/register` | — | Inscription d'un nouvel utilisateur |
-| POST | `/login` | — | Connexion et obtention du JWT |
-| POST | `/refresh-token` | — | Renouvellement du token d'accès |
-| POST | `/forgot-password` | — | Demande de réinitialisation du mot de passe |
-| POST | `/reset-password` | — | Réinitialisation du mot de passe |
-| POST | `/verify-email` | — | Vérification de l'adresse e-mail |
-| GET | `/me` | Authentifié | Informations sur l'utilisateur courant |
-| POST | `/logout` | Authentifié | Déconnexion et invalidation du refresh token |
-
-### 8.2 Entreprises (`/api/v1/companies`)
-
-| Méthode | Endpoint | Rôle requis | Description |
-|---------|----------|-------------|-------------|
-| GET | `/` | — | Liste paginée avec filtres |
-| GET | `/{id}` | — | Détail par ID |
-| GET | `/{slug}` | — | Détail par slug |
-| POST | `/` | Admin, EntrepriseOwner | Créer une fiche |
-| PUT | `/{id}/update-company-profile` | Admin, EntrepriseOwner | Modifier le profil |
-| PUT | `/{id}/update-media` | Admin, EntrepriseOwner | Modifier logo/bannière |
-| POST | `/{id}/submit-company` | Admin, EntrepriseOwner | Soumettre pour validation |
-| POST | `/{id}/validate-company` | Admin | Valider la fiche |
-| POST | `/{id}/reject-company` | Admin | Rejeter avec motif |
-| POST | `/{id}/suspend-company` | Admin | Suspendre la fiche |
-| POST | `/{id}/reactivate-company` | Admin, EntrepriseOwner | Réactiver la fiche |
-| PATCH | `/{id}/verify-company` | Admin | Marquer comme vérifiée |
-| POST | `/{id}/add-contact` | Admin, EntrepriseOwner | Ajouter un contact |
-| DELETE | `/{id}/contacts/{contactId}` | Admin, EntrepriseOwner | Supprimer un contact |
-| PUT | `/{id}/update-contact` | Admin, EntrepriseOwner | Modifier un contact |
-| POST | `/{id}/add-service` | Admin, EntrepriseOwner | Ajouter un service |
-| DELETE | `/{id}/services/{serviceId}` | Admin, EntrepriseOwner | Supprimer un service |
-| POST | `/{id}/add-image` | Admin, EntrepriseOwner | Ajouter une image |
-| DELETE | `/{id}/images/{imageId}` | Admin, EntrepriseOwner | Supprimer une image |
-| POST | `/{id}/add-document` | Admin, EntrepriseOwner | Ajouter un document |
-| DELETE | `/{id}/documents/{documentId}` | Admin, EntrepriseOwner | Supprimer un document |
-| POST | `/{id}/add-report` | Authentifié | Signaler une fiche |
-| GET | `/reports` | Admin | Liste des signalements |
-| POST | `/reports/{reportId}/process` | Admin | Traiter un signalement |
-| POST | `/{id}/generate-description` | Admin, EntrepriseOwner | Générer une description via IA |
-| GET | `/{id}/recommendations` | — | Entreprises similaires recommandées |
-| POST | `/{id}/contact-click` | — | Enregistrer un clic sur un contact |
-
-### 8.3 Abonnements (`/api/v1/subscriptions`)
-
-| Méthode | Endpoint | Rôle requis | Description |
-|---------|----------|-------------|-------------|
-| GET | `/company/{id}` | Admin, EntrepriseOwner | Abonnements d'une entreprise |
-| POST | `/subscribe` | Admin, EntrepriseOwner | Souscrire à un plan |
-| DELETE | `/{id}/cancel` | Admin, EntrepriseOwner | Résilier un abonnement |
-
-### 8.4 Plans (`/api/v1/plans`)
-
-| Méthode | Endpoint | Rôle requis | Description |
-|---------|----------|-------------|-------------|
-| GET | `/` | — | Liste des plans disponibles |
-| GET | `/{id}` | — | Détail d'un plan |
-| POST | `/` | Admin | Créer un plan |
-| PUT | `/{id}` | Admin | Modifier un plan |
-
-### 8.5 Secteurs, Géographie, Statistiques, Notifications
-
-Des endpoints dédiés existent pour : `/api/v1/sectors`, `/api/v1/regions`, `/api/v1/cities`, `/api/v1/stats`, `/api/v1/notifications`, `/api/v1/users`, `/api/v1/business-owners`.
+| # | Migration | Purpose |
+|---|-----------|---------|
+| 01 | `20260322000307_InitialMigration` | Initial database creation including Core tables, Identity integration, and base relations. |
+| 02 | `20260322223422_UpdateSectorTable` | Introduces styling icons and slug parameters to activity sectors. |
+| 03 | `20260328142145_FixNullableFields` | Changes specific fields to nullable status to facilitate partial draft saves. |
+| 04 | `20260328142705_FixNullableFieldsAddress` | Standardizes address constraints to allow draft creation with sparse data. |
+| 05 | `20260505073248_UpdateCompanyTable` | Extends company data attributes including year founded and media assets. |
+| 06 | `20260509232707_UpdateNotificationTable` | Standardizes notification channels and message metadata formatting. |
+| 07 | `20260510160708_AuditFixesPhase2` | Enhances structured logging constraints and registers new system tables. |
+| 08 | `20260510162830_DateTimeOffsetSync` | Converts all temporal values across database tables to `DateTimeOffset` for timezone safety. |
+| 09 | `20260510224532_AddSubmittedAtToCompany` | Appends workflow metrics enabling tracking of listing validation durations. |
+| 10 | `20260516220835_AddEmailToBusinessOwner` | Standardizes directory contact information inside the BusinessOwner domain model. |
+| 11 | `20260519135125_AddTrustScoreToCompany` | Extends validation metadata with trust score metrics. |
+| 12 | `20260607164450_AddUserProfileAndUserSubscription` | Deploys B2C user profile features and individual subscription endpoints. |
 
 ---
 
-## 9. Système de cache
+## 8. REST API — Endpoint Reference
 
-La plateforme utilise **HybridCache** (Microsoft.Extensions.Caching.Hybrid), combinant deux niveaux :
+All endpoints are versioned (`v1`) and prefixed with `/api/v1/`. Interactive documentation is available via Scalar at `https://localhost:7139/scalar`.
 
-| Niveau | Type | Durée |
-|--------|------|-------|
-| L1 | Cache mémoire local (in-process) | 30 secondes |
-| L2 | Cache distribué (IDistributedCache) | 10 minutes |
+### 8.1 Authentication (`/api/v1/auth`)
 
-Les requêtes en lecture intensive (détail d'entreprise, liste des secteurs, etc.) implémentent `ICachedQuery<T>`. Les données sensibles ou fréquemment mutées (abonnements, paiements) n'utilisent pas le cache.
+| Method | Endpoint | Required Role | Description |
+|--------|----------|---------------|-------------|
+| POST | `/register` | — | Registers a new user |
+| POST | `/login` | — | User login; issues JWT access and refresh tokens |
+| POST | `/refresh-token` | — | Refreshes an expired access token |
+| POST | `/forgot-password` | — | Initiates password recovery process |
+| POST | `/reset-password` | — | Resets user password using token |
+| POST | `/verify-email` | — | Verifies a newly registered email address |
+| GET | `/me` | Authenticated | Retrieves profile of currently authenticated user |
+| POST | `/logout` | Authenticated | Discards active session and refresh tokens |
 
-> **Note importante** : `ICachedQuery<Result<T>>` ne peut pas être utilisé lorsque `T` est un type union discriminé (`Result<T>`) car `System.Text.Json` ne peut pas le sérialiser. Dans ce cas, la requête implémente directement `IRequest<Result<T>>`.
+### 8.2 Companies (`/api/v1/companies`)
+
+| Method | Endpoint | Required Role | Description |
+|--------|----------|---------------|-------------|
+| GET | `/` | — | Paged listing of active companies with filters |
+| GET | `/{id}` | — | Retrieves company listing by GUID |
+| GET | `/{slug}` | — | Retrieves company listing by URL Slug |
+| POST | `/` | Admin, EntrepriseOwner | Creates a new draft listing |
+| PUT | `/{id}/update-company-profile` | Admin, EntrepriseOwner | Modifies company details |
+| PUT | `/{id}/update-media` | Admin, EntrepriseOwner | Modifies logo and banner cover URLs |
+| POST | `/{id}/submit-company` | Admin, EntrepriseOwner | Submits listing to verification queue |
+| POST | `/{id}/validate-company` | Admin | Approves pending listing |
+| POST | `/{id}/reject-company` | Admin | Rejects listing with rejection reason details |
+| POST | `/{id}/suspend-company` | Admin | Suspends active company listing |
+| POST | `/{id}/reactivate-company` | Admin, EntrepriseOwner | Reactivates a suspended or draft company |
+| PATCH | `/{id}/verify-company` | Admin | Marks company as "Verified badge" |
+| POST | `/{id}/add-contact` | Admin, EntrepriseOwner | Adds contact point (Phone, WhatsApp, etc.) |
+| DELETE | `/{id}/contacts/{contactId}` | Admin, EntrepriseOwner | Removes contact point |
+| PUT | `/{id}/update-contact` | Admin, EntrepriseOwner | Edits contact properties |
+| POST | `/{id}/add-service` | Admin, EntrepriseOwner | Adds catalogue service |
+| DELETE | `/{id}/services/{serviceId}` | Admin, EntrepriseOwner | Removes catalogue service |
+| POST | `/{id}/add-image` | Admin, EntrepriseOwner | Uploads company image to gallery |
+| DELETE | `/{id}/images/{imageId}` | Admin, EntrepriseOwner | Removes gallery asset |
+| POST | `/{id}/add-document` | Admin, EntrepriseOwner | Uploads official document (PDF, Image) |
+| DELETE | `/{id}/documents/{documentId}` | Admin, EntrepriseOwner | Removes official document |
+| POST | `/{id}/add-report` | Authenticated | Reports listing for moderation |
+| GET | `/reports` | Admin | Retrieves reported listings queue |
+| POST | `/reports/{reportId}/process` | Admin | Moderates report resolution status |
+| POST | `/{id}/generate-description` | Admin, EntrepriseOwner | Generates profile overview text via Grok AI |
+| GET | `/{id}/recommendations` | — | Recommends similar listings |
+| POST | `/{id}/contact-click` | — | Registers analytics interaction |
+
+### 8.3 B2B Subscriptions (`/api/v1/subscriptions`)
+
+| Method | Endpoint | Required Role | Description |
+|--------|----------|---------------|-------------|
+| GET | `/company/{id}` | Admin, EntrepriseOwner | Retrieves company packages history |
+| POST | `/subscribe` | Admin, EntrepriseOwner | Assigns corporate package plan |
+| DELETE | `/{id}/cancel` | Admin, EntrepriseOwner | Disables active automated renewal |
+
+### 8.4 B2C User Subscriptions (`/api/v1/user-subscriptions`)
+
+| Method | Endpoint | Required Role | Description |
+|--------|----------|---------------|-------------|
+| GET | `/my` | RegularUser | Retrieves B2C profile's current active plan |
+| POST | `/subscribe` | RegularUser | Purchases personal package (Free, Pro, Premium) |
+| DELETE | `/{subscriptionId}/cancel` | RegularUser | Terminates active B2C subscription plan |
+
+### 8.5 Plans (`/api/v1/plans`)
+
+| Method | Endpoint | Required Role | Description |
+|--------|----------|---------------|-------------|
+| GET | `/` | — | Lists active purchase plan parameters |
+| GET | `/{id}` | — | Retrieves plan pricing and features details |
+| POST | `/` | Admin | Introduces a new purchase plan |
+| PUT | `/{id}` | Admin | Modifies purchase plan limits and price |
+
+### 8.6 Sectors, Geography, Statistics, and Notifications
+
+Dedicated sub-controllers manage specialized tasks across routes `/api/v1/sectors`, `/api/v1/regions`, `/api/v1/cities`, `/api/v1/stats`, `/api/v1/notifications`, `/api/v1/users`, and `/api/v1/business-owners`.
 
 ---
 
-## 10. Système de fichiers et stockage
+## 9. Caching System
 
-Les fichiers uploadés sont stockés localement dans `wwwroot/uploads/` et servis en tant que fichiers statiques par ASP.NET Core. La structure des dossiers est la suivante :
+The platform leverages **HybridCache** (Microsoft.Extensions.Caching.Hybrid) utilizing a two-tier configuration:
+
+| Layer | Type | Duration |
+|-------|------|----------|
+| L1 | Local In-Process Memory Cache | 30 seconds |
+| L2 | Distributed Cache (IDistributedCache) | 10 minutes |
+
+Highly requested read operations (sectors list, regions dropdown, public profiles) implement `ICachedQuery<T>`. Sensitive data or frequently mutated models (such as active subscriptions or payment validations) bypass the cache layer entirely.
+
+> [!IMPORTANT]
+> **Serialization Constraints**: The cached wrapper `ICachedQuery<Result<T>>` must not be used when `T` is an explicit union type like `Result<T>` because `System.Text.Json` cannot serialize generic wrapper instances. For such operations, query commands inherit standard `IRequest<Result<T>>` interfaces directly.
+
+---
+
+## 10. File System and Storage
+
+Uploaded media files are stored on the local storage partition under `wwwroot/uploads/` and served as static resources by ASP.NET Core:
 
 ```
 wwwroot/
 └── uploads/
-    ├── logos/        # Logos des entreprises
-    ├── covers/       # Bannières/photos de couverture
-    ├── images/       # Galerie d'images de la fiche
-    ├── documents/    # Documents officiels
-    ├── services/     # Images liées aux services
-    └── invoices/     # Factures PDF générées par QuestPDF
+    ├── logos/        # Company brand icons
+    ├── covers/       # Company profile hero banners
+    ├── images/       # Gallery photos
+    ├── documents/    # PDFs and official business papers
+    ├── services/     # Illustration icons for services
+    └── invoices/     # Financial invoice documents (QuestPDF output)
 ```
 
-Chaque fichier est renommé avec un GUID pour éviter les collisions et les accès non autorisés par devinette de nom. La taille maximale par fichier est de **10 MB**.
+To prevent naming collisions and deter directory harvesting exploits, uploaded files are systematically renamed to custom GUIDs. The maximum allowable payload limit is **10 MB** per upload.
 
-L'interface `IStorageService` isole l'implémentation, permettant une migration future vers un stockage cloud (Azure Blob Storage, AWS S3) sans modification des couches supérieures.
-
----
-
-## 11. Observabilité et journalisation
-
-### 11.1 Journalisation structurée (Serilog)
-
-Tous les logs sont structurés (format JSON) et enrichis avec le contexte de la requête HTTP. Ils sont émis vers deux destinations :
-- **Console** : pour le développement local
-- **Seq** : pour la centralisation et la recherche (`http://ops.seq:5341`)
-
-### 11.2 Télémétrie (OpenTelemetry)
-
-L'API expose des métriques Prometheus à l'endpoint `/metrics`, compatibles avec Grafana ou tout collecteur Prometheus standard. OpenTelemetry est configuré pour tracer les requêtes HTTP et les opérations de base de données.
-
-### 11.3 Logs d'audit administrateur
-
-Les actions sensibles effectuées par les administrateurs (validation, rejet, suspension de fiches) sont enregistrées dans la table `AdminLogs` avec l'identité de l'opérateur, la date, et le détail de l'action.
+The layout isolates local storage using the `IStorageService` interface abstraction, enabling seamless future migration to cloud services (such as Azure Blob Storage or AWS S3) without impacting application code.
 
 ---
 
-## 12. Exécution en environnement local
+## 11. Observability and Logging
 
-### 12.1 Démarrage complet
+### 11.1 Structured Logging (Serilog)
+
+Logs are generated in JSON format and enriched with active HTTP headers and environment telemetry. Output targets include:
+- **Console**: Structured output optimized for local development.
+- **Seq**: Centralized logging collector and analytics dashboard (`http://ops.seq:5341`).
+
+### 11.2 Telemetry (OpenTelemetry)
+
+Metrics are collected via OpenTelemetry and exposed on the `/metrics` path for scraping by Prometheus. Traces capture API response times, routing delays, and database query executions.
+
+### 11.3 Administrative Audit Logs
+
+Sensitive modifications executed by administrators (such as approvals, rejections, and suspensions) are logged to the `AdminLogs` database table. Captured data includes administrator ID, target object GUID, action category, and timestamp parameters.
+
+---
+
+## 12. Execution in Local Environment
+
+### 12.1 Launching the Services
 
 ```bash
-# 1. Terminal 1 — Base de données (SQL Server doit être démarré)
-# S'assurer que SQL Server écoute sur localhost
+# 1. SQL Server must be active locally.
 
-# 2. Terminal 2 — API Backend
+# 2. Terminal 1 — Backend Web API
 cd src/ANNUAIRECONGO.Api
 dotnet run
 
-# 3. Terminal 3 — Frontend Angular
+# 3. Terminal 2 — Frontend client
 cd src/ANNUAIRECONGO.Client
 ng serve
 
-# 4. (Optionnel) Terminal 4 — Seq
+# 4. (Optional) Terminal 3 — Centralized logging
 docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
 ```
 
-### 12.2 URLs en développement
+### 12.2 Development Environment URLs
 
-| Service | URL |
-|---------|-----|
-| Frontend Angular | `http://localhost:4200` |
-| API Backend | `https://localhost:7139` |
-| Documentation Scalar | `https://localhost:7139/scalar` |
-| Métriques Prometheus | `https://localhost:7139/metrics` |
-| Seq (logs) | `http://localhost:5341` |
+| Service | Address |
+|---------|---------|
+| Frontend Client | `http://localhost:4200` |
+| Backend API | `https://localhost:7139` |
+| Interactive Scalar Docs | `https://localhost:7139/scalar` |
+| OpenTelemetry Metrics | `https://localhost:7139/metrics` |
+| Centralized Logs (Seq) | `http://localhost:5341` |
 
-### 12.3 Comptes de démonstration
+### 12.3 Seeder Accounts
 
-Lors du premier démarrage, la base est peuplée avec les comptes suivants :
+The database seeder automatically provisions test credentials at initial launch:
 
-| Rôle | E-mail | Mot de passe |
-|------|--------|--------------|
+| Role | Email | Password |
+|------|-------|----------|
 | Admin | `admin@localhost` | `admin@localhost` |
-| EntrepriseOwner | `suzan.businessOwner@localhost` | `suzan.businessOwner@localhost` |
-| RegularUser | (via inscription) | — |
+| Company Owner | `suzan.businessOwner@localhost` | `Password123!` |
+| Regular User | (Create via registration) | — |
 
-> Les comptes de test exacts peuvent varier selon le seeder. Vérifier `ApplicationDbContextInitialiser.cs` pour les valeurs à jour.
-
----
-
-# DOCUMENTATION FONCTIONNELLE
+> [!NOTE]
+> Please refer to [ApplicationDbContextInitialiser.cs](file:///c:/Users/oussa/Desktop/PFE%20Project/ANNUAIRECONGO/src/ANNUAIRECONGO.Infrastructure/Data/ApplicationDbContextInitialiser.cs) to view the complete list of generated accounts.
 
 ---
 
-## 13. Objectifs de la plateforme
-
-**ANNUAIRE CONGO** est une plateforme web d'annuaire professionnel dédiée à la République du Congo. Elle répond à plusieurs objectifs :
-
-**Pour les entreprises et professionnels congolais**, elle offre un espace de visibilité en ligne : création d'une fiche détaillée (présentation, contacts, services, galerie photos, documents), référencement dans les résultats de recherche, et accès à des statistiques de consultation.
-
-**Pour les visiteurs et clients potentiels**, elle constitue un moteur de découverte des entreprises locales : recherche par nom, secteur d'activité, ville ou région ; navigation sur une carte interactive ; consultation des fiches détaillées.
-
-**Pour les administrateurs de la plateforme**, elle fournit un back-office complet pour modérer les inscriptions, gérer les utilisateurs, contrôler les abonnements, et surveiller l'activité globale de la plateforme.
-
-**Pour la visibilité économique**, l'annuaire contribue à la digitalisation du tissu économique congolais, en rendant les entreprises locales plus accessibles et découvrables, notamment pour les partenaires, investisseurs et clients.
+# FUNCTIONAL DOCUMENTATION
 
 ---
 
-## 14. Rôles et profils utilisateurs
+## 13. Platform Objectives
 
-La plateforme distingue quatre types d'utilisateurs, dont trois rôles authentifiés :
+**ANNUAIRE CONGO** is a professional business directory platform designed for the Republic of the Congo. It addresses three primary target audiences:
 
-### 14.1 Visiteur (non authentifié)
+**Congolese Businesses and Professionals** are provided a dedicated online showcase. Through the platform, they can publish rich details (profile overviews, contact points, services catalogue, photo galleries, and documents), benefit from search engine indexing, and monitor traffic metrics.
 
-Accès en lecture seule à toutes les pages publiques. Peut consulter les fiches d'entreprises actives, effectuer des recherches, naviguer sur la carte, consulter les secteurs et les tarifs. Ne peut pas créer de compte entreprise ni accéder à un espace personnel.
+**Visitors and Customers** can find and verify regional businesses. They can search using terms, sector definitions, cities, and regions, browse the interactive Leaflet map, and view listings.
 
-### 14.2 RegularUser — Utilisateur régulier
-
-Utilisateur inscrit sans entreprise associée. Dispose d'un profil personnel. Peut signaler une fiche entreprise inappropriée. Peut souscrire à des plans individuels (UserSubscriptions). Ne peut pas créer ni gérer de fiche entreprise.
-
-### 14.3 EntrepriseOwner — Propriétaire d'entreprise
-
-Utilisateur inscrit et associé à une ou plusieurs fiches entreprises via un profil `BusinessOwner`. Accède à l'**Espace Entreprise** (`/espace`) qui comprend :
-
-- La console de tableau de bord avec les statistiques de la fiche
-- L'éditeur complet de la fiche (informations, contacts, services, galerie, documents)
-- La gestion de l'abonnement et le suivi des paiements
-- Le centre de notifications
-- Le profil du compte
-
-### 14.4 Admin — Administrateur de la plateforme
-
-Accès complet à toutes les fonctionnalités via l'**Espace Administrateur** (`/admin`). L'administrateur peut :
-
-- Consulter et éditer toutes les fiches entreprises (Règle Admin 0)
-- Valider, rejeter, suspendre ou réactiver des fiches
-- Gérer les utilisateurs (comptes, rôles, statuts)
-- Gérer les secteurs d'activité, régions et villes
-- Gérer les plans d'abonnement et les forfaits
-- Consulter les journaux système, d'audit, et d'analytiques globaux
-- Traiter les signalements d'entreprises
-- Configurer les paramètres de la plateforme
-
-> L'administrateur **n'a pas d'espace entreprise** (`/espace`). Toute redirection post-action le ramène vers `/admin`.
+**Platform Administrators** are equipped with a management back-office console to moderate registrations, audit user account permissions, process system alerts, and track payment transactions.
 
 ---
 
-## 15. Fonctionnalités disponibles
+## 14. User Roles and Profiles
 
-### 15.1 Annuaire public
+The platform defines four categories of users (including three authenticated roles):
 
-- **Recherche avancée** : par mot-clé (nom d'entreprise), secteur d'activité, ville, région
-- **Recherche intelligente** (smart search) : recherche sémantique assistée
-- **Pagination** : résultats paginés avec choix de la taille de page
-- **Tri** : par nom, date de création, pertinence
-- **Fiche publique** : photo de couverture, logo, description, contacts, services, galerie d'images, documents téléchargeables, position sur la carte
-- **Recommandations** : entreprises similaires suggérées en bas de fiche
+### 14.1 Visitor (Anonymous)
+- Pervasive read-only access to published listings.
+- Can perform queries, view regions, and check pricing tables.
+- Cannot create company profiles or access personal consoles.
 
-### 15.2 Cartographie interactive
+### 14.2 RegularUser (Individual User)
+- Personal account profile.
+- Can report inappropriate listings for moderation.
+- Can buy individual B2C subscriptions (`UserSubscriptions`) to unlock access to sensitive information.
+- Cannot publish business profiles.
 
-- Carte Leaflet affichant la localisation géographique des entreprises actives
-- Filtrage des entreprises par zone géographique depuis la carte
-- Marqueurs cliquables renvoyant vers la fiche de l'entreprise
+### 14.3 EntrepriseOwner (Company Owner)
+- Corporate profile linked to one or more business sheets via a `BusinessOwner` entity.
+- Grants access to the **Company Space** (`/espace`), featuring:
+  - Analytics dashboard containing visit and contact click statistics.
+  - Profile editor interface (general information, contacts, services, galleries, and documents).
+  - Billing history and subscription upgrade controls.
+  - real-time notification queue.
 
-### 15.3 Espace Entreprise (`/espace`)
+### 14.4 Admin (Administrator)
+- Complete control of system data via the **Admin Panel** (`/admin`).
+- Can edit any listing (bypassing owner checks via **Admin Rule 0**).
+- Can validate, reject, suspend, or reactivate company listings.
+- Moderates user profiles, system flags, geographical sectors, and plans pricing.
+- Inspects system performance metrics and audit trails.
 
-**Console (tableau de bord)** : vues statistiques (nombre de visites, clics sur les contacts, favoris) sur la période choisie.
-
-**Fiche entreprise** : éditeur complet permettant de modifier :
-- Informations générales (nom, description, secteur, localisation, RCCM, NINEA)
-- Logo et photo de couverture
-- Coordonnées de contact (téléphone, e-mail, site web, réseaux sociaux)
-- Services proposés (avec descriptions et images)
-- Galerie d'images
-- Documents officiels (PDF, images)
-
-**Abonnements** : souscription à un plan, historique des paiements, téléchargement des factures PDF.
-
-**Notifications** : centre de notifications en temps réel pour les événements liés à la fiche (validation, rejet, messages…).
-
-**Statistiques** : analytics détaillés de la fiche (évolution des visites, sources de trafic, actions des visiteurs).
-
-### 15.4 Génération de description par IA
-
-Depuis l'éditeur de fiche, le propriétaire ou l'administrateur peut demander à l'IA (Grok, modèle `llama-3.3-70b-versatile`) de générer automatiquement une description professionnelle de l'entreprise, en se basant sur le nom, le secteur, la ville et les services renseignés.
-
-### 15.5 Système de signalement
-
-Tout utilisateur authentifié peut signaler une fiche entreprise pour contenu inapproprié, informations incorrectes ou fraude. Les signalements sont centralisés dans l'espace admin pour traitement.
-
-### 15.6 Espace Administrateur (`/admin`)
-
-- **Dashboard** : KPIs globaux (nombre d'entreprises, utilisateurs actifs, abonnements, revenus)
-- **Validation** : file d'attente des fiches en statut `Pending` à valider ou rejeter
-- **Entreprises** : liste complète avec filtres, accès au détail, édition directe de la fiche, actions de statut
-- **Utilisateurs** : liste, détail, modification du rôle, désactivation de comptes
-- **Dirigeants** : gestion des profils BusinessOwner
-- **Secteurs** : création, modification, suppression des secteurs d'activité
-- **Géographie** : gestion des régions et villes
-- **Forfaits** : gestion des plans tarifaires
-- **Abonnements** : suivi de tous les abonnements actifs et expirés
-- **Signalements** : traitement des signalements reçus
-- **Statistiques** : analytiques globaux de la plateforme
-- **Audit** : journaux des actions administratives
-- **Logs** : journaux système (erreurs, avertissements)
-- **Paramètres** : configuration globale de la plateforme
+> [!IMPORTANT]
+> **Navigation Constraints**: Administrators **do not have access** to the company workspace (`/espace`). Accessing `/espace` triggers the `espaceGuard` which redirects the admin to `/admin`. Admin account settings are managed via a dedicated "Mon compte" link in the topbar next to the notification icon.
 
 ---
 
-## 16. Parcours utilisateurs
+## 15. Available Features
 
-### 16.1 Parcours Visiteur → Découverte d'une entreprise
+### 15.1 Search Directory
+- **Advanced Query Filters**: Filter by keywords, activity sector, city, and department.
+- **Smart Search**: Semantic search assistance for better matches.
+- **Sorting**: Order results by alphabetical name, creation date, and relevance parameters.
+- **Detailed Profiles**: Rich listings presenting contacts, services, map location markers, and downloadable documents.
+- **Recommendations**: Automated matching engine highlighting similar companies below the profile details.
 
-```
-Page d'accueil
-    └── Barre de recherche (ou navigation par secteur)
-            └── Liste des résultats (annuaire)
-                    └── Fiche publique de l'entreprise
-                            ├── Consultation des contacts
-                            ├── Consultation de la galerie
-                            ├── Consultation des documents
-                            └── Carte de localisation
-```
+### 15.2 Interactive Map (Leaflet)
+- Map display displaying geographical coordinates of approved companies.
+- Fully constrained and locked to the Republic of Congo (coordinates centered on ~ -1.5, 15.0, minimum zoom 6, with max bounds viscosity `1.0` to keep the user focused on the country).
+- Interactive marker popups routing users to listing details.
 
-### 16.2 Parcours EntrepriseOwner → Création et publication d'une fiche
+### 15.3 Company Space (`/espace`)
+- **Dashboard Stats**: Track views, contact clicks, and bookmarks over custom time windows.
+- **Profile Customizer**: Manage metadata (business name, category, department, town, and corporate identifiers like RCCM and NIU).
+- **Billing Manager**: Review invoice PDF generations, select package tiers, and follow payments status.
 
-```
-Inscription (rôle EntrepriseOwner)
-    └── Vérification de l'e-mail
-            └── Connexion
-                    └── Espace Entreprise (/espace)
-                            └── Création de la fiche (Draft)
-                                    └── Remplissage du profil
-                                            └── Ajout des contacts, services, images
-                                                    └── Soumission pour validation (→ Pending)
-                                                            └── Validation par l'Admin (→ Active)
-                                                                    └── Fiche visible publiquement
-```
+### 15.4 AI Description Generator
+- Integrated Grok AI helper (`llama-3.3-70b-versatile` model) enabling operators to generate structured company profile text based on name, city, category, and services data.
 
-### 16.3 Parcours Admin → Validation d'une fiche
+### 15.5 Reporting System
+- Authenticated users can report listings violating rules. Submissions are enqueued in the admin dashboard for resolution.
 
-```
-Connexion (rôle Admin)
-    └── Espace Admin (/admin)
-            └── Validation → File de fiches Pending
-                    └── Consultation du détail de la fiche
-                            ├── [Valider] → Fiche passe à Active (visible)
-                            └── [Rejeter + motif] → Fiche passe à Rejected (propriétaire notifié)
-```
+### 15.6 Admin Console (`/admin`)
+- **Main Dashboard**: Platform performance metrics (approved companies count, user retention, financial details).
+- **Approvals Pipeline**: Validation queue of companies in `Pending` status.
+- **Access Management**: Audit logs, user accounts validation, system performance charts, and reports moderation.
 
-### 16.4 Parcours Admin → Édition d'une fiche
+---
+
+## 16. User Journeys
+
+### 16.1 Visitor Journey → Discovering a Business
 
 ```
-Admin → Liste des entreprises
-    └── Détail d'une entreprise
-            └── Bouton "Éditer la fiche"
-                    └── Éditeur complet de la fiche (/admin/entreprises/:id/editer)
-                            └── Modification et sauvegarde
-                                    └── Retour au détail de l'entreprise (/admin/entreprises/:id)
+Homepage
+    └── Search Bar (or Sector Navigation)
+            └── Directory Results List
+                    └── Public Company Profile
+                            ├── View Contacts (Masked if not authorized)
+                            ├── Browse Image Gallery
+                            ├── Access Legal Documents (Lock icon if not authorized)
+                            └── Interactive Map Marker
 ```
 
-### 16.5 Parcours EntrepriseOwner → Souscription à un plan
+### 16.2 EnterpriseOwner Journey → Creating and Publishing a Listing
 
 ```
-Espace Entreprise → Abonnement
-    └── Choix du plan (Free / Pro / Premium)
-            └── Confirmation et paiement
-                    └── Génération de la facture PDF
-                            └── Activation du plan (nouvelles limites débloquées)
+Registration (role: EntrepriseOwner)
+    └── Email Verification
+            └── Login
+                    └── Company Space (/espace)
+                            └── Create New Listing (Draft)
+                                    └── Fill Profile Metadata
+                                            └── Add Contacts, Services, and Images
+                                                    └── Submit for Verification (→ Pending)
+                                                            └── Admin Review & Approval (→ Active)
+                                                                    └── Profile Visible in Public Directory
+```
+
+### 16.3 Admin Journey → Moderating a Listing
+
+```
+Login (role: Admin)
+    └── Admin Space (/admin)
+            └── Validation Queue (Pending listings)
+                    └── View Company Profile details
+                            ├── [Approve] → Profile status set to Active (visible)
+                            └── [Reject + Reason] → Profile status set to Rejected (owner notified)
+```
+
+### 16.4 Admin Journey → Editing a Listing Directly
+
+```
+Admin Space → Companies List
+    └── Select Target Company
+            └── Click "Edit Profile"
+                    └── Dedicated Editor Screen (/admin/entreprises/:id/editer)
+                            └── Modify & Save Changes
+                                    └── Redirect to Profile Detail View (/admin/entreprises/:id)
+```
+
+### 16.5 EnterpriseOwner Journey → Purchasing a Corporate Plan
+
+```
+Company Space → Billing
+    └── Select Subscription Plan (Free / Pro / Premium)
+            └── Confirm Purchase & Submit Payment details
+                    └── Generate Invoice PDF (QuestPDF)
+                            └── Plan Activation (new media and document limits unlocked)
 ```
 
 ---
 
-## 17. Cycle de vie d'une fiche entreprise
+## 17. Company Listing Lifecycle
 
-Une fiche entreprise suit un cycle de vie strict, contrôlé par des méthodes de domaine sur l'agrégat `Company` :
+Company profiles progress through states enforced by domain logic in the `Company` aggregate:
 
 ```
                     ┌─────────────────────────────────────────────────────────┐
                     │                                                         │
-              Création                                                        │
-                 │                                                            │
-                 ▼                                                            │
-           ┌──────────┐    Submit()    ┌─────────┐   Validate()  ┌────────┐  │
-           │  Draft   │ ────────────▶ │ Pending │ ────────────▶ │ Active │  │
-           └──────────┘               └─────────┘               └────────┘  │
-                                           │                         │        │
-                                    Reject(reason)              Suspend()    │
-                                           │                         │        │
-                                           ▼                         ▼        │
-                                    ┌──────────┐              ┌───────────┐  │
-                                    │ Rejected │              │ Suspended │  │
-                                    └──────────┘              └───────────┘  │
-                                                                    │         │
-                                                              Reactivate()   │
-                                                                    │         │
-                                                                    └─────────┘
+               Creation                                                       │
+                  │                                                           │
+                  ▼                                                           │
+            ┌──────────┐    Submit()    ┌─────────┐   Validate()  ┌────────┐  │
+            │  Draft   │ ────────────▶ │ Pending │ ────────────▶ │ Active │  │
+            └──────────┘               └─────────┘               └────────┘  │
+                                            │                         │        │
+                                     Reject(reason)              Suspend()    │
+                                            │                         │        │
+                                            ▼                         ▼        │
+                                     ┌──────────┐              ┌───────────┐  │
+                                     │ Rejected │              │ Suspended │  │
+                                     └──────────┘              └───────────┘  │
+                                                                     │         │
+                                                               Reactivate()   │
+                                                                     │         │
+                                                                     └─────────┘
 ```
 
-| Statut | Valeur enum | Visible publiquement | Modifiable par owner |
-|--------|-------------|---------------------|---------------------|
-| Draft | 0 | Non | Oui |
-| Pending | 1 | Non | Non |
-| Active | 2 | **Oui** | Oui |
-| Rejected | 3 | Non | Oui (peut re-soumettre) |
-| Suspended | 4 | Non | Non |
+| Status | Value | Visible in Search? | Editable by Owner? |
+|--------|-------|--------------------|--------------------|
+| **Draft** | 0 | No | Yes |
+| **Pending** | 1 | No | No |
+| **Active** | 2 | **Yes** | Yes |
+| **Rejected** | 3 | No | Yes (Can modify and re-submit) |
+| **Suspended** | 4 | No | No |
 
 ---
 
-## 18. Système d'abonnements et de plans
+## 18. Subscriptions and Plans System
 
-La plateforme propose trois plans tarifaires avec des limites différentes sur le contenu de la fiche :
+The platform offers three B2B packages with varying storage and feature limits:
 
-| Plan | Prix | Durée | Images max | Documents max | Fonctionnalités |
-|------|------|-------|------------|---------------|-----------------|
-| **Free** | 0 XAF | 365 jours | 3 | 1 | Fiche de base |
-| **Pro** | 25 000 XAF | 30 jours | 10 | 5 | Fiche enrichie, statistiques avancées |
-| **Premium** | 75 000 XAF | 30 jours | 50 | 20 | Fiche complète, mise en avant, toutes fonctionnalités |
+| Plan | Price | Duration | Max Images | Max Documents | Key Features |
+|------|-------|----------|------------|---------------|--------------|
+| **Free** | 0 XAF | 365 Days | 3 | 1 | Basic profile details. |
+| **Pro** | 25,000 XAF | 30 Days | 10 | 5 | Rich profile, advanced analytics dashboard. |
+| **Premium** | 75,000 XAF | 30 Days | 50 | 20 | Complete profile details, featured badge priority, full analytics. |
 
-Le plan `Free` est attribué automatiquement à la création de toute nouvelle fiche. L'upgrade vers Pro ou Premium déverrouille des limites supérieures et des fonctionnalités additionnelles.
-
-Chaque paiement génère une **facture PDF** (via QuestPDF) téléchargeable depuis l'espace abonnement.
+- **Free Tier Default**: Every new listing defaults to the Free plan.
+- **Sensitive Data Visibility**: Access control rules hide highly sensitive data (such as **RCCM**, **NIU**, **Équipe**, and **Documents Légaux**) from public users and users on the Free subscription plan.
+- **Visibility Requirements**:
+  - The company **owner** can view all details.
+  - **Administrators** can view all details.
+  - **Paid users** can view all details. A regular user (B2C) must have an active paid `UserSubscription`. A business owner (B2B) must have a premium company status (`isPremium === true`) verified via `BusinessOwnerService.getMyCompanies()`.
 
 ---
 
-## 19. Procédures d'utilisation
+## 19. Usage Procedures
 
-### 19.1 Créer un compte entreprise
+### 19.1 Setting Up a Business Account
 
-1. Accéder à la page d'inscription (`/auth/register`)
-2. Remplir le formulaire avec le rôle `EntrepriseOwner`
-3. Vérifier l'adresse e-mail via le lien reçu
-4. Se connecter (`/auth/login`)
-5. Accéder à l'espace entreprise (`/espace`)
-6. Compléter la fiche entreprise
+1. Navigate to the registration page (`/auth/inscription`).
+2. Register an account assigning the role `EntrepriseOwner`.
+3. Confirm registration via the verification email link.
+4. Log in (`/auth/connexion`).
+5. Open the company dashboard space (`/espace`).
+6. Initiate profile details configuration.
 
-### 19.2 Soumettre une fiche pour validation
+### 19.2 Publishing a Listing
 
-1. Depuis l'espace entreprise, accéder à l'éditeur de fiche
-2. S'assurer que les champs obligatoires sont remplis (nom, secteur, ville, description)
-3. Cliquer sur **"Soumettre pour validation"**
-4. La fiche passe en statut `Pending` — elle est désormais dans la file de validation de l'admin
-5. Attendre la notification de validation ou de rejet
+1. Go to the profile editor in `/espace`.
+2. Complete all required inputs (Name, Category/Sector, City, Description).
+3. Click the **"Submit for validation"** button.
+4. The listing moves to `Pending` status and enters the administrative validation queue.
+5. You will receive a notification once the review is completed.
 
-### 19.3 Valider une fiche (Admin)
+### 19.3 Reviewing Listings (Admin)
 
-1. Se connecter avec un compte Admin
-2. Accéder à `Admin → Validation`
-3. Consulter la fiche soumise
-4. Cliquer sur **"Valider"** ou **"Rejeter"** (avec motif)
-5. Le propriétaire reçoit une notification
+1. Log in with an Admin account.
+2. Navigate to `Admin → Validation`.
+3. Select a pending company listing.
+4. Click **"Validate"** to publish or **"Reject"** (with rejection reason feedback).
+5. The listing owner is notified.
 
-### 19.4 Éditer une fiche en tant qu'administrateur
+### 19.4 Direct Profile Edits (Admin)
 
-1. Accéder à `Admin → Entreprises`
-2. Rechercher et cliquer sur l'entreprise à modifier
-3. Cliquer sur **"Éditer la fiche"** (bouton en haut du détail)
-4. Effectuer les modifications dans l'éditeur complet
-5. Cliquer sur **"Enregistrer"** — l'administrateur est redirigé vers le détail de l'entreprise
+1. Open `Admin → Entreprises`.
+2. Find the target company listing.
+3. Click the **"Edit Profile"** button at the top.
+4. Modify company details and click **"Save"**. You are returned to the details view.
 
-### 19.5 Générer une description par IA
+### 19.5 Generating Profiles via AI
 
-1. Depuis l'éditeur de fiche (espace entreprise ou admin)
-2. S'assurer que le nom de l'entreprise, le secteur, la ville et au moins un service sont renseignés
-3. Cliquer sur le bouton **"Générer avec l'IA"**
-4. L'IA génère automatiquement une description professionnelle
-5. Relire, modifier si nécessaire, puis sauvegarder
+1. Open the profile editor (either in the company workspace or admin panel).
+2. Ensure Company Name, Category, City, and at least one service are completed.
+3. Click **"Generate with AI"**.
+4. The AI analyzes inputs and creates a professional overview. Review and save.
 
-### 19.6 Souscrire à un plan payant
+### 19.6 Upgrading to a Corporate Plan
 
-1. Depuis l'espace entreprise, accéder à **Abonnement**
-2. Choisir le plan Pro ou Premium
-3. Confirmer la souscription
-4. Procéder au paiement via les moyens disponibles
-5. L'abonnement est activé immédiatement
-6. La facture PDF est disponible dans l'historique des paiements
+1. Navigate to the **Subscription** page in the company workspace.
+2. Select either the Pro or Premium plan.
+3. Complete the checkout form and submit payment.
+4. The plan activates immediately upon success, and the PDF invoice becomes downloadable from your billing history.
 
-### 19.7 Signaler une entreprise
+### 19.7 Reporting Listings
 
-1. Accéder à la fiche publique de l'entreprise à signaler
-2. Cliquer sur le bouton **"Signaler"**
-3. Sélectionner le motif du signalement et renseigner les détails
-4. Confirmer l'envoi du signalement
-5. L'équipe d'administration examine le signalement
+1. View the public company listing profile.
+2. Click the **"Report"** button.
+3. Choose the reporting reason, enter supporting comments, and confirm.
+4. The report is submitted to administrators.
 
-### 19.8 Rechercher une entreprise
+### 19.8 Searching Listings
 
-1. Depuis la page d'accueil ou l'annuaire (`/annuaire`)
-2. Saisir un terme de recherche dans la barre de recherche
-3. Optionnellement filtrer par secteur, ville ou région
-4. Parcourir les résultats paginés
-5. Cliquer sur une fiche pour accéder au détail complet
+1. Go to the homepage or search directory (`/annuaire`).
+2. Input target terms in the search bar.
+3. Filter search results by sector, city, or department.
+4. Browse directory records and select a business name to open the detailed page.
 
 ---
 
 ## Annexes
 
-### A. Glossaire
+### A. Glossary
 
-| Terme | Définition |
-|-------|------------|
-| **Fiche entreprise** | Page de présentation d'une entreprise dans l'annuaire |
-| **BusinessOwner** | Profil associé à un propriétaire d'entreprise (distinct du compte Identity) |
-| **Draft** | Fiche créée mais non soumise, visible uniquement par son propriétaire |
-| **Pending** | Fiche soumise en attente de validation par un administrateur |
-| **Active** | Fiche validée et visible publiquement dans l'annuaire |
-| **CQRS** | Command Query Responsibility Segregation — séparation des lectures et écritures |
-| **JWT** | JSON Web Token — standard d'authentification par token |
-| **HybridCache** | Combinaison de cache mémoire local et cache distribué |
-| **Règle Admin 0** | Bypass de la vérification de propriété pour les administrateurs |
-| **Slug** | Identifiant textuel lisible dans les URLs (ex: `societe-generale-congo`) |
+| Term | Definition |
+|------|------------|
+| **Fiche entreprise** | The detailed showcase page of a business listing in the directory. |
+| **BusinessOwner** | Domain entity profile representing a business owner (distinct from the login Identity account). |
+| **Draft** | A listing that is not yet verified, visible only to its creator. |
+| **Pending** | A listing waiting for administrator approval. |
+| **Active** | A validated listing visible in the public search directory. |
+| **CQRS** | Command Query Responsibility Segregation — design separating data writes from reads. |
+| **JWT** | JSON Web Token — standard authentication token format. |
+| **HybridCache** | Cache setup combining in-memory local caching and distributed backend caching. |
+| **Admin Rule 0** | Bypasses ownership verification checks for administrators. |
+| **Slug** | Human-readable URL identifier derived from the listing name (e.g., `societe-generale-congo`). |
 
-### B. Codes d'erreur courants
+### B. Common Error Codes
 
-| Code HTTP | Signification |
-|-----------|---------------|
-| 400 | Requête invalide — données manquantes ou incorrectes |
-| 401 | Non authentifié — token absent ou expiré |
-| 403 | Accès refusé — rôle insuffisant ou non propriétaire |
-| 404 | Ressource introuvable |
-| 409 | Conflit — ressource déjà existante |
-| 500 | Erreur serveur interne |
+| HTTP Code | Label | Application Meaning |
+|-----------|-------|---------------------|
+| 400 | Bad Request | Invalid inputs, missing properties, or format exceptions. |
+| 401 | Unauthorized | Missing, malformed, or expired JWT session token. |
+| 403 | Forbidden | Access denied due to insufficient roles or not owning the listing. |
+| 404 | Not Found | Target record does not exist in the database. |
+| 409 | Conflict | Resource already exists (e.g., duplicate email registration). |
+| 500 | Internal Server Error | Unhandled backend exception. |
 
-### C. Conventions de code
+### C. Code Conventions
 
 **Backend (.NET)**
-- Namespaces en PascalCase, correspondant à la structure des dossiers
-- Commandes nommées `[Action][Entité]Command` (ex: `AddContactCommand`)
-- Queries nommées `Get[Entité][Critère]Query` (ex: `GetCompanyByIdQuery`)
-- Handlers toujours `sealed`, un par fichier
-- Errors exposées via des méthodes statiques dans les classes `[Entité]Errors`
+- Namespaces are written in PascalCase matching project directory trees.
+- Command requests are named `[Action][Entity]Command` (e.g., `AddContactCommand`).
+- Query requests are named `Get[Entity][Criteria]Query` (e.g., `GetCompanyByIdQuery`).
+- MediatR handlers are marked `sealed` and declared one handler per file.
+- Business validation errors are declared as static properties in `[Entity]Errors` classes.
 
 **Frontend (Angular)**
-- Composants en `kebab-case` pour les noms de fichiers, `PascalCase` pour les classes
-- Services injectés via `inject()` (API fonctionnelle Angular 19)
-- État UI géré via `signal<>()` et `computed()`
-- Tous les appels HTTP retournent des `Observable<T>` via `ApiService`
-- Routes lazy-loaded via `loadComponent()`
+- Files use kebab-case formatting, and component classes use PascalCase.
+- Services are injected using Angular 19 functional `inject()` methods.
+- UI state properties are managed via reactive `signal<>()` and `computed()` hooks.
+- HTTP operations return RxJS `Observable<T>` instances wrapping ApiService responses.
+- Router definitions load components lazily using dynamic `loadComponent()` calls.
 
 ---
 
-*Documentation générée le 12 juin 2026 — ANNUAIRE CONGO v1.0*
+*Documentation generated on June 15, 2026 — ANNUAIRE CONGO v1.0*
