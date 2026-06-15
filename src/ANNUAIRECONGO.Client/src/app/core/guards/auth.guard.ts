@@ -39,6 +39,27 @@ export const publicGuard: CanActivateFn = (route, state) => {
 };
 
 /**
+ * Prevents Admins from accessing the Espace client, redirecting them to the Admin panel.
+ * Forwards unauthenticated users to login.
+ */
+export const espaceGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    router.navigate(['/auth/connexion'], { queryParams: { returnUrl: state.url } });
+    return false;
+  }
+
+  if (authService.isAdmin()) {
+    router.navigate(['/admin']);
+    return false;
+  }
+
+  return true;
+};
+
+/**
  * Allows access only to users with the EntrepriseOwner role.
  * Admin is a platform super-admin with no company or espace; they are
  * explicitly redirected to /admin.

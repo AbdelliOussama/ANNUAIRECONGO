@@ -15,10 +15,16 @@ import { BehaviorSubject, switchMap, catchError, of, debounceTime } from 'rxjs';
   imports: [RouterLink, SkeletonComponent],
   template: `
     <div class="page">
-      <header class="page-head">
-        <p class="eyebrow">Gestion</p>
-        <h1>Entreprises</h1>
-        <p class="sub">Toutes les fiches enregistrées sur la plateforme.</p>
+      <header class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <p class="eyebrow">Gestion</p>
+          <h1>Entreprises</h1>
+          <p class="sub">Toutes les fiches enregistrées sur la plateforme.</p>
+        </div>
+        <a routerLink="/admin/entreprises/creer" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">add_business</span>
+          Créer une fiche
+        </a>
       </header>
 
       <div class="toolbar">

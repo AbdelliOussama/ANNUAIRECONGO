@@ -40,6 +40,9 @@ import { AuthService } from '@core/services/auth.service';
         <button class="topbar-btn" type="button" aria-label="Paramètres" routerLink="/admin/parametres">
           <span class="material-symbols-outlined" aria-hidden="true">settings</span>
         </button>
+        <button class="topbar-btn" type="button" aria-label="Profil" routerLink="/admin/compte">
+          <span class="material-symbols-outlined" aria-hidden="true">person</span>
+        </button>
 
         <div class="topbar-user" role="button" tabindex="0" [attr.aria-label]="userAriaLabel()" aria-haspopup="true">
           <div class="avatar" aria-hidden="true">{{ initials() }}</div>

@@ -119,7 +119,6 @@ export class AdminSidebarComponent {
       links: [
         { path: '/admin/validation',        label: 'Validation fiches', icon: 'fact_check' },
         { path: '/admin/entreprises',       label: 'Entreprises',       icon: 'apartment' },
-        { path: '/admin/entreprises/creer', label: 'Créer une fiche',   icon: 'add_business' },
         { path: '/admin/paiements',         label: 'Paiements',         icon: 'payments' },
         { path: '/admin/utilisateurs',      label: 'Utilisateurs',      icon: 'group',         superAdminOnly: true },
         { path: '/admin/dirigeants',        label: 'Dirigeants',        icon: 'badge' },

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, publicGuard, entrepriseOwnerGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, publicGuard, entrepriseOwnerGuard, espaceGuard } from './core/guards/auth.guard';
 
 /**
  * Annuaire Congo — route table.
@@ -182,8 +182,8 @@ export const routes: Routes = [
     path: 'espace',
     loadComponent: () =>
       import('./layout/espace/espace-layout.component').then((m) => m.EspaceLayoutComponent),
-    canActivate: [authGuard],
-    canActivateChild: [authGuard],
+    canActivate: [espaceGuard],
+    canActivateChild: [espaceGuard],
     children: [
       {
         path: '',
@@ -319,6 +319,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/entreprises/admin-company-detail.component').then((m) => m.AdminCompanyDetailComponent),
         title: 'Gestion entreprise — Admin',
+      },
+      {
+        path: 'compte',
+        loadComponent: () =>
+          import('./features/espace/compte/compte.component').then((m) => m.EspaceCompteComponent),
+        title: 'Mon profil — Admin',
       },
       {
         path: 'utilisateurs',

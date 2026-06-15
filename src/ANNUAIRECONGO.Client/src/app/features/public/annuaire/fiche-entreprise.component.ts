@@ -9,6 +9,8 @@ import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.componen
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { CompanyService } from '@core/services/company.service';
 import { AuthService } from '@core/services/auth.service';
+import { UserSubscriptionService } from '@core/services/user-subscription.service';
+import { BusinessOwnerService } from '@core/services/business-owner.service';
 import { Company, CompanyContact, CompanyDocument, ContactType, DocumentType as DocTypeEnum } from '@core/models/company.model';
 import { FR } from '@core/i18n/fr.constants';
 import * as L from 'leaflet';
@@ -137,8 +139,13 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
               <p class="lead">{{ fiche()!.description }}</p>
               <dl class="kv">
                 <div><dt>Année de création</dt><dd>{{ fiche()!.yearFounded || 'N/A' }}</dd></div>
-                <div><dt>Numéro RCCM</dt><dd>{{ fiche()!.rccm || 'N/A' }}</dd></div>
-                <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
+                @if (canViewSensitiveData()) {
+                  <div><dt>Numéro RCCM</dt><dd>{{ fiche()!.rccm || 'N/A' }}</dd></div>
+                  <div><dt>NIU</dt><dd>{{ fiche()!.niu || 'N/A' }}</dd></div>
+                } @else {
+                  <div><dt>Numéro RCCM</dt><dd class="muted"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">lock</span> Masqué</dd></div>
+                  <div><dt>NIU</dt><dd class="muted"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">lock</span> Masqué</dd></div>
+                }
               </dl>
 
               @if (fiche()!.trustScore !== undefined && fiche()!.trustScore !== null) {
@@ -169,7 +176,20 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
             <!-- Équipe / Dirigeants -->
             <section class="section-card" aria-labelledby="sec-equipe">
               <h2 id="sec-equipe" class="panel-title">Équipe (Dirigeants)</h2>
-              <p class="muted">Les dirigeants seront affichés dès que l'entreprise les aura déclarés sur la plateforme.</p>
+              @if (canViewSensitiveData()) {
+                <p class="muted">Les dirigeants seront affichés dès que l'entreprise les aura déclarés sur la plateforme.</p>
+              } @else {
+                <div class="doc-locked" style="margin-top: 16px;">
+                  <span class="material-symbols-outlined doc-lock-icon" aria-hidden="true">lock</span>
+                  <span class="doc-lock-label">
+                    @if (!isAuthenticated()) {
+                      <a routerLink="/auth/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
+                    } @else {
+                      <a routerLink="/espace/abonnement" class="doc-lock-link">Abonnez-vous</a> (plan payant requis)
+                    }
+                  </span>
+                </div>
+              }
             </section>
 
             <!-- Services & Produits -->
@@ -219,14 +239,14 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
                         <strong>{{ getDocLabel(doc.docType) }}</strong>
                         <p>{{ doc.description || 'Document sans description' }}</p>
                       </div>
-                      @if (doc.fileUrl) {
+                      @if (doc.fileUrl && canViewSensitiveData()) {
                         <a [href]="doc.fileUrl" target="_blank" class="btn btn-ghost btn-sm">Ouvrir</a>
                       } @else {
                         <div class="doc-locked">
                           <span class="material-symbols-outlined doc-lock-icon" aria-hidden="true">lock</span>
                           <span class="doc-lock-label">
                             @if (!isAuthenticated()) {
-                              <a routerLink="/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
+                              <a routerLink="/auth/connexion" class="doc-lock-link">Connectez-vous</a> pour accéder
                             } @else {
                               <a routerLink="/espace/abonnement" class="doc-lock-link">Abonnez-vous</a> (plan payant requis)
                             }
@@ -825,6 +845,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly titleService = inject(Title);
   private readonly metaService  = inject(Meta);
+  private readonly userSubService = inject(UserSubscriptionService);
 
   /** Exposed to template — drives the locked-state CTA copy. */
   protected readonly isAuthenticated = this.auth.isAuthenticated;
@@ -833,6 +854,17 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly showReportModal = signal(false);
   protected readonly reportReason = signal('');
   protected readonly isReporting = signal(false);
+  
+  protected readonly hasPaidSubscription = signal(false);
+  
+  protected readonly canViewSensitiveData = computed(() => {
+    const user = this.auth.currentUser();
+    const f = this.fiche();
+    if (!user || !f) return false;
+    if (this.auth.isAdmin()) return true;
+    if (f.ownerId === user.id) return true;
+    return this.hasPaidSubscription();
+  });
 
   report() {
     if (!this.auth.isAuthenticated()) {
@@ -911,6 +943,33 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     effect(() => {
+      const user = this.auth.currentUser();
+      if (user && !this.auth.isAdmin()) {
+        if (this.auth.isRegularUser()) {
+          this.userSubService.getMySubscription().pipe(
+            catchError(() => of(null))
+          ).subscribe(sub => {
+            if (sub && sub.status === 'Active' && (sub.planPrice > 0 || sub.planName !== 'Free')) {
+              this.hasPaidSubscription.set(true);
+            } else {
+              this.hasPaidSubscription.set(false);
+            }
+          });
+        } else {
+          const boService = this.injector.get(BusinessOwnerService);
+          boService.getMyCompanies().pipe(
+            catchError(() => of([]))
+          ).subscribe(companies => {
+            const hasPremium = companies.some(c => c.isPremium);
+            this.hasPaidSubscription.set(hasPremium);
+          });
+        }
+      } else {
+        this.hasPaidSubscription.set(false);
+      }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
       const f = this.fiche();
       if (f) {
         const title = `${f.name} - ${f.sectorLabel} à ${f.city} | Annuaire Congo`;
@@ -956,6 +1015,7 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
       allContacts: c.contacts || [],
       address: c.address || 'N/A',
       yearFounded: c.yearFounded,
+      ownerId: c.ownerId,
       rccm: c.rccm,
       niu: c.niu,
       gallery: c.images || [],

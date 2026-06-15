@@ -209,9 +209,17 @@ export class CartographieComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     if (!this.mapEl) return;
 
+    const congoBounds = L.latLngBounds(
+      L.latLng(-5.5, 11.0), // South-West
+      L.latLng(3.8, 18.8)   // North-East
+    );
+
     this.map.set(L.map(this.mapEl.nativeElement, {
-      center: [-1.5, 15.0],
-      zoom: 5,
+      center: [-0.8, 15.0],
+      zoom: 6,
+      minZoom: 6,
+      maxBounds: congoBounds,
+      maxBoundsViscosity: 1.0,
       zoomControl: true,
       attributionControl: true,
     }));
