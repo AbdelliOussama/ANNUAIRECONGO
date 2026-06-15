@@ -821,10 +821,10 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly FR = FR;
   private readonly companyService = inject(CompanyService);
   private readonly auth           = inject(AuthService);
-  private readonly route = inject(ActivatedRoute);
+  private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly titleService = inject(Title);
-  private readonly metaService = inject(Meta);
+  private readonly metaService  = inject(Meta);
 
   /** Exposed to template — drives the locked-state CTA copy. */
   protected readonly isAuthenticated = this.auth.isAuthenticated;
@@ -835,6 +835,13 @@ export class FicheEntrepriseComponent implements AfterViewInit, OnDestroy {
   protected readonly isReporting = signal(false);
 
   report() {
+    if (!this.auth.isAuthenticated()) {
+      // Redirect unauthenticated users to login, preserving the current URL as returnUrl
+      this.router.navigate(['/auth/connexion'], {
+        queryParams: { returnUrl: this.router.url }
+      });
+      return;
+    }
     this.reportReason.set('');
     this.showReportModal.set(true);
   }

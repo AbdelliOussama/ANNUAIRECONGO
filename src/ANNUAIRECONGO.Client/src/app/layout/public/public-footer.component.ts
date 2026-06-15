@@ -150,7 +150,6 @@ export class PublicFooterComponent {
       links: [
         { path: '/annuaire',    label: FR.nav.annuaire },
         { path: '/registre',    label: 'Registre National' },
-        { path: '/dirigeants',  label: 'Dirigeants' },
         { path: '/trust-score', label: 'Trust Score' },
       ],
     },
@@ -159,7 +158,6 @@ export class PublicFooterComponent {
       links: [
         { path: '/tarifs',         label: FR.nav.tarifs },
         { path: '/appels-offres',  label: 'Appels d\'Offres' },
-        { path: '/rapport-ia',     label: 'Rapports IA' },
         { path: '/cartographie',   label: FR.nav.cartographie },
       ],
     },

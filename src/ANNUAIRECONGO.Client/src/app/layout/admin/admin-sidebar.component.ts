@@ -123,6 +123,7 @@ export class AdminSidebarComponent {
         { path: '/admin/paiements',         label: 'Paiements',         icon: 'payments' },
         { path: '/admin/utilisateurs',      label: 'Utilisateurs',      icon: 'group',         superAdminOnly: true },
         { path: '/admin/dirigeants',        label: 'Dirigeants',        icon: 'badge' },
+        { path: '/admin/rapport-ia',        label: 'Rapport IA',        icon: 'psychology' },
       ],
     },
     {

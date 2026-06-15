@@ -93,12 +93,13 @@ export const routes: Routes = [
         title: 'Confidentialité — Annuaire Congo',
       },
 
-      /* Hors-spec, kept per user decision */
+      /* Hors-spec — admin-only: redirect to the admin panel equivalent.
+         Guards live on the /admin/* parent layout (authGuard + adminGuard),
+         so no guard is needed here on the redirect itself. */
       {
         path: 'dirigeants',
-        loadComponent: () =>
-          import('./features/public/extras/dirigeants.component').then((m) => m.DirigeantsComponent),
-        title: 'Dirigeants — Annuaire Congo',
+        redirectTo: '/admin/dirigeants',
+        pathMatch: 'full',
       },
       {
         path: 'trust-score',
@@ -108,9 +109,8 @@ export const routes: Routes = [
       },
       {
         path: 'rapport-ia',
-        loadComponent: () =>
-          import('./features/public/extras/rapport-ia.component').then((m) => m.RapportIaComponent),
-        title: 'Rapports IA — Annuaire Congo',
+        redirectTo: '/admin/rapport-ia',
+        pathMatch: 'full',
       },
       {
         path: 'appels-offres',
@@ -379,6 +379,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/abonnements/admin-payments.component').then((m) => m.AdminPaymentsComponent),
         title: 'Validation des paiements — Admin',
+      },
+      {
+        path: 'rapport-ia',
+        loadComponent: () =>
+          import('./features/public/extras/rapport-ia.component').then((m) => m.RapportIaComponent),
+        title: 'Rapports IA — Admin',
       },
     ],
   },
