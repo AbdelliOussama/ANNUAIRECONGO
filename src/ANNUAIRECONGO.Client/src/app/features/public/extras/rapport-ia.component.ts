@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { SectorService, SectorIntelligenceReport } from '../../../core/services/sector.service';
 import { Sector } from '../../../core/models/company.model';
 
@@ -7,7 +6,7 @@ import { Sector } from '../../../core/models/company.model';
   selector: 'ac-rapport-ia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [],
   template: `
     <!-- Detailed Report Modal Overlay (Placed at the very top for absolute stacking safety) -->
     @if (selectedReport(); as report) {
@@ -176,16 +175,7 @@ import { Sector } from '../../../core/models/company.model';
       </div>
     </section>
 
-    <section class="cta py-20 text-center max-w-4xl mx-auto px-6 border-t border-outline-variant/20">
-      <h2 class="text-3xl font-black font-headline mb-4">Accès complet à l'intelligence économique</h2>
-      <p class="text-secondary max-w-xl mx-auto mb-8">
-        Souscrivez au forfait Premium pour télécharger l'intégralité des analyses, recevoir les notifications par e-mail en temps réel et accéder à nos outils de prédiction.
-      </p>
-      <a routerLink="/tarifs" class="btn btn-primary py-4 px-10 text-sm inline-flex items-center gap-2">
-        <span>Découvrir le forfait Premium</span>
-        <span class="material-symbols-outlined text-sm">stars</span>
-      </a>
-    </section>
+
   `,
   styles: [`
     :host { display: block; }
