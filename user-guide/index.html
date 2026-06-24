@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Guide Utilisateur — Annuaire Congo</title>
+  <meta name="description"
+    content="Guide complet d'utilisation de la plateforme Annuaire Congo : fonctionnalités publiques, espace propriétaire, administration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- ══ TOPBAR ══ -->
+  <header class="topbar">
+    <a class="topbar__brand" data-nav="bienvenue">
+      <img class="topbar__brand-logo" src="images/logo.png" alt="Annuaire Congo" />
+      <div class="topbar__brand-label">
+        <span>Annuaire Congo</span>
+        <span>Guide Utilisateur</span>
+      </div>
+    </a>
+    <div class="topbar__center">
+      <div class="search-box">
+        <span class="material-icons-outlined icon">search</span>
+        <input id="searchInput" type="text" placeholder="Rechercher dans le guide… (Ctrl+K)" autocomplete="off" />
+        <kbd>Ctrl+K</kbd>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <button class="topbar__btn topbar__hamburger" id="hamburger" title="Menu">
+        <span class="material-icons-outlined">menu</span>
+      </button>
+      <button class="topbar__btn" id="themeBtn" title="Changer de thème">
+        <span class="material-icons-outlined" id="themeIcon">light_mode</span>
+      </button>
+      <a class="topbar__btn topbar__dev-link" href="../docs/index.html" title="Documentation développeur">
+        <span class="material-icons-outlined" style="font-size:1rem;">code</span>Dev Docs
+      </a>
+    </div>
+  </header>
+
+  <!-- ══ OVERLAY ══ -->
+  <div class="sidebar__overlay" id="overlay"></div>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <nav>
+
+      <div class="sidebar__group">
+        <span class="sidebar__label">Démarrage</span>
+        <a class="sidebar__link active" data-nav="bienvenue">
+          <span class="material-icons-outlined mi">waving_hand</span>Bienvenue
+        </a>
+        <a class="sidebar__link" data-nav="connexion">
+          <span class="material-icons-outlined mi">login</span>Connexion & Inscription
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <span class="sidebar__label">Pages Publiques</span>
+        <a class="sidebar__link" data-nav="accueil">
+          <span class="material-icons-outlined mi">home</span>Page d'accueil
+        </a>
+        <a class="sidebar__link" data-nav="annuaire">
+          <span class="material-icons-outlined mi">business</span>Annuaire des entreprises
+        </a>
+        <a class="sidebar__link" data-nav="fiche">
+          <span class="material-icons-outlined mi">article</span>Fiche entreprise
+        </a>
+        <a class="sidebar__link" data-nav="recherche">
+          <span class="material-icons-outlined mi">search</span>Recherche & Filtres
+        </a>
+        <a class="sidebar__link" data-nav="secteurs">
+          <span class="material-icons-outlined mi">category</span>Secteurs d'activité
+        </a>
+        <a class="sidebar__link" data-nav="cartographie">
+          <span class="material-icons-outlined mi">map</span>Carte interactive
+        </a>
+        <a class="sidebar__link" data-nav="trust-score">
+          <span class="material-icons-outlined mi">verified</span>Trust Score
+        </a>
+        <a class="sidebar__link" data-nav="tarifs">
+          <span class="material-icons-outlined mi">workspace_premium</span>Forfaits & Tarifs
+        </a>
+        <a class="sidebar__link" data-nav="registre">
+          <span class="material-icons-outlined mi">list_alt</span>Registre national
+        </a>
+        <a class="sidebar__link" data-nav="congobot">
+          <span class="material-icons-outlined mi">smart_toy</span>CongoBot IA
+        </a>
+        <a class="sidebar__link" data-nav="contact">
+          <span class="material-icons-outlined mi">contact_support</span>Contact & Support
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <span class="sidebar__label">Espace connecté</span>
+        <a class="sidebar__link" data-nav="console">
+          <span class="material-icons-outlined mi">dashboard</span>Console (tableau de bord)
+        </a>
+        <a class="sidebar__link" data-nav="fiche-creer">
+          <span class="material-icons-outlined mi">storefront</span>Créer ma fiche entreprise
+        </a>
+        <a class="sidebar__link" data-nav="fiche-editer">
+          <span class="material-icons-outlined mi">edit</span>Modifier ma fiche
+        </a>
+        <a class="sidebar__link" data-nav="media">
+          <span class="material-icons-outlined mi">perm_media</span>Images & Documents
+        </a>
+        <a class="sidebar__link" data-nav="statistiques">
+          <span class="material-icons-outlined mi">bar_chart</span>Statistiques d'audience
+        </a>
+        <a class="sidebar__link" data-nav="abonnement">
+          <span class="material-icons-outlined mi">credit_card</span>Mon abonnement
+        </a>
+        <a class="sidebar__link" data-nav="historique">
+          <span class="material-icons-outlined mi">receipt_long</span>Historique de paiement
+        </a>
+        <a class="sidebar__link" data-nav="notifications">
+          <span class="material-icons-outlined mi">notifications</span>Notifications
+        </a>
+        <a class="sidebar__link" data-nav="compte">
+          <span class="material-icons-outlined mi">manage_accounts</span>Mon compte
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <span class="sidebar__label">Administration</span>
+        <a class="sidebar__link" data-nav="admin-dashboard">
+          <span class="material-icons-outlined mi">admin_panel_settings</span>Tableau de bord
+        </a>
+        <a class="sidebar__link" data-nav="admin-validation">
+          <span class="material-icons-outlined mi">fact_check</span>Validation des fiches
+        </a>
+        <a class="sidebar__link" data-nav="admin-entreprises">
+          <span class="material-icons-outlined mi">domain</span>Entreprises
+        </a>
+        <a class="sidebar__link" data-nav="admin-utilisateurs">
+          <span class="material-icons-outlined mi">group</span>Utilisateurs
+        </a>
+        <a class="sidebar__link" data-nav="admin-dirigeants">
+          <span class="material-icons-outlined mi">badge</span>Dirigeants
+        </a>
+        <a class="sidebar__link" data-nav="admin-secteurs">
+          <span class="material-icons-outlined mi">layers</span>Secteurs
+        </a>
+        <a class="sidebar__link" data-nav="admin-geographie">
+          <span class="material-icons-outlined mi">location_on</span>Géographie
+        </a>
+        <a class="sidebar__link" data-nav="admin-forfaits">
+          <span class="material-icons-outlined mi">sell</span>Forfaits
+        </a>
+        <a class="sidebar__link" data-nav="admin-signalements">
+          <span class="material-icons-outlined mi">flag</span>Signalements
+        </a>
+        <a class="sidebar__link" data-nav="admin-audit">
+          <span class="material-icons-outlined mi">history</span>Journal d'audit
+        </a>
+        <a class="sidebar__link" data-nav="admin-paiements">
+          <span class="material-icons-outlined mi">payments</span>Validation des paiements
+        </a>
+        <a class="sidebar__link" data-nav="admin-rapport-ia">
+          <span class="material-icons-outlined mi">psychology</span>Rapport IA
+        </a>
+        <a class="sidebar__link" data-nav="admin-parametres">
+          <span class="material-icons-outlined mi">settings</span>Paramètres plateforme
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <span class="sidebar__label">Aide</span>
+        <a class="sidebar__link" data-nav="faq">
+          <span class="material-icons-outlined mi">help_outline</span>FAQ
+        </a>
+        <a class="sidebar__link" data-nav="depannage">
+          <span class="material-icons-outlined mi">build_circle</span>Dépannage
+        </a>
+      </div>
+
+    </nav>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+    <div class="content">
+
+      <!-- ══════════════ BIENVENUE ══════════════ -->
+      <section class="page" id="page-bienvenue">
+        <div class="page__crumb">Guide Utilisateur</div>
+        <h1 class="page__title">Bienvenue sur<br><span class="gradient-text">Annuaire Congo</span> 👋</h1>
+        <p class="page__sub">Le guide complet pour utiliser toutes les fonctionnalités de la plateforme — de la
+          recherche publique à la gestion avancée de votre entreprise.</p>
+
+        <div class="banner">
+          <span class="material-icons-outlined mi">info</span>
+          <div>
+            <strong>Qu'est-ce qu'Annuaire Congo ?</strong>
+            La plateforme numérique de référencement des entreprises de la République du Congo (Congo-Brazzaville). Elle
+            permet à tout visiteur de trouver des entreprises, aux propriétaires de gérer leur visibilité, et aux
+            administrateurs de superviser l'ensemble de la plateforme.
+          </div>
+        </div>
+
+        <div class="hero-grid">
+          <div class="hero-card" data-nav="annuaire">
+            <div class="icon">🔍</div>
+            <h3>Explorer l'annuaire</h3>
+            <p>Parcourez et recherchez les entreprises — sans créer de compte.</p>
+          </div>
+          <div class="hero-card" data-nav="connexion">
+            <div class="icon">🚀</div>
+            <h3>Créer un compte</h3>
+            <p>Inscrivez-vous pour gérer votre entreprise ou votre profil.</p>
+          </div>
+          <div class="hero-card" data-nav="fiche-creer">
+            <div class="icon">🏢</div>
+            <h3>Référencer mon entreprise</h3>
+            <p>Créez et enrichissez la fiche de votre entreprise.</p>
+          </div>
+          <div class="hero-card" data-nav="admin-dashboard">
+            <div class="icon">🛡️</div>
+            <h3>Administration</h3>
+            <p>Gérez la plateforme, validez les fiches et suivez les statistiques.</p>
+          </div>
+        </div>
+
+        <h2>Qui peut utiliser Annuaire Congo ?</h2>
+        <div class="role-grid">
+          <div class="role-card">
+            <div class="emoji">👀</div><strong>Visiteur</strong>
+            <p>Accès libre à l'annuaire, aux fiches, à la carte, au Trust Score et à CongoBot — sans compte.</p>
+          </div>
+          <div class="role-card">
+            <div class="emoji">👤</div><strong>Utilisateur</strong>
+            <p>Compte inscrit : profil personnel, notifications, historique.</p>
+          </div>
+          <div class="role-card">
+            <div class="emoji">🏢</div><strong>Propriétaire</strong>
+            <p>Gère sa fiche entreprise, consulte ses stats, souscrit à un forfait.</p>
+          </div>
+          <div class="role-card">
+            <div class="emoji">🛡️</div><strong>Administrateur</strong>
+            <p>Supervise la plateforme : validations, secteurs, forfaits, audit, signalements.</p>
+          </div>
+        </div>
+
+        <figure class="screenshot" id="ss-home1">
+          <img src="images/homepage_1781602700489.png" alt="Accueil Annuaire Congo" />
+          <figcaption>Page d'accueil publique — accessible à tous sans connexion. Barre de recherche, secteurs en
+            vedette et CongoBot.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ══════════════ CONNEXION & INSCRIPTION ══════════════ -->
+      <section class="page" id="page-connexion">
+        <div class="page__crumb">Démarrage</div>
+        <h1 class="page__title">Connexion & Inscription</h1>
+        <p class="page__sub">Créez votre compte ou connectez-vous pour accéder à votre espace personnel.</p>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">info</span>
+          <div><strong>Pas obligatoire pour parcourir</strong> — La navigation dans l'annuaire, la recherche, la carte
+            et CongoBot sont accessibles sans compte. Un compte est nécessaire uniquement pour gérer une fiche
+            entreprise ou consulter vos notifications.</div>
+        </div>
+
+        <h2>S'inscrire</h2>
+        <figure class="screenshot">
+          <img src="images/inscription_1781602789732.png" alt="Formulaire d'inscription" />
+          <figcaption>Formulaire d'inscription — remplissez les champs requis pour créer votre compte gratuitement.
+          </figcaption>
+        </figure>
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Cliquez sur « S'inscrire »</div>
+              <div class="step__desc">Depuis n'importe quelle page, cliquez sur <strong>S'inscrire</strong> en haut à
+                droite de la barre de navigation ou sur le bouton présent sur la page d'accueil. L'URL est
+                <code>/auth/inscription</code>.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Remplissez le formulaire</div>
+              <div class="step__desc">
+                <ul>
+                  <li><strong>Prénom et Nom</strong></li>
+                  <li><strong>Adresse e-mail</strong> — votre identifiant de connexion</li>
+                  <li><strong>Mot de passe</strong> et sa confirmation</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Vérifiez votre adresse e-mail</div>
+              <div class="step__desc">Un e-mail de vérification est envoyé à l'adresse saisie. Cliquez sur le lien
+                contenu dans cet e-mail pour activer votre compte. Vérifiez vos spams si vous ne le recevez pas sous 5
+                minutes.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Compte activé — connectez-vous</div>
+              <div class="step__desc">Une fois l'e-mail confirmé, vous pouvez vous connecter et accéder à votre espace.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Se connecter</h2>
+        <figure class="screenshot">
+          <img src="images/connexion_1781602781355.png" alt="Formulaire de connexion" />
+          <figcaption>Formulaire de connexion — saisissez votre e-mail et mot de passe.</figcaption>
+        </figure>
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Accédez à la page de connexion</div>
+              <div class="step__desc">Cliquez sur <strong>Connexion</strong> en haut à droite (URL :
+                <code>/auth/connexion</code>).
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Saisissez vos identifiants</div>
+              <div class="step__desc">Entrez votre adresse e-mail et votre mot de passe, puis cliquez sur <strong>Se
+                  connecter</strong>.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Redirection automatique</div>
+              <div class="step__desc">Vous êtes redirigé vers votre console (<code>/espace</code> pour les propriétaires
+                et utilisateurs, <code>/admin</code> pour les administrateurs).</div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Mot de passe oublié</h2>
+        <p>Sur la page de connexion, cliquez sur <strong>« Mot de passe oublié ? »</strong> (URL :
+          <code>/auth/mot-de-passe-oublie</code>). Saisissez votre e-mail et un lien de réinitialisation vous sera
+          envoyé. Ce lien est valable 24 heures. Suivez le lien, saisissez votre nouveau mot de passe sur la page
+          <code>/auth/reinitialiser-mot-de-passe</code>.
+        </p>
+
+        <h2>Se déconnecter</h2>
+        <p>Cliquez sur votre avatar ou votre prénom en haut à droite, puis sélectionnez <strong>« Déconnexion
+            »</strong>. Vous serez redirigé vers la page d'accueil publique.</p>
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">warning</span>
+          <div><strong>Conseil de sécurité</strong> — Déconnectez-vous toujours sur un ordinateur partagé ou public.
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ACCUEIL ══════════════ -->
+      <section class="page" id="page-accueil">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Page d'accueil</h1>
+        <p class="page__sub">La porte d'entrée publique de la plateforme — URL : <code>/</code></p>
+
+        <figure class="screenshot">
+          <img src="images/homepage_1781602703526.png" alt="Page d'accueil" />
+          <figcaption>Page d'accueil avec barre de recherche centrale, secteurs en vedette et entreprises mises en
+            avant.</figcaption>
+        </figure>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">🔍</div>
+            <h4>Recherche centrale</h4>
+            <p>Tapez un nom d'entreprise ou un secteur directement depuis l'en-tête pour lancer une recherche.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📂</div>
+            <h4>Secteurs en vedette</h4>
+            <p>Les 6 secteurs stratégiques s'affichent sous forme de cartes cliquables pour filtrer directement.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⭐</div>
+            <h4>Entreprises vedettes</h4>
+            <p>Les fiches Premium avec badge vedette apparaissent en avant sur la page d'accueil.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🤖</div>
+            <h4>CongoBot</h4>
+            <p>L'assistant IA est accessible via le bouton flottant en bas à droite de toutes les pages.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🗺️</div>
+            <h4>Accès rapide</h4>
+            <p>Liens directs vers l'annuaire, la carte interactive, les appels d'offres et les tarifs.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📊</div>
+            <h4>Compteurs live</h4>
+            <p>Nombre total d'entreprises référencées, secteurs et régions couvertes affichés en temps réel.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ANNUAIRE ══════════════ -->
+      <section class="page" id="page-annuaire">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Annuaire des entreprises</h1>
+        <p class="page__sub">Liste complète des entreprises actives — URL : <code>/annuaire</code></p>
+
+        <figure class="screenshot">
+          <img src="images/annuaire_1781602714054.png" alt="Liste des entreprises" />
+          <figcaption>Annuaire — liste paginée des entreprises avec informations clés et filtres rapides.</figcaption>
+        </figure>
+
+        <h2>Informations affichées sur chaque carte</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Élément</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Logo / Photo</td>
+                <td>Image principale de l'entreprise</td>
+              </tr>
+              <tr>
+                <td>Nom</td>
+                <td>Raison sociale complète</td>
+              </tr>
+              <tr>
+                <td>Secteur(s)</td>
+                <td>Domaine(s) d'activité principal(aux)</td>
+              </tr>
+              <tr>
+                <td>Localisation</td>
+                <td>Ville et région</td>
+              </tr>
+              <tr>
+                <td>Trust Score</td>
+                <td>Score de fiabilité IA de 0 à 100</td>
+              </tr>
+              <tr>
+                <td>Badge <span class="badge badge--gold">Premium</span></td>
+                <td>Forfait Pro ou Premium actif</td>
+              </tr>
+              <tr>
+                <td>Badge <span class="badge badge--green">Vérifié</span></td>
+                <td>Entreprise vérifiée par un administrateur après contrôle KYC des documents officiels</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Pagination et tri</h2>
+        <p>Les résultats sont paginés (20 entreprises par page). Vous pouvez changer le nombre de résultats par page et
+          naviguer entre les pages via les boutons en bas de liste. Le tri s'effectue par pertinence, date d'ajout ou
+          Trust Score.</p>
+      </section>
+
+      <!-- ══════════════ FICHE ENTREPRISE ══════════════ -->
+      <section class="page" id="page-fiche">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Fiche entreprise</h1>
+        <p class="page__sub">Page de détail d'une entreprise — URL : <code>/annuaire/:id</code></p>
+
+        <p>Cliquez sur n'importe quelle carte dans l'annuaire pour accéder à la fiche complète. La fiche regroupe toutes
+          les informations disponibles sur l'entreprise.</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">📝</div>
+            <h4>Informations générales</h4>
+            <p>Nom, description, secteur(s), année de création, RCCM, NIU.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📞</div>
+            <h4>Coordonnées</h4>
+            <p>Téléphone(s), e-mail, site web — cliquables directement.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🖼️</div>
+            <h4>Galerie photos</h4>
+            <p>Photos du local, produits et équipes téléchargées par le propriétaire.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🛠️</div>
+            <h4>Services proposés</h4>
+            <p>Liste des services ou produits déclarés par l'entreprise.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📄</div>
+            <h4>Documents</h4>
+            <p>Documents officiels consultables (registre de commerce, brochures…).</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⭐</div>
+            <h4>Trust Score</h4>
+            <p>Score de fiabilité calculé par IA, avec détail des indicateurs.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📍</div>
+            <h4>Carte de localisation</h4>
+            <p>Position géographique sur la carte avec possibilité d'itinéraire.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🔗</div>
+            <h4>Recommandations</h4>
+            <p>Suggestions IA d'entreprises similaires dans le même secteur ou région.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🚩</div>
+            <h4>Signaler</h4>
+            <p>Bouton pour signaler une information incorrecte ou un problème.</p>
+          </div>
+        </div>
+
+        <figure class="screenshot">
+          <img src="images/Trust Score sur une fiche entreprise.png" alt="Trust Score sur une fiche" />
+          <figcaption>Trust Score affiché en haut d'une fiche entreprise — indicateur visuel de fiabilité de 0 à 100.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ══════════════ RECHERCHE ══════════════ -->
+      <section class="page" id="page-recherche">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Recherche & Filtres</h1>
+        <p class="page__sub">Trouvez précisément l'entreprise qui correspond à vos besoins.</p>
+
+        <figure class="screenshot">
+          <img src="images/Figure 4.5. Interface de recherche avec filtres et résultats paginés.png"
+            alt="Interface de recherche" />
+          <figcaption>Interface de recherche avancée avec filtres combinés et résultats paginés en temps réel.
+          </figcaption>
+        </figure>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Tapez un mot-clé</div>
+              <div class="step__desc">Saisissez le nom d'une entreprise, d'un secteur ou d'un service dans la barre de
+                recherche. La recherche est déclenchée automatiquement.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Affinez avec les filtres</div>
+              <div class="step__desc">Utilisez le panneau de filtres latéral pour combiner :<ul>
+                  <li><strong>Secteur d'activité</strong> (Maritime, Logistique, Industrie…)</li>
+                  <li><strong>Région / Ville</strong> (Brazzaville, Pointe-Noire, Dolisie…)</li>
+                  <li><strong>Entreprises vérifiées uniquement</strong></li>
+                  <li><strong>Entreprises Premium uniquement</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Consultez les résultats</div>
+              <div class="step__desc">Les résultats se mettent à jour en temps réel. Cliquez sur une fiche pour accéder
+                aux détails.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Réinitialisez les filtres</div>
+              <div class="step__desc">Cliquez sur <strong>« Réinitialiser »</strong> ou effacez le champ de recherche
+                pour revenir à la liste complète.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="material-icons-outlined mi">lightbulb</span>
+          <div><strong>Astuce CongoBot</strong> — Vous ne savez pas quoi chercher ? Décrivez votre besoin à CongoBot en
+            langage naturel et il vous orientera vers les bons résultats.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ SECTEURS ══════════════ -->
+      <section class="page" id="page-secteurs">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Secteurs d'activité</h1>
+        <p class="page__sub">Explorez les entreprises par domaine d'activité — URL : <code>/secteurs</code></p>
+
+        <figure class="screenshot">
+          <img src="images/secteurs_1781602725416.png" alt="Secteurs d'activité" />
+          <figcaption>Page des secteurs — 6 secteurs stratégiques disponibles, chacun avec le nombre d'entreprises
+            référencées.</figcaption>
+        </figure>
+
+        <h2>Les 6 secteurs disponibles</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Secteur</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>🚢 Maritime &amp; Portuaire</td>
+                <td>Consignation, assistance portuaire, transport maritime</td>
+              </tr>
+              <tr>
+                <td>🚛 Logistique &amp; Transport</td>
+                <td>Manutention, transport routier, logistique internationale</td>
+              </tr>
+              <tr>
+                <td>📋 Douane &amp; Transit</td>
+                <td>Commissionnaires en douane, transit, dédouanement</td>
+              </tr>
+              <tr>
+                <td>🏭 Industrie</td>
+                <td>Agro-industrie, pétrole, brasseries, production</td>
+              </tr>
+              <tr>
+                <td>🔒 Sécurité</td>
+                <td>Gardiennage, vidéosurveillance, transport de fonds</td>
+              </tr>
+              <tr>
+                <td>📦 Manutention &amp; Entreposage</td>
+                <td>Levage, entreposage, gestion de stocks</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Cliquez sur un secteur pour afficher immédiatement toutes les entreprises qui y appartiennent.</p>
+      </section>
+
+      <!-- ══════════════ CARTE ══════════════ -->
+      <section class="page" id="page-cartographie">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Carte interactive</h1>
+        <p class="page__sub">Visualisez les entreprises géolocalisées — URL : <code>/cartographie</code></p>
+
+        <figure class="screenshot">
+          <img src="images/cartographie_1781602768192.png" alt="Carte interactive" />
+          <figcaption>Carte interactive — chaque épingle représente une entreprise. Cliquez pour voir sa fiche.
+          </figcaption>
+        </figure>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Ouvrez la carte</div>
+              <div class="step__desc">Cliquez sur <strong>« Cartographie »</strong> dans le menu de navigation.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Naviguez</div>
+              <div class="step__desc">Utilisez la molette pour zoomer/dézoomer, faites glisser la carte pour explorer
+                les régions. Les boutons <strong>+</strong> et <strong>−</strong> permettent le zoom précis.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Cliquez sur une épingle</div>
+              <div class="step__desc">Un pop-up affiche le nom, le secteur et l'adresse de l'entreprise. Cliquez sur
+                <strong>« Voir la fiche »</strong> pour accéder aux détails complets.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">info</span>
+          <div><strong>Regroupement automatique</strong> — Quand plusieurs entreprises sont proches sur la carte, elles
+            se regroupent en un cercle numéroté. Zoomez ou cliquez sur le groupe pour les séparer.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ TRUST SCORE ══════════════ -->
+      <section class="page" id="page-trust-score">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Trust Score</h1>
+        <p class="page__sub">Score de fiabilité calculé par IA pour chaque entreprise — URL : <code>/trust-score</code>
+        </p>
+
+        <p>Le Trust Score est un indicateur de 0 à 100 calculé automatiquement par intelligence artificielle (Groq /
+          LLaMA 3.3 70B) pour chaque entreprise. Il mesure la fiabilité et la complétude du profil selon 8 critères
+          objectifs.</p>
+
+        <h2>Les 8 indicateurs du Trust Score</h2>
+
+        <div class="trust-item">
+          <div class="trust-item__name">📄 Numéro RCCM</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:100%"></div>
+          </div>
+          <div class="trust-item__pts">Élevé</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">🔢 Numéro NIU</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:85%"></div>
+          </div>
+          <div class="trust-item__pts">Élevé</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">📁 Documents officiels</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:70%"></div>
+          </div>
+          <div class="trust-item__pts">Moyen</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">🛠️ Services déclarés</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:55%"></div>
+          </div>
+          <div class="trust-item__pts">Moyen</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">🖼️ Photos du local</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:50%"></div>
+          </div>
+          <div class="trust-item__pts">Moyen</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">📅 Âge d'existence</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:40%"></div>
+          </div>
+          <div class="trust-item__pts">Faible</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">✅ Complétude du profil</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:65%"></div>
+          </div>
+          <div class="trust-item__pts">Moyen</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-item__name">🚩 Signalements reçus</div>
+          <div class="trust-item__bar-wrap">
+            <div class="trust-item__bar" style="width:20%;background:linear-gradient(90deg,var(--red),#f87171)"></div>
+          </div>
+          <div class="trust-item__pts">Impact −</div>
+        </div>
+
+        <div class="tbl-wrap" style="margin-top:20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Score</th>
+                <th>Niveau</th>
+                <th>Signification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>80 – 100</td>
+                <td><span class="badge badge--green">Excellent</span></td>
+                <td>Entreprise très fiable, profil complet et documenté</td>
+              </tr>
+              <tr>
+                <td>60 – 79</td>
+                <td><span class="badge badge--blue">Bon</span></td>
+                <td>Profil bien renseigné, quelques informations manquantes</td>
+              </tr>
+              <tr>
+                <td>40 – 59</td>
+                <td><span class="badge badge--gold">Moyen</span></td>
+                <td>Profil partiel, informations légales incomplètes</td>
+              </tr>
+              <tr>
+                <td>0 – 39</td>
+                <td><span class="badge badge--red">Faible</span></td>
+                <td>Profil très incomplet, peu d'informations vérifiables</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="material-icons-outlined mi">lightbulb</span>
+          <div><strong>Pour les propriétaires</strong> — Améliorez votre Trust Score en ajoutant votre RCCM, NIU, des
+            documents officiels, des photos et en complétant votre description. Chaque indicateur renseigné augmente
+            votre score et renforce la confiance des visiteurs.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ TARIFS ══════════════ -->
+      <section class="page" id="page-tarifs">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Forfaits & Tarifs</h1>
+        <p class="page__sub">Comparez les trois forfaits disponibles — URL : <code>/tarifs</code></p>
+
+        <figure class="screenshot">
+          <img src="images/tarifs_1781602743510.png" alt="Page des tarifs" />
+          <figcaption>Page des forfaits — comparaison Free, Pro et Premium avec les fonctionnalités incluses.
+          </figcaption>
+        </figure>
+
+        <div class="plans-grid">
+          <div class="plan-card">
+            <div class="plan-card__name">🆓 Free</div>
+            <div class="plan-card__price">0 <span>FCFA</span></div>
+            <div class="plan-card__tag">Durée : 1 an renouvelable</div>
+            <ul class="plan-card__features">
+              <li>Fiche entreprise de base</li>
+              <li>3 images maximum</li>
+              <li>1 document officiel</li>
+              <li>Visibilité standard</li>
+              <li style="color:var(--t3);">✗ Pas d'analytics</li>
+              <li style="color:var(--t3);">✗ Pas de badge vedette</li>
+            </ul>
+          </div>
+          <div class="plan-card">
+            <div class="plan-card__name">💼 Pro</div>
+            <div class="plan-card__price">25 000 <span>FCFA / mois</span></div>
+            <div class="plan-card__tag">Durée : 30 jours renouvelables</div>
+            <ul class="plan-card__features">
+              <li>Fiche enrichie complète</li>
+              <li>10 images maximum</li>
+              <li>5 documents officiels</li>
+              <li>Statistiques d'audience</li>
+              <li>Priorité de recherche élevée</li>
+              <li style="color:var(--t3);">✗ Pas de badge vedette</li>
+            </ul>
+          </div>
+          <div class="plan-card plan-card--featured">
+            <div class="plan-card__name">⭐ Premium</div>
+            <div class="plan-card__price">75 000 <span>FCFA / mois</span></div>
+            <div class="plan-card__tag">Durée : 30 jours renouvelables</div>
+            <ul class="plan-card__features">
+              <li>Fiche enrichie complète</li>
+              <li>50 images maximum</li>
+              <li>20 documents officiels</li>
+              <li>Statistiques d'audience</li>
+              <li>Badge vedette sur l'annuaire</li>
+              <li>Priorité maximale (1ère position)</li>
+              <li>Mis en avant sur la page d'accueil</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">payments</span>
+          <div><strong>Modes de paiement acceptés</strong> — MTN Mobile Money · Airtel Money · Carte bancaire (Stripe).
+            La souscription s'effectue depuis votre espace propriétaire : <code>/espace/abonnement</code>.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ REGISTRE ══════════════ -->
+      <section class="page" id="page-registre">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Registre national</h1>
+        <p class="page__sub">Consultation du registre officiel des entreprises — URL : <code>/registre</code></p>
+        <p>La page Registre national permet de consulter les entreprises référencées selon leurs informations
+          officielles (RCCM, NIU). Elle est accessible à tous sans connexion et peut être utilisée pour vérifier
+          l'existence légale d'une entreprise dans la base de données de la plateforme.</p>
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">warning</span>
+          <div><strong>Note</strong> — Le registre Annuaire Congo n'est pas le registre officiel de l'État congolais. Il
+            référence uniquement les entreprises ayant créé une fiche sur la plateforme et fourni leurs informations
+            légales.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ CONGOBOT ══════════════ -->
+      <section class="page" id="page-congobot">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">CongoBot IA</h1>
+        <p class="page__sub">Assistant conversationnel propulsé par LLaMA 3.3 70B (Groq API) — accessible sans
+          connexion.</p>
+
+        <figure class="screenshot">
+          <img src="images/Figure 4.9. Interface CongoBot—chatbot contextuel.png" alt="Interface CongoBot" />
+          <figcaption>CongoBot — fenêtre de chat flottante accessible depuis toutes les pages publiques.</figcaption>
+        </figure>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Cliquez sur le bouton flottant CongoBot</div>
+              <div class="step__desc">Le bouton <strong>🤖 CongoBot</strong> est visible en bas à droite de chaque page.
+                Cliquez dessus pour ouvrir la fenêtre de conversation.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Posez votre question en français</div>
+              <div class="step__desc">Écrivez votre besoin naturellement : <em>« Je cherche un prestataire de
+                  manutention à Pointe-Noire »</em> ou <em>« Quelles entreprises de sécurité sont vérifiées à
+                  Brazzaville ? »</em></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Obtenez des suggestions</div>
+              <div class="step__desc">CongoBot répond avec une liste d'entreprises correspondant à votre besoin,
+                incluant des liens directs vers leurs fiches.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Affinez la recherche</div>
+              <div class="step__desc">Posez des questions de suivi : <em>« Montrez-moi uniquement les entreprises
+                  vérifiées »</em> ou <em>« Celles avec un Trust Score supérieur à 70 »</em>.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Exemple de question</th>
+                <th>Ce que CongoBot fait</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>« Je cherche un transitaire à Pointe-Noire »</td>
+                <td>Propose les entreprises de Douane &amp; Transit à Pointe-Noire</td>
+              </tr>
+              <tr>
+                <td>« Quels hôtels existent à Brazzaville ? »</td>
+                <td>Liste les établissements hôteliers référencés</td>
+              </tr>
+              <tr>
+                <td>« Entreprises industrielles vérifiées »</td>
+                <td>Filtre le secteur Industrie avec badge Vérifié</td>
+              </tr>
+              <tr>
+                <td>« Expliquez les secteurs disponibles »</td>
+                <td>Décrit les 6 secteurs de l'annuaire</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">warning</span>
+          <div><strong>Périmètre de CongoBot</strong> — CongoBot répond uniquement aux questions liées aux entreprises
+            référencées sur Annuaire Congo. Il ne peut pas répondre à des questions générales (actualités, météo, etc.).
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ CONTACT ══════════════ -->
+      <section class="page" id="page-contact">
+        <div class="page__crumb">Pages Publiques</div>
+        <h1 class="page__title">Contact & Support</h1>
+        <p class="page__sub">Nous contacter et accéder à l'aide — URLs : <code>/contact</code> et <code>/support</code>
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">✉️</div>
+            <h4>Formulaire de contact</h4>
+            <p>Envoyez un message directement à l'équipe Annuaire Congo via la page <code>/contact</code>.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">❓</div>
+            <h4>Support & Aide</h4>
+            <p>La page <code>/support</code> centralise les ressources d'aide, les tutoriels et les réponses aux
+              questions fréquentes.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⚖️</div>
+            <h4>Mentions légales</h4>
+            <p>Consultez les conditions d'utilisation sur <code>/mentions-legales</code> et la politique de
+              confidentialité sur <code>/confidentialite</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ CONSOLE ══════════════ -->
+      <section class="page" id="page-console">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Console — Tableau de bord</h1>
+        <p class="page__sub">Votre centre de contrôle après connexion — URL : <code>/espace</code></p>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">lock</span>
+          <div><strong>Accès requis</strong> — Cette section et toutes les suivantes nécessitent d'être connecté.
+            Accédez via <code>/auth/connexion</code>.</div>
+        </div>
+
+        <figure class="screenshot">
+          <img src="images/Figure 4.14. Tableau de bord statistiques propriétaire.png" alt="Console propriétaire" />
+          <figcaption>Console de l'espace connecté — KPIs clés, statut de la fiche, Trust Score et raccourcis d'action.
+          </figcaption>
+        </figure>
+
+        <h2>Ce que vous voyez dans la console</h2>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">📊</div>
+            <h4>Statistiques rapides</h4>
+            <p>Vues de profil et clics sur les contacts des 7 derniers jours.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🏷️</div>
+            <h4>Statut de la fiche</h4>
+            <p>État actuel : Brouillon, En attente, Active, Rejetée ou Suspendue.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⭐</div>
+            <h4>Trust Score</h4>
+            <p>Votre score actuel et les indicateurs à améliorer.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">💳</div>
+            <h4>Forfait actif</h4>
+            <p>Plan souscrit, date d'expiration et lien vers la gestion de l'abonnement.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🔔</div>
+            <h4>Notifications récentes</h4>
+            <p>Aperçu des 3 dernières notifications (validation, paiement, système).</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⚡</div>
+            <h4>Actions rapides</h4>
+            <p>Raccourcis vers « Modifier la fiche », « Statistiques » et « Abonnement ».</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ CRÉER FICHE ══════════════ -->
+      <section class="page" id="page-fiche-creer">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Créer ma fiche entreprise</h1>
+        <p class="page__sub">Référencez votre entreprise sur l'annuaire — URL : <code>/espace/fiche/creer</code></p>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">info</span>
+          <div><strong>Réservé aux propriétaires</strong> — Cette page n'est accessible qu'aux comptes ayant le rôle
+            Propriétaire. Si votre compte est de type Utilisateur, ce bouton n'est pas visible.</div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Informations de base (obligatoires)</div>
+              <div class="step__desc">
+                <ul>
+                  <li><strong>Nom de l'entreprise</strong></li>
+                  <li><strong>Description</strong> (vous pouvez utiliser la génération IA)</li>
+                  <li><strong>Secteur(s) d'activité</strong> — jusqu'à 3 secteurs</li>
+                  <li><strong>Région et Ville</strong></li>
+                  <li><strong>Adresse physique</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Informations légales (recommandées)</div>
+              <div class="step__desc">
+                <ul>
+                  <li><strong>Numéro RCCM</strong> — améliore fortement le Trust Score</li>
+                  <li><strong>Numéro NIU</strong> — identifiant fiscal</li>
+                  <li><strong>Année de création</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Coordonnées</div>
+              <div class="step__desc">Téléphone, e-mail professionnel et site web. Ces informations seront cliquables
+                sur la fiche publique.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Enregistrer ou Soumettre</div>
+              <div class="step__desc">
+                <ul>
+                  <li>Cliquez sur <strong>« Enregistrer »</strong> pour sauvegarder en brouillon (<span
+                      class="badge badge--gray">Brouillon</span>)</li>
+                  <li>Cliquez sur <strong>« Soumettre pour validation »</strong> pour envoyer à l'admin (<span
+                      class="badge badge--blue">En attente</span>)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Génération de description par IA</h2>
+        <p>Dans le champ Description, cliquez sur <strong>« Générer avec l'IA »</strong>. L'assistant analyse les
+          informations déjà renseignées (nom, secteur, ville) et rédige automatiquement une description professionnelle
+          en français. Vous pouvez modifier le texte généré avant de l'enregistrer.</p>
+
+        <div class="callout callout--tip">
+          <span class="material-icons-outlined mi">lightbulb</span>
+          <div><strong>Complétez au maximum dès le départ</strong> — Plus votre fiche est complète lors de la
+            soumission, plus votre Trust Score sera élevé et plus vite elle sera validée.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ MODIFIER FICHE ══════════════ -->
+      <section class="page" id="page-fiche-editer">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Modifier ma fiche</h1>
+        <p class="page__sub">Mettez à jour les informations de votre fiche — URL : <code>/espace/fiche/editer</code></p>
+
+        <p>Toutes les informations de votre fiche sont modifiables à tout moment depuis votre espace. Accédez à la
+          modification via la console ou le bouton <strong>« Modifier la fiche »</strong>.</p>
+
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">warning</span>
+          <div><strong>Attention — Revalidation automatique</strong> : Si vous modifiez des informations sensibles (nom
+            de l'entreprise, RCCM, NIU), la fiche repasse automatiquement au statut <span class="badge badge--blue">En
+              attente</span> et doit être revalidée par un administrateur avant d'être de nouveau visible dans
+            l'annuaire.</div>
+        </div>
+
+        <h2>États de la fiche entreprise</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Statut</th>
+                <th>Signification</th>
+                <th>Action requise</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge--gray">Brouillon</span></td>
+                <td>Créée mais non soumise</td>
+                <td>Complétez et soumettez pour validation</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--blue">En attente</span></td>
+                <td>Soumise, en cours de révision</td>
+                <td>Aucune — patientez</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--green">Active</span></td>
+                <td>Validée et visible dans l'annuaire</td>
+                <td>Continuez à enrichir votre fiche</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--red">Rejetée</span></td>
+                <td>Non conforme — motif communiqué</td>
+                <td>Corrigez les points mentionnés et re-soumettez</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--orange">Suspendue</span></td>
+                <td>Masquée temporairement par l'admin</td>
+                <td>Contactez le support</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ IMAGES & DOCS ══════════════ -->
+      <section class="page" id="page-media">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Images & Documents</h1>
+        <p class="page__sub">Enrichissez votre fiche avec des médias professionnels.</p>
+
+        <h2>Ajouter des images</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Accédez à la galerie</div>
+              <div class="step__desc">Depuis l'éditeur de fiche, cliquez sur l'onglet <strong>« Images »</strong>.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Téléversez vos photos</div>
+              <div class="step__desc">Cliquez sur <strong>« Ajouter une image »</strong> et sélectionnez un fichier
+                depuis votre appareil. Formats acceptés : JPG, JPEG, PNG, WEBP. Taille maximale : <strong>10 Mo</strong>
+                par fichier. Le nombre d'images dépend de votre forfait (3 Free · 10 Pro · 50 Premium).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Définissez l'image principale</div>
+              <div class="step__desc">Cliquez sur l'icône ⭐ d'une image pour la définir comme photo de couverture. C'est
+                elle qui apparaît dans l'annuaire et sur la carte.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Supprimez si nécessaire</div>
+              <div class="step__desc">Cliquez sur l'icône 🗑️ pour supprimer une image. La suppression est définitive.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Ajouter des documents officiels</h2>
+        <p>Les documents (registre de commerce, certificat d'existence, brochures commerciales) renforcent la
+          crédibilité de votre fiche et augmentent votre Trust Score. Dans l'éditeur de fiche, cliquez sur l'onglet
+          <strong>« Documents »</strong>, puis <strong>« Ajouter un document »</strong>. Formats acceptés : PDF, DOC,
+          DOCX. Le nombre de documents dépend de votre forfait (1 Free · 5 Pro · 20 Premium).
+        </p>
+      </section>
+
+      <!-- ══════════════ STATISTIQUES ══════════════ -->
+      <section class="page" id="page-statistiques">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Statistiques d'audience</h1>
+        <p class="page__sub">Suivez les performances de votre fiche — URL : <code>/espace/statistiques</code> (forfaits
+          Pro & Premium uniquement)</p>
+
+        <figure class="screenshot">
+          <img src="images/Figure 4.14. Tableau de bord statistiques propriétaire.png"
+            alt="Statistiques propriétaire" />
+          <figcaption>Tableau de bord analytics — vues de profil, clics sur les contacts et évolution mensuelle.
+          </figcaption>
+        </figure>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Métrique</th>
+                <th>Ce qu'elle mesure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Vues de profil</td>
+                <td>Nombre total de consultations de votre fiche</td>
+              </tr>
+              <tr>
+                <td>Clics sur les contacts</td>
+                <td>Nombre de fois qu'un visiteur a cliqué sur votre téléphone ou e-mail</td>
+              </tr>
+              <tr>
+                <td>Évolution mensuelle</td>
+                <td>Comparaison vues mois actuel vs. mois précédent (en %)</td>
+              </tr>
+              <tr>
+                <td>Sources de trafic</td>
+                <td>D'où viennent vos visiteurs (annuaire, carte, recherche, accueil…)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Exporter les données</h2>
+        <p>Cliquez sur <strong>« Exporter »</strong> en haut du tableau de bord pour télécharger vos statistiques au
+          format CSV.</p>
+
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">workspace_premium</span>
+          <div><strong>Fonctionnalité Pro & Premium uniquement</strong> — L'accès aux statistiques d'audience est
+            réservé aux forfaits Pro (25 000 FCFA/mois) et Premium (75 000 FCFA/mois).</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ABONNEMENT ══════════════ -->
+      <section class="page" id="page-abonnement">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Mon abonnement</h1>
+        <p class="page__sub">Gérez votre forfait — URL : <code>/espace/abonnement</code></p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Choisissez votre forfait</div>
+              <div class="step__desc">Sur la page abonnement, comparez les forfaits <strong>Free</strong>,
+                <strong>Pro</strong> (25 000 FCFA/mois) et <strong>Premium</strong> (75 000 FCFA/mois). Cliquez sur
+                <strong>« Choisir ce forfait »</strong>.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Sélectionnez le mode de paiement</div>
+              <div class="step__desc">Choisissez entre <strong>MTN Mobile Money</strong>, <strong>Airtel Money</strong>
+                ou <strong>Carte bancaire (Stripe)</strong>.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Confirmez le paiement</div>
+              <div class="step__desc">Suivez les instructions de votre opérateur ou de Stripe. Une notification de
+                confirmation est envoyée dès que le paiement est validé. En cas d'échec, vous êtes redirigé vers
+                <code>/espace/abonnement/echec</code> avec les informations d'erreur.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Forfait activé</div>
+              <div class="step__desc">Votre forfait est actif immédiatement après confirmation. Vous pouvez vérifier la
+                date d'expiration dans votre console ou sur la page abonnement.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">autorenew</span>
+          <div><strong>Renouvellement</strong> — Les forfaits Pro et Premium doivent être renouvelés manuellement avant
+            leur expiration. Vous recevrez une notification de rappel avant la date d'échéance.</div>
+        </div>
+
+        <div class="callout callout--info" style="margin-top:20px;">
+          <span class="material-icons-outlined mi">description</span>
+          <div><strong>Abonnement Utilisateur (Accès Documents)</strong> — Les comptes "Utilisateur" (sans entreprise)
+            peuvent souscrire à un abonnement spécial leur permettant d'accéder aux documents légaux (RCCM, NIU) des
+            fiches entreprises.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ HISTORIQUE ══════════════ -->
+      <section class="page" id="page-historique">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Historique de paiement</h1>
+        <p class="page__sub">Consultez tous vos paiements — URL : <code>/espace/abonnement/historique</code></p>
+
+        <p>La page Historique de paiement liste tous les paiements effectués sur votre compte, avec pour chaque
+          transaction :</p>
+        <ul>
+          <li>Date et heure du paiement</li>
+          <li>Montant et devise (FCFA)</li>
+          <li>Forfait souscrit (Free, Pro, Premium)</li>
+          <li>Mode de paiement utilisé (MTN MoMo, Airtel Money, Stripe)</li>
+          <li>Statut (Validé, En attente de validation admin, Échoué)</li>
+        </ul>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">info</span>
+          <div><strong>Validation manuelle</strong> — Les paiements par MTN Mobile Money et Airtel Money peuvent
+            nécessiter une validation manuelle par un administrateur. Le forfait s'active dès la validation.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ NOTIFICATIONS ══════════════ -->
+      <section class="page" id="page-notifications">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Notifications</h1>
+        <p class="page__sub">Restez informé des activités de votre compte — URL : <code>/espace/notifications</code></p>
+
+        <figure class="screenshot">
+          <img src="images/Figure 4.15. Centre de notifications in-app.png" alt="Centre de notifications" />
+          <figcaption>Centre de notifications — toutes vos alertes classées par date, avec indicateur lu/non-lu.
+          </figcaption>
+        </figure>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Déclencheur</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>✅ Fiche validée</td>
+                <td>L'administrateur a approuvé votre fiche — elle est maintenant visible</td>
+              </tr>
+              <tr>
+                <td>❌ Fiche rejetée</td>
+                <td>L'administrateur a rejeté votre fiche avec le motif détaillé</td>
+              </tr>
+              <tr>
+                <td>⏸️ Fiche suspendue</td>
+                <td>Votre fiche a été temporairement masquée</td>
+              </tr>
+              <tr>
+                <td>💳 Paiement confirmé</td>
+                <td>Votre paiement a été validé et le forfait est actif</td>
+              </tr>
+              <tr>
+                <td>⚠️ Paiement échoué</td>
+                <td>Une tentative de paiement a échoué</td>
+              </tr>
+              <tr>
+                <td>🔔 Rappel d'expiration</td>
+                <td>Votre forfait expire bientôt — pensez à renouveler</td>
+              </tr>
+              <tr>
+                <td>📢 Système</td>
+                <td>Annonces importantes de la plateforme</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Gérer vos notifications</h2>
+        <p>Cliquez sur l'icône 🔔 dans la barre de navigation pour ouvrir le panneau de notifications. Depuis ce panneau
+          :</p>
+        <ul>
+          <li>Cliquez sur une notification pour la marquer comme lue</li>
+          <li>Cliquez sur <strong>« Tout marquer comme lu »</strong> pour effacer le compteur</li>
+          <li>Cliquez sur <strong>« Voir toutes »</strong> pour accéder à la page complète</li>
+        </ul>
+      </section>
+
+      <!-- ══════════════ COMPTE ══════════════ -->
+      <section class="page" id="page-compte">
+        <div class="page__crumb">Espace connecté</div>
+        <h1 class="page__title">Mon compte</h1>
+        <p class="page__sub">Gérez votre profil personnel — URL : <code>/espace/compte</code></p>
+
+        <h2>Modifier mes informations</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Accédez à « Mon compte »</div>
+              <div class="step__desc">Cliquez sur votre avatar en haut à droite, puis sur <strong>« Mon compte
+                  »</strong>, ou naviguez directement vers <code>/espace/compte</code>.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Modifiez vos informations</div>
+              <div class="step__desc">Prénom, Nom, Téléphone et Photo de profil peuvent être modifiés à tout moment.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Changez votre mot de passe</div>
+              <div class="step__desc">Dans la section <strong>« Sécurité »</strong>, saisissez votre mot de passe
+                actuel, puis votre nouveau mot de passe deux fois pour confirmer.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">4</div>
+            <div class="step__body">
+              <div class="step__title">Exporter vos données (RGPD)</div>
+              <div class="step__desc">Dans la section <strong>« Confidentialité »</strong>, cliquez sur
+                <strong>Exporter</strong> pour télécharger l'intégralité de vos données personnelles et professionnelles
+                au format JSON.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">5</div>
+            <div class="step__body">
+              <div class="step__title">Supprimer votre compte</div>
+              <div class="step__desc">Vous pouvez supprimer définitivement votre compte. Cette action est irréversible
+                et supprimera également toutes vos données associées.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN DASHBOARD ══════════════ -->
+      <section class="page" id="page-admin-dashboard">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Tableau de bord Admin</h1>
+        <p class="page__sub">Vue d'ensemble de la plateforme en temps réel — URL : <code>/admin</code></p>
+
+        <div class="callout callout--danger">
+          <span class="material-icons-outlined mi">shield</span>
+          <div><strong>Accès Administrateur uniquement</strong> — Toutes les pages <code>/admin/*</code> nécessitent le
+            rôle Administrateur. Tout accès non autorisé est journalisé dans le journal d'audit.</div>
+        </div>
+
+        <figure class="screenshot">
+          <img src="images/admin_dashboard_1781603017691.png" alt="Tableau de bord admin" />
+          <figcaption>Tableau de bord admin — KPIs principaux : entreprises actives, utilisateurs, fiches en attente,
+            revenus.</figcaption>
+        </figure>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">🏢</div>
+            <h4>Entreprises</h4>
+            <p>Total et répartition par statut : actives, en attente, rejetées, suspendues.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">👥</div>
+            <h4>Utilisateurs</h4>
+            <p>Nombre total d'inscrits et nouveaux comptes cette semaine.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⏳</div>
+            <h4>File d'attente</h4>
+            <p>Fiches en attente de validation — accès direct pour traitement rapide.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">💰</div>
+            <h4>Revenus</h4>
+            <p>Total des paiements validés et en attente de validation manuelle.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">📈</div>
+            <h4>Statistiques</h4>
+            <p>Trafic global, secteurs les plus consultés et tendances hebdomadaires.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">🚩</div>
+            <h4>Signalements récents</h4>
+            <p>Derniers signalements reçus nécessitant une révision.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN VALIDATION ══════════════ -->
+      <section class="page" id="page-admin-validation">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Validation des fiches</h1>
+        <p class="page__sub">Révisez et publiez les nouvelles fiches soumises — URL : <code>/admin/validation</code></p>
+
+        <figure class="screenshot">
+          <img src="images/admin_validation_1781603101949.png" alt="Validation des fiches" />
+          <figcaption>File de validation — fiches en attente avec aperçu rapide et actions d'approbation/rejet.
+          </figcaption>
+        </figure>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Ouvrez la file d'attente</div>
+              <div class="step__desc">Cliquez sur <strong>« Validation »</strong> dans le menu admin, ou sur le badge
+                rouge du tableau de bord indiquant le nombre de fiches en attente.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Examinez chaque fiche</div>
+              <div class="step__desc">Cliquez sur <strong>« Examiner »</strong> (URL :
+                <code>/admin/validation/:id</code>) pour voir la fiche complète : informations, contacts, secteur,
+                documents, Trust Score.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Prenez une décision</div>
+              <div class="step__desc">
+                <ul>
+                  <li>✅ <strong>Valider</strong> — Active la fiche dans l'annuaire au statut <span
+                      class="badge badge--green">Active</span>.</li>
+                  <li>❌ <strong>Rejeter</strong> — Saisissez un motif clair et constructif. Le propriétaire doit
+                    corriger et re-soumettre.</li>
+                  <li>🛡️ <strong>Vérifier (KYC)</strong> — Attribue le badge <span
+                      class="badge badge--green">Vérifié</span> après contrôle des documents (action distincte de la
+                    validation).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--tip">
+          <span class="material-icons-outlined mi">lightbulb</span>
+          <div><strong>Motif de rejet</strong> — Soyez précis et constructif : « Merci de fournir un numéro RCCM valide
+            » ou « La description ne correspond pas au secteur sélectionné ». Un bon motif évite les re-soumissions
+            répétées.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN ENTREPRISES ══════════════ -->
+      <section class="page" id="page-admin-entreprises">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Gestion des entreprises</h1>
+        <p class="page__sub">Consultez et gérez toutes les fiches — URL : <code>/admin/entreprises</code></p>
+
+        <figure class="screenshot">
+          <img src="images/admin_entreprises_1781603061411.png" alt="Gestion des entreprises" />
+          <figcaption>Liste complète des entreprises avec filtres par statut et actions administratives disponibles.
+          </figcaption>
+        </figure>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Effet</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>👁️ Voir la fiche</td>
+                <td>Ouvre la fiche publique</td>
+              </tr>
+              <tr>
+                <td>✏️ Éditer</td>
+                <td>Modifie la fiche depuis l'admin (<code>/admin/entreprises/:id/editer</code>)</td>
+              </tr>
+              <tr>
+                <td>✅ Valider</td>
+                <td>Active la fiche si elle est en attente</td>
+              </tr>
+              <tr>
+                <td>⏸️ Suspendre</td>
+                <td>Masque temporairement une fiche active</td>
+              </tr>
+              <tr>
+                <td>🔄 Réactiver</td>
+                <td>Réactive une fiche suspendue</td>
+              </tr>
+              <tr>
+                <td>🤖 Générer Trust Score</td>
+                <td>Recalcule via IA ou définit un score manuel</td>
+              </tr>
+              <tr>
+                <td>✍️ Générer description IA</td>
+                <td>Génère ou régénère la description via IA</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>L'administrateur peut également créer directement une fiche depuis <code>/admin/entreprises/creer</code>.</p>
+      </section>
+
+      <!-- ══════════════ ADMIN UTILISATEURS ══════════════ -->
+      <section class="page" id="page-admin-utilisateurs">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Gestion des utilisateurs</h1>
+        <p class="page__sub">Consultez et gérez tous les comptes — URL : <code>/admin/utilisateurs</code></p>
+
+        <figure class="screenshot">
+          <img src="images/admin_utilisateurs_1781603156668.png" alt="Liste des utilisateurs" />
+          <figcaption>Liste des utilisateurs avec recherche par nom ou e-mail, filtrage par rôle et actions par compte.
+          </figcaption>
+        </figure>
+        <figure class="screenshot">
+          <img src="images/admin_utilisateurs_1781603184021.png" alt="Détail utilisateur" />
+          <figcaption>Détail d'un compte utilisateur — informations, rôle, statut et actions disponibles.</figcaption>
+        </figure>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>🔍 Rechercher</td>
+                <td>Filtrez par nom, e-mail ou rôle</td>
+              </tr>
+              <tr>
+                <td>👁️ Voir le profil</td>
+                <td>Informations complètes du compte</td>
+              </tr>
+              <tr>
+                <td>🔄 Modifier le rôle</td>
+                <td>Changez le rôle (Utilisateur ↔ Propriétaire ↔ Admin)</td>
+              </tr>
+              <tr>
+                <td>🚫 Désactiver</td>
+                <td>Bloque l'accès au compte sans le supprimer</td>
+              </tr>
+              <tr>
+                <td>✅ Réactiver</td>
+                <td>Rétablit l'accès d'un compte désactivé</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <figure class="screenshot">
+          <img src="images/admin_utilisateurs_1781603203845.png" alt="Actions utilisateur" />
+          <figcaption>Actions disponibles sur un compte — modification de rôle, désactivation et réactivation.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ══════════════ ADMIN DIRIGEANTS ══════════════ -->
+      <section class="page" id="page-admin-dirigeants">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Dirigeants d'entreprises</h1>
+        <p class="page__sub">Gestion des propriétaires d'entreprise (BusinessOwners) — URL :
+          <code>/admin/dirigeants</code>
+        </p>
+
+        <p>Les dirigeants (BusinessOwners) sont les personnes physiques associées aux entreprises référencées. Ils n'ont
+          pas nécessairement de compte utilisateur actif sur la plateforme — ils peuvent être des représentants passifs
+          d'une entreprise inscrite par un tiers.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Champ</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prénom / Nom</td>
+                <td>Identité du dirigeant</td>
+              </tr>
+              <tr>
+                <td>Téléphone</td>
+                <td>Contact direct du dirigeant</td>
+              </tr>
+              <tr>
+                <td>Poste dans l'entreprise</td>
+                <td>PDG, Directeur, Gérant…</td>
+              </tr>
+              <tr>
+                <td>Statut de vérification</td>
+                <td>Dirigeant vérifié ou non</td>
+              </tr>
+              <tr>
+                <td>Entreprises associées</td>
+                <td>Liste des fiches liées à ce dirigeant</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN SECTEURS ══════════════ -->
+      <section class="page" id="page-admin-secteurs">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Gestion des secteurs</h1>
+        <p class="page__sub">Créez et gérez les secteurs d'activité — URL : <code>/admin/secteurs</code></p>
+
+        <figure class="screenshot">
+          <img src="images/admin_secteurs_1781603230103.png" alt="Gestion des secteurs" />
+          <figcaption>Interface de gestion des secteurs — ajout, modification et désactivation des catégories
+            d'activité.</figcaption>
+        </figure>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Ajouter un secteur</div>
+              <div class="step__desc">Cliquez sur <strong>« + Nouveau secteur »</strong>, saisissez le nom, une icône et
+                une description, puis enregistrez.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Modifier un secteur</div>
+              <div class="step__desc">Cliquez sur l'icône ✏️ à côté du secteur pour changer son nom ou sa description.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Désactiver / Réactiver</div>
+              <div class="step__desc">Un secteur désactivé n'apparaît plus dans les filtres et sur la page Secteurs,
+                mais les entreprises qui y sont associées restent visibles dans l'annuaire.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN GÉOGRAPHIE ══════════════ -->
+      <section class="page" id="page-admin-geographie">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Géographie</h1>
+        <p class="page__sub">Gestion des régions et villes — URL : <code>/admin/geographie</code></p>
+
+        <p>La page Géographie permet de gérer la liste des régions et villes disponibles pour la localisation des
+          entreprises. Vous pouvez ajouter de nouvelles villes, les associer à leur région et les activer/désactiver.
+        </p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Entité</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Région</td>
+                <td>Les 12 régions administratives de la République du Congo (ex: Brazzaville, Pointe-Noire, Bouenza…)
+                </td>
+              </tr>
+              <tr>
+                <td>Ville</td>
+                <td>Villes et localités associées à chaque région</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN FORFAITS ══════════════ -->
+      <section class="page" id="page-admin-forfaits">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Gestion des forfaits</h1>
+        <p class="page__sub">Configurez les plans d'abonnement — URL : <code>/admin/forfaits</code></p>
+
+        <p>Cette page permet de modifier les paramètres de chaque forfait (Free, Pro, Premium) : tarif, durée, nombre
+          d'images et de documents autorisés, accès aux statistiques, badge vedette et priorité de recherche.</p>
+
+        <div class="callout callout--warn">
+          <span class="material-icons-outlined mi">warning</span>
+          <div><strong>Important</strong> — Les modifications de tarif et de fonctionnalités s'appliquent uniquement aux
+            <strong>nouveaux abonnements</strong>. Les abonnements en cours conservent leurs conditions jusqu'à leur
+            expiration.
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Paramètre</th>
+                <th>Free</th>
+                <th>Pro</th>
+                <th>Premium</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prix actuel</td>
+                <td>0 FCFA</td>
+                <td>25 000 FCFA/mois</td>
+                <td>75 000 FCFA/mois</td>
+              </tr>
+              <tr>
+                <td>Durée</td>
+                <td>365 jours</td>
+                <td>30 jours</td>
+                <td>30 jours</td>
+              </tr>
+              <tr>
+                <td>Images max</td>
+                <td>3</td>
+                <td>10</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Documents max</td>
+                <td>1</td>
+                <td>5</td>
+                <td>20</td>
+              </tr>
+              <tr>
+                <td>Analytics</td>
+                <td>Non</td>
+                <td>Oui</td>
+                <td>Oui</td>
+              </tr>
+              <tr>
+                <td>Badge vedette</td>
+                <td>Non</td>
+                <td>Non</td>
+                <td>Oui</td>
+              </tr>
+              <tr>
+                <td>Priorité de recherche</td>
+                <td>3 (basse)</td>
+                <td>2 (normale)</td>
+                <td>1 (maximale)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN SIGNALEMENTS ══════════════ -->
+      <section class="page" id="page-admin-signalements">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Signalements</h1>
+        <p class="page__sub">Traitez les signalements des utilisateurs — URL : <code>/admin/signalements</code></p>
+
+        <p>Les visiteurs et utilisateurs peuvent signaler une fiche entreprise via le bouton <strong>« Signaler
+            »</strong> présent sur chaque fiche publique. Les signalements apparaissent ici pour révision.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>👁️ Examiner</td>
+                <td>Consultez le contenu du signalement et la fiche concernée</td>
+              </tr>
+              <tr>
+                <td>✅ Résoudre</td>
+                <td>Marquez le signalement comme traité (sans action sur la fiche)</td>
+              </tr>
+              <tr>
+                <td>⏸️ Suspendre la fiche</td>
+                <td>Suspendez la fiche en attente de correction du propriétaire</td>
+              </tr>
+              <tr>
+                <td>❌ Ignorer</td>
+                <td>Classez le signalement sans suite s'il est infondé</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--info">
+          <span class="material-icons-outlined mi">info</span>
+          <div><strong>Impact sur le Trust Score</strong> — Chaque signalement validé par l'admin impacte négativement
+            le Trust Score de l'entreprise concernée.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN AUDIT ══════════════ -->
+      <section class="page" id="page-admin-audit">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Journal d'audit</h1>
+        <p class="page__sub">Traçabilité complète des actions sur la plateforme — URL : <code>/admin/audit</code></p>
+
+        <p>Le journal d'audit enregistre toutes les actions significatives effectuées sur la plateforme avec horodatage,
+          utilisateur responsable et type d'action. Il permet une traçabilité complète pour la supervision et la
+          sécurité.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type d'action journalisée</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Connexion et déconnexion des administrateurs</td>
+              </tr>
+              <tr>
+                <td>Validation, rejet et suspension de fiches entreprises</td>
+              </tr>
+              <tr>
+                <td>Modification de rôle utilisateur</td>
+              </tr>
+              <tr>
+                <td>Activation / désactivation de comptes</td>
+              </tr>
+              <tr>
+                <td>Modification des forfaits</td>
+              </tr>
+              <tr>
+                <td>Validation manuelle de paiements</td>
+              </tr>
+              <tr>
+                <td>Tentatives d'accès non autorisé</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN PAIEMENTS ══════════════ -->
+      <section class="page" id="page-admin-paiements">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Validation des paiements</h1>
+        <p class="page__sub">Validez manuellement les paiements mobile money — URL : <code>/admin/paiements</code></p>
+
+        <p>Les paiements par MTN Mobile Money et Airtel Money nécessitent une validation manuelle par l'administrateur,
+          car ils ne peuvent pas être confirmés automatiquement. Les paiements Stripe sont validés automatiquement.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Consultez les paiements en attente</div>
+              <div class="step__desc">La page affiche tous les paiements avec statut « En attente de validation » triés
+                par date.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Vérifiez la transaction</div>
+              <div class="step__desc">Vérifiez le montant, l'opérateur, la référence de transaction et le propriétaire
+                concerné.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Validez ou rejetez</div>
+              <div class="step__desc">Cliquez sur <strong>« Valider »</strong> pour activer le forfait immédiatement, ou
+                <strong>« Rejeter »</strong> si la transaction ne peut pas être confirmée. Le propriétaire reçoit une
+                notification dans les deux cas.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN RAPPORT IA ══════════════ -->
+      <section class="page" id="page-admin-rapport-ia">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Rapport IA</h1>
+        <p class="page__sub">Analyses et rapports générés par intelligence artificielle — URL :
+          <code>/admin/rapport-ia</code>
+        </p>
+
+        <p>La page Rapport IA centralise les analyses générées automatiquement par le système d'intelligence
+          artificielle (Groq / LLaMA 3.3 70B) sur les données de la plateforme.</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="icon">📊</div>
+            <h4>Analyse de la plateforme</h4>
+            <p>Rapport synthétique sur la qualité globale des fiches, secteurs sous-représentés et tendances.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">⭐</div>
+            <h4>Trust Score en masse</h4>
+            <p>Recalcul du Trust Score pour toutes les entreprises ou par lot sélectionné.</p>
+          </div>
+          <div class="feature-item">
+            <div class="icon">✍️</div>
+            <h4>Génération de descriptions</h4>
+            <p>Génération automatique de descriptions pour les fiches à description vide ou incomplète.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN STATISTIQUES ══════════════ -->
+      <section class="page" id="page-admin-stats">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Statistiques globales</h1>
+        <p class="page__sub">Analysez les performances de la plateforme — URL : <code>/admin/statistiques</code></p>
+
+        <figure class="screenshot">
+          <img src="images/admin_statistiques_1781603268877.png" alt="Statistiques globales" />
+          <figcaption>Statistiques admin — trafic global, secteurs populaires, répartition géographique et revenus.
+          </figcaption>
+        </figure>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Métrique</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Vues totales de la plateforme</td>
+                <td>Consultations cumulées de toutes les fiches</td>
+              </tr>
+              <tr>
+                <td>Nouveaux inscrits</td>
+                <td>Évolution du nombre de comptes par période</td>
+              </tr>
+              <tr>
+                <td>Fiches validées</td>
+                <td>Nombre d'approbations par semaine / mois</td>
+              </tr>
+              <tr>
+                <td>Secteurs les plus consultés</td>
+                <td>Classement par nombre de vues</td>
+              </tr>
+              <tr>
+                <td>Revenus des abonnements</td>
+                <td>Total validé par forfait (Pro + Premium)</td>
+              </tr>
+              <tr>
+                <td>Taux d'engagement</td>
+                <td>% visiteurs ayant cliqué sur une coordonnée</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ ADMIN PARAMÈTRES ══════════════ -->
+      <section class="page" id="page-admin-parametres">
+        <div class="page__crumb">Administration</div>
+        <h1 class="page__title">Paramètres plateforme</h1>
+        <p class="page__sub">Configuration générale de la plateforme — URL : <code>/admin/parametres</code></p>
+
+        <p>La page Paramètres permet de configurer les options globales de la plateforme : nom et coordonnées,
+          comportements par défaut, intégrations et options de modération.</p>
+      </section>
+
+      <!-- ══════════════ FAQ ══════════════ -->
+      <section class="page" id="page-faq">
+        <div class="page__crumb">Aide</div>
+        <h1 class="page__title">Questions fréquentes</h1>
+        <p class="page__sub">Réponses aux questions les plus courantes.</p>
+
+        <div class="accordion">
+          <div class="acc-item open">
+            <div class="acc-header">Faut-il un compte pour consulter l'annuaire ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Non. La consultation de l'annuaire, la recherche, la carte, la page Trust Score, les
+              appels d'offres et CongoBot sont entièrement accessibles sans inscription.</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Comment référencer mon entreprise ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Créez un compte gratuit, connectez-vous, puis accédez à
+              <strong>/espace/fiche/creer</strong>. Remplissez le formulaire et soumettez votre fiche. Elle sera
+              examinée sous 24–48 heures ouvrées.
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Combien de temps pour la validation d'une fiche ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">En général <strong>24 à 48 heures ouvrées</strong>. Vous recevrez une notification dès
+              qu'une décision est prise (approbation ou rejet avec motif).</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Ma fiche a été rejetée — que faire ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Le motif de rejet est communiqué dans la notification et dans votre espace
+              propriétaire. Corrigez les points mentionnés, puis re-soumettez via <strong>« Soumettre pour validation
+                »</strong>. Il n'y a pas de limite de tentatives.</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Comment améliorer mon Trust Score ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Renseignez votre <strong>RCCM</strong> et <strong>NIU</strong> (les deux indicateurs
+              les plus importants), ajoutez des <strong>documents officiels</strong>, des <strong>photos du
+                local</strong>, déclarez vos <strong>services</strong> et complétez toutes les informations de votre
+              profil. Chaque indicateur renseigné augmente votre score.</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Quels modes de paiement sont disponibles ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body"><strong>MTN Mobile Money</strong>, <strong>Airtel Money</strong> et <strong>Carte
+                bancaire (Stripe)</strong>. Les paiements Stripe sont validés automatiquement. Les paiements mobile
+              money nécessitent une validation manuelle par un administrateur (délai variable selon les horaires).</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Puis-je gérer plusieurs entreprises avec un seul compte ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Oui. Un compte Propriétaire peut créer et gérer plusieurs fiches entreprises. Chaque
+              fiche est indépendante avec ses propres statistiques, médias et abonnement.</div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Comment annuler mon abonnement Pro ou Premium ?<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">Les forfaits ne se renouvellent pas automatiquement — il suffit de ne pas renouveler à
+              l'échéance. Votre fiche reste visible jusqu'à la date d'expiration, puis repasse automatiquement au plan
+              Free.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ DÉPANNAGE ══════════════ -->
+      <section class="page" id="page-depannage">
+        <div class="page__crumb">Aide</div>
+        <h1 class="page__title">Dépannage</h1>
+        <p class="page__sub">Solutions aux problèmes les plus courants.</p>
+
+        <h2>Problèmes de connexion</h2>
+        <div class="accordion">
+          <div class="acc-item open">
+            <div class="acc-header">Je ne peux pas me connecter — identifiants incorrects<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Vérifiez que l'e-mail est correct (pas d'espace avant/après).</li>
+                <li>Vérifiez que le Verr. Maj (Caps Lock) n'est pas activé.</li>
+                <li>Utilisez <strong>« Mot de passe oublié ? »</strong> pour réinitialiser votre mot de passe.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Je ne reçois pas l'e-mail de vérification ou de réinitialisation<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Vérifiez votre dossier <strong>Spams / Courriers indésirables</strong>.</li>
+                <li>Patientez jusqu'à 5 minutes.</li>
+                <li>Utilisez l'option <strong>« Renvoyer l'e-mail de vérification »</strong> depuis la page de
+                  connexion.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h2>Problèmes avec la fiche</h2>
+        <div class="accordion">
+          <div class="acc-item open">
+            <div class="acc-header">Ma fiche n'apparaît pas dans l'annuaire<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Vérifiez le statut de votre fiche dans la console. Seules les fiches <span
+                    class="badge badge--green">Active</span> sont visibles dans l'annuaire.</li>
+                <li>Si votre fiche est <span class="badge badge--blue">En attente</span>, patientez la validation de
+                  l'administrateur.</li>
+                <li>Si elle est <span class="badge badge--red">Rejetée</span>, lisez le motif dans vos notifications et
+                  corrigez.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Le bouton « Soumettre » est grisé<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Des champs obligatoires ne sont pas remplis : <strong>Nom</strong>, <strong>Description</strong>,
+                  <strong>Secteur</strong>, <strong>Région</strong> et <strong>Adresse</strong> sont requis.
+                </li>
+                <li>Assurez-vous que la description contient au moins quelques phrases.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">Erreur lors du téléversement d'image<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Taille maximale : <strong>10 Mo</strong> par fichier. Compressez vos images avant l'envoi.</li>
+                <li>Formats acceptés : JPG, JPEG, PNG, WEBP.</li>
+                <li>Vérifiez que vous n'avez pas atteint la limite d'images de votre forfait (3 Free · 10 Pro · 50
+                  Premium).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h2>Problèmes d'affichage</h2>
+        <div class="accordion">
+          <div class="acc-item open">
+            <div class="acc-header">La page s'affiche mal ou est vide<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Rafraîchissez la page (touche <kbd>F5</kbd> ou <kbd>Ctrl+R</kbd>).</li>
+                <li>Videz le cache du navigateur (<kbd>Ctrl+Shift+Delete</kbd>).</li>
+                <li>Essayez un autre navigateur (Chrome, Firefox, Edge).</li>
+                <li>Désactivez les extensions de navigateur qui pourraient bloquer du contenu.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-header">La carte interactive ne s'affiche pas<span
+                class="material-icons-outlined acc-icon">expand_more</span></div>
+            <div class="acc-body">
+              <ul>
+                <li>Vérifiez votre connexion internet.</li>
+                <li>La carte nécessite JavaScript activé dans le navigateur.</li>
+                <li>Rafraîchissez la page si la carte s'affiche en gris.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--info" style="margin-top:28px;">
+          <span class="material-icons-outlined mi">support_agent</span>
+          <div><strong>Besoin d'aide supplémentaire ?</strong> Utilisez le formulaire de contact sur
+            <code>/contact</code> ou consultez la page support sur <code>/support</code>. L'équipe Annuaire Congo vous
+            répondra dans les meilleurs délais.
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+    <footer class="footer">
+      <span>© 2026 Annuaire Congo</span>
+      <span>·</span>
+      <span data-nav="bienvenue" style="cursor:pointer;">Guide Utilisateur</span>
+      <span>·</span>
+      <a href="../docs/index.html">Documentation technique</a>
+      <span>·</span>
+      <span>République du Congo (Congo-Brazzaville)</span>
+    </footer>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox__close" id="lbClose"><span class="material-icons-outlined">close</span></button>
+    <img id="lbImg" src="" alt="" />
+  </div>
+
+  <!-- Back to top -->
+  <button class="back-top" id="backTop" aria-label="Retour en haut">
+    <span class="material-icons-outlined">arrow_upward</span>
+  </button>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

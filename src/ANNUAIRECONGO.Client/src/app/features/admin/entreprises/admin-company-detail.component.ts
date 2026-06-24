@@ -76,7 +76,7 @@ import { catchError } from 'rxjs/operators';
             <h1>{{ company()!.name }}</h1>
             <p class="meta">
               {{ company()!.cityName || '' }}
-              @if (company()!.sectors?.length) { · {{ company()!.sectors[0].name }} }
+              @if (company()!.sectors?.length) { · {{ company()!.sectors![0].name }} }
               · Créée le {{ formatDate(company()!.createdAt) }}
             </p>
           </div>

@@ -8,5 +8,10 @@
     "target": "https://localhost:7139",
     "secure": false,
     "changeOrigin": true
+  },
+  "/user-subscriptions": {
+    "target": "https://localhost:7139",
+    "secure": false,
+    "changeOrigin": true
   }
 }

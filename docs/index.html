@@ -1,0 +1,3829 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annuaire Congo — Documentation</title>
+  <meta name="description"
+    content="Documentation technique complète de la plateforme Annuaire Congo : architecture, API, guides, déploiement et plus." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- ═══════════════ Top Bar ═══════════════ -->
+  <header class="topbar" id="topbar">
+    <div class="topbar__left">
+      <button class="topbar__hamburger" id="sidebarToggle" aria-label="Toggle sidebar">
+        <span class="material-icons-outlined">menu</span>
+      </button>
+      <a href="#" class="topbar__brand" data-nav="introduction">
+        <img src="images/logo.png" alt="Logo"
+          style="height: 128px; width: auto; margin-right: 12px; border-radius: 4px; object-fit: contain;" />
+      </a>
+    </div>
+    <div class="topbar__center">
+      <div class="search-box" id="searchBox">
+        <span class="material-icons-outlined search-box__icon">search</span>
+        <input type="text" class="search-box__input" id="searchInput" placeholder="Rechercher dans la documentation…"
+          autocomplete="off" />
+        <kbd class="search-box__kbd">Ctrl+K</kbd>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <button class="topbar__icon-btn" id="themeToggle" aria-label="Toggle theme">
+        <span class="material-icons-outlined" id="themeIcon">light_mode</span>
+      </button>
+      <a href="https://github.com" target="_blank" class="topbar__icon-btn" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+        </svg>
+      </a>
+      <span class="topbar__version">v1.0.0</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════ Sidebar ═══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar__nav">
+      <!-- Getting Started -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Démarrage</div>
+        <a class="sidebar__link active" data-nav="introduction">
+          <span class="material-icons-outlined">home</span>Introduction
+        </a>
+        <a class="sidebar__link" data-nav="quickstart">
+          <span class="material-icons-outlined">rocket_launch</span>Démarrage rapide
+        </a>
+        <a class="sidebar__link" data-nav="prerequisites">
+          <span class="material-icons-outlined">checklist</span>Prérequis
+        </a>
+      </div>
+
+      <!-- Architecture -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Architecture</div>
+        <a class="sidebar__link" data-nav="architecture-overview">
+          <span class="material-icons-outlined">account_tree</span>Vue d'ensemble
+        </a>
+        <a class="sidebar__link" data-nav="clean-architecture">
+          <span class="material-icons-outlined">layers</span>Clean Architecture
+        </a>
+        <a class="sidebar__link" data-nav="pipeline-cqrs">
+          <span class="material-icons-outlined">mediation</span>Pipeline CQRS
+        </a>
+        <a class="sidebar__link" data-nav="domain-model">
+          <span class="material-icons-outlined">hub</span>Modèle de domaine
+        </a>
+        <a class="sidebar__link" data-nav="database-schema">
+          <span class="material-icons-outlined">storage</span>Schéma BDD
+        </a>
+      </div>
+
+      <!-- API Reference -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Référence API</div>
+        <a class="sidebar__link" data-nav="api-overview">
+          <span class="material-icons-outlined">api</span>Vue d'ensemble API
+        </a>
+        <a class="sidebar__link" data-nav="api-identity">
+          <span class="material-icons-outlined">fingerprint</span>Identité & Auth
+        </a>
+        <a class="sidebar__link" data-nav="api-companies">
+          <span class="material-icons-outlined">business</span>Entreprises
+        </a>
+        <a class="sidebar__link" data-nav="api-subscriptions">
+          <span class="material-icons-outlined">card_membership</span>Abonnements & Paiements
+        </a>
+        <a class="sidebar__link" data-nav="api-geography">
+          <span class="material-icons-outlined">public</span>Géographie
+        </a>
+        <a class="sidebar__link" data-nav="api-sectors">
+          <span class="material-icons-outlined">category</span>Secteurs
+        </a>
+        <a class="sidebar__link" data-nav="api-ai">
+          <span class="material-icons-outlined">smart_toy</span>CongoBot & IA
+        </a>
+        <a class="sidebar__link" data-nav="api-admin">
+          <span class="material-icons-outlined">admin_panel_settings</span>Administration
+        </a>
+        <a class="sidebar__link" data-nav="api-stats">
+          <span class="material-icons-outlined">analytics</span>Statistiques
+        </a>
+      </div>
+
+      <!-- Frontend -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Client Angular</div>
+        <a class="sidebar__link" data-nav="frontend-overview">
+          <span class="material-icons-outlined">web</span>Architecture Frontend
+        </a>
+        <a class="sidebar__link" data-nav="frontend-routing">
+          <span class="material-icons-outlined">route</span>Routage & Navigation
+        </a>
+        <a class="sidebar__link" data-nav="frontend-services">
+          <span class="material-icons-outlined">miscellaneous_services</span>Services & State
+        </a>
+        <a class="sidebar__link" data-nav="frontend-guards">
+          <span class="material-icons-outlined">shield</span>Guards & Interceptors
+        </a>
+      </div>
+
+      <!-- Features -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Fonctionnalités</div>
+        <a class="sidebar__link" data-nav="features-auth">
+          <span class="material-icons-outlined">lock</span>Authentification
+        </a>
+        <a class="sidebar__link" data-nav="features-company">
+          <span class="material-icons-outlined">domain_add</span>Gestion d'entreprise
+        </a>
+        <a class="sidebar__link" data-nav="features-subscription">
+          <span class="material-icons-outlined">payments</span>Plans & Abonnements
+        </a>
+        <a class="sidebar__link" data-nav="features-analytics">
+          <span class="material-icons-outlined">insights</span>Analytiques
+        </a>
+        <a class="sidebar__link" data-nav="features-congobot">
+          <span class="material-icons-outlined">chat</span>CongoBot IA
+        </a>
+        <a class="sidebar__link" data-nav="features-trustscore">
+          <span class="material-icons-outlined">verified</span>Trust Score
+        </a>
+        <a class="sidebar__link" data-nav="features-notifications">
+          <span class="material-icons-outlined">notifications</span>Notifications
+        </a>
+      </div>
+
+      <!-- Infrastructure -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Infrastructure</div>
+        <a class="sidebar__link" data-nav="infra-security">
+          <span class="material-icons-outlined">security</span>Sécurité
+        </a>
+        <a class="sidebar__link" data-nav="infra-observability">
+          <span class="material-icons-outlined">monitor_heart</span>Observabilité
+        </a>
+        <a class="sidebar__link" data-nav="infra-deployment">
+          <span class="material-icons-outlined">cloud_upload</span>Déploiement
+        </a>
+        <a class="sidebar__link" data-nav="infra-configuration">
+          <span class="material-icons-outlined">settings</span>Configuration
+        </a>
+      </div>
+
+      <!-- Tests & Contribution -->
+      <div class="sidebar__group">
+        <div class="sidebar__group-title">Tests & Contribution</div>
+        <a class="sidebar__link" data-nav="tests">
+          <span class="material-icons-outlined">science</span>Stratégie de tests
+        </a>
+        <a class="sidebar__link" data-nav="contributing">
+          <span class="material-icons-outlined">code</span>Contribuer
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ═══════════════ Sidebar Overlay (mobile) ═══════════════ -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════════ Main Content ═══════════════ -->
+  <main class="content" id="content">
+
+    <!-- ============ INTRODUCTION ============ -->
+    <section class="page" id="page-introduction">
+      <div class="page__header">
+        <div class="page__breadcrumb">Démarrage / Introduction</div>
+        <h1 class="page__title">Bienvenue dans la documentation<br /><span class="gradient-text">Annuaire Congo</span>
+        </h1>
+        <p class="page__subtitle">Documentation technique complète de la plateforme SaaS de référencement des
+          entreprises de la République du Congo (Congo-Brazzaville). Ce guide couvre l'architecture, l'API REST, le
+          frontend Angular, la sécurité, l'IA et le déploiement.</p>
+      </div>
+
+      <!-- Navigation rapide -->
+      <div class="hero-cards">
+        <a class="hero-card" data-nav="quickstart">
+          <span class="hero-card__icon material-icons-outlined">rocket_launch</span>
+          <h3>Démarrage rapide</h3>
+          <p>Lancez l'API et le frontend localement en moins de 5 minutes avec Docker Compose.</p>
+        </a>
+        <a class="hero-card" data-nav="architecture-overview">
+          <span class="hero-card__icon material-icons-outlined">account_tree</span>
+          <h3>Architecture</h3>
+          <p>Clean Architecture à 5 projets, CQRS via MediatR 12, pipeline de 4 behaviors.</p>
+        </a>
+        <a class="hero-card" data-nav="api-overview">
+          <span class="hero-card__icon material-icons-outlined">api</span>
+          <h3>Référence API</h3>
+          <p>7 contrôleurs RESTful, 50+ endpoints documentés avec schémas de requête/réponse.</p>
+        </a>
+        <a class="hero-card" data-nav="infra-deployment">
+          <span class="hero-card__icon material-icons-outlined">cloud_upload</span>
+          <h3>Déploiement</h3>
+          <p>5 services Docker Compose : API, SQL Server, Seq, Prometheus, Grafana.</p>
+        </a>
+      </div>
+
+      <!-- Stack technique -->
+      <div class="info-banner">
+        <span class="material-icons-outlined">layers</span>
+        <div>
+          <strong>Stack technique</strong>
+          <p><strong>Backend :</strong> .NET 9 · ASP.NET Core · MediatR · FluentValidation · EF Core · Serilog &nbsp;|&nbsp;
+            <strong>Frontend :</strong> Angular 19 (standalone + signals) &nbsp;|&nbsp;
+            <strong>Infra :</strong> SQL Server 2022 · Seq · Prometheus · Grafana · Docker &nbsp;|&nbsp;
+            <strong>IA :</strong> Groq API / LLaMA 3.3 70B</p>
+        </div>
+      </div>
+
+      <!-- Contexte et objectif -->
+      <h2 id="what-is">Qu'est-ce qu'Annuaire Congo ?</h2>
+      <p>
+        La République du Congo compte des milliers d'entreprises locales dont la visibilité numérique reste très limitée,
+        faute d'un annuaire professionnel centralisé et fiable. <strong>Annuaire Congo</strong> répond à ce manque en
+        proposant une plateforme SaaS complète qui permet à trois types d'acteurs d'interagir :
+      </p>
+      <ul style="margin: 16px 0 16px 24px; line-height: 1.9;">
+        <li><strong>Les propriétaires d'entreprise</strong> créent et enrichissent leur fiche (secteur, localisation,
+          contacts, services, documents, images), souscrivent à un abonnement premium et suivent leurs statistiques
+          d'audience.</li>
+        <li><strong>Les utilisateurs</strong> recherchent des entreprises par secteur, région ou mot-clé, consultent les
+          fiches enrichies, et interagissent avec CongoBot — l'assistant IA intégré — pour affiner leur recherche.</li>
+        <li><strong>Les administrateurs</strong> valident les fiches soumises, modèrent les signalements, gèrent les
+          plans d'abonnement et supervisent la plateforme via un journal d'audit complet.</li>
+      </ul>
+      <p>
+        La page d'accueil ci-dessous illustre l'expérience publique : accès direct à la recherche, mise en avant des
+        secteurs clés, et intégration visible de CongoBot.
+      </p>
+
+      <!-- Capture homepage -->
+      <div style="margin: 24px 0 8px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/homepage_1781602700489.png" alt="Page d'accueil publique d'Annuaire Congo"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+      <p style="text-align: center; font-size: .82rem; color: var(--text-3); margin-bottom: 32px;">
+        <em>Figure — Page d'accueil publique : accès visiteur avec recherche, secteurs et CongoBot.</em>
+      </p>
+
+      <!-- Fonctionnalités clés -->
+      <h2 id="features">Fonctionnalités principales</h2>
+      <p>La plateforme s'articule autour de six piliers fonctionnels, tous exposés via l'API REST et consommés par le
+        frontend Angular :</p>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">search</span>
+          <h4>Recherche avancée</h4>
+          <p>Filtres combinés (secteur, région, statut, premium) avec pagination côté serveur et tri dynamique. La
+            recherche textuelle est enrichie par CongoBot.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">map</span>
+          <h4>Cartographie interactive</h4>
+          <p>Visualisation Leaflet géolocalisée des entreprises sur les 12 régions du Congo, avec clustering de marqueurs
+            et fiche pop-up.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">verified</span>
+          <h4>Trust Score IA</h4>
+          <p>Score de confiance 0–100 calculé sur 10 indicateurs (complétude, vérification, engagement…), affiché
+            directement sur chaque fiche publique.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">smart_toy</span>
+          <h4>CongoBot</h4>
+          <p>Assistant conversationnel propulsé par LLaMA 3.3 70B (Groq API), accessible sans authentification pour
+            guider les visiteurs vers les bonnes entreprises.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">analytics</span>
+          <h4>Analytics propriétaire</h4>
+          <p>Tableau de bord dédié aux propriétaires : vues de profil, clics sur les contacts, évolution mensuelle et
+            export CSV des données d'audience.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">payments</span>
+          <h4>Abonnements & paiements</h4>
+          <p>Plans Free / Premium / Business avec intégration MTN MoMo, Airtel Money et Stripe. Machine à états pour le
+            cycle de vie des abonnements.</p>
+        </div>
+      </div>
+
+      <!-- Points forts techniques -->
+      <div class="callout callout--tip" style="margin: 32px 0;">
+        <span class="material-icons-outlined">engineering</span>
+        <div>
+          <strong>Points forts de l'implémentation</strong>
+          <p>
+            Le backend applique la <strong>Clean Architecture</strong> stricte (Domain → Application → Infrastructure →
+            Api) sans dépendances circulaires. Chaque commande ou requête transite par un pipeline MediatR de
+            4 behaviors chaînés : gestion des exceptions → validation FluentValidation → monitoring des performances →
+            cache HybridCache (.NET 9, L1 in-process 30 s + L2 distribué 10 min). L'observabilité est assurée par
+            Serilog → Seq (logs structurés) et OpenTelemetry → Prometheus → Grafana (métriques).
+          </p>
+        </div>
+      </div>
+
+      <!-- Rôles et accès -->
+      <h2 id="roles">Rôles et niveaux d'accès</h2>
+      <p>La plateforme distingue quatre rôles aux périmètres bien délimités. Les routes API sont sécurisées par des
+        attributs <code>[Authorize(Roles = "…")]</code> ; certains endpoints publics portent explicitement
+        <code>[AllowAnonymous]</code> (recherche, fiches, CongoBot, Trust Score).</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Rôle</th>
+              <th>Profil</th>
+              <th>Périmètre d'accès</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Admin</code></td>
+              <td>Administrateur de la plateforme</td>
+              <td>Panel admin complet : validation des fiches, modération, gestion des plans, journal d'audit, rapports IA</td>
+            </tr>
+            <tr>
+              <td><code>EntrepriseOwner</code></td>
+              <td>Propriétaire d'entreprise inscrit</td>
+              <td>Espace entreprise : création/édition de fiches, images, documents, services, abonnements, statistiques</td>
+            </tr>
+            <tr>
+              <td><code>RegularUser</code></td>
+              <td>Utilisateur authentifié</td>
+              <td>Profil personnel, notifications, favoris, consultation de l'annuaire et des fiches enrichies</td>
+            </tr>
+            <tr>
+              <td><em>Visiteur</em></td>
+              <td>Non authentifié</td>
+              <td>Pages publiques : accueil, annuaire, secteurs, tarifs, cartographie, CongoBot, Trust Score</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="margin-top: 16px;">Le tableau de bord administrateur ci-dessous illustre la supervision centralisée :
+        statistiques globales de la plateforme, liste des entreprises en attente de validation, et accès rapide aux
+        outils de modération.</p>
+
+      <!-- Capture admin dashboard -->
+      <div style="margin: 24px 0 8px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/admin_dashboard_1781603017691.png" alt="Tableau de bord Administrateur"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+      <p style="text-align: center; font-size: .82rem; color: var(--text-3); margin-bottom: 32px;">
+        <em>Figure — Tableau de bord Admin : vue d'ensemble des KPIs, validation des fiches et journal d'audit.</em>
+      </p>
+
+      <!-- Ce que couvre cette documentation -->
+      <h2 id="doc-scope">Ce que couvre cette documentation</h2>
+      <p>Ce site de documentation est organisé en six grandes sections accessibles depuis le menu latéral :</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>Contenu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Architecture</strong></td>
+              <td>Clean Architecture, pipeline CQRS/MediatR, modèle de domaine, schéma de base de données</td>
+            </tr>
+            <tr>
+              <td><strong>Référence API</strong></td>
+              <td>Tous les endpoints par contrôleur avec schémas de requête, réponse et codes d'erreur</td>
+            </tr>
+            <tr>
+              <td><strong>Sécurité</strong></td>
+              <td>JWT, refresh tokens, rôles, CORS, rate limiting</td>
+            </tr>
+            <tr>
+              <td><strong>Fonctionnalités</strong></td>
+              <td>Recherche, analytics, notifications, CongoBot, Trust Score</td>
+            </tr>
+            <tr>
+              <td><strong>Infrastructure</strong></td>
+              <td>Docker Compose, observabilité (Seq + Grafana), déploiement</td>
+            </tr>
+            <tr>
+              <td><strong>Tests & Contribution</strong></td>
+              <td>Stratégie de tests (pyramide à 4 niveaux), Testcontainers, guide de contribution</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ QUICKSTART ============ -->
+    <section class="page" id="page-quickstart">
+      <div class="page__header">
+        <div class="page__breadcrumb">Démarrage / Démarrage rapide</div>
+        <h1 class="page__title">Démarrage rapide</h1>
+        <p class="page__subtitle">Suivez ces étapes pour lancer la plateforme en mode développement sur votre machine
+          locale.</p>
+      </div>
+
+      <h2>1. Cloner le dépôt</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code>git clone https://github.com/your-org/ANNUAIRECONGO.git
+cd ANNUAIRECONGO</code></pre>
+      </div>
+
+      <h2>2. Lancer le backend (.NET 10)</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code># Restaurer les dépendances
+dotnet restore
+
+# Lancer les migrations et le seed
+cd src/ANNUAIRECONGO.Api
+dotnet run</code></pre>
+      </div>
+      <div class="callout callout--tip">
+        <span class="material-icons-outlined">lightbulb</span>
+        <div>
+          <strong>Astuce</strong>
+          <p>L'API lance automatiquement les migrations et le seed de la base de données au démarrage (via
+            <code>ApplicationDbContextInitialiser</code>). L'API écoute sur <code>https://localhost:7139</code> et
+            <code>http://localhost:5000</code>.
+          </p>
+        </div>
+      </div>
+
+      <h2>3. Lancer le frontend (Angular 19)</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code>cd src/ANNUAIRECONGO.Client
+npm install
+ng serve</code></pre>
+      </div>
+      <p>L'application Angular sera disponible sur <code>http://localhost:4200</code>.</p>
+
+      <h2>4. Comptes de test pré-configurés</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Rôle</th>
+              <th>Email</th>
+              <th>Mot de passe</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge--admin">Admin</span></td>
+              <td><code>admin@localhost</code></td>
+              <td><code>admin@localhost</code></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--owner">EntrepriseOwner</span></td>
+              <td><code>john.businessOwner@localhost</code></td>
+              <td><code>Password123!</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>5. Lancer avec Docker Compose</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code># Démarrage complet : API + SQL Server + Seq + Prometheus + Grafana
+docker compose up -d
+
+# Vérifier les services
+docker compose ps</code></pre>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>URL</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>API .NET</td>
+              <td><code>http://localhost:5001</code></td>
+              <td>Backend REST API</td>
+            </tr>
+            <tr>
+              <td>Angular App</td>
+              <td><code>http://localhost:80</code></td>
+              <td>Frontend (via Nginx)</td>
+            </tr>
+            <tr>
+              <td>SQL Server</td>
+              <td><code>localhost:1433</code></td>
+              <td>Base de données</td>
+            </tr>
+            <tr>
+              <td>Seq</td>
+              <td><code>http://localhost:8081</code></td>
+              <td>Centralisation des logs</td>
+            </tr>
+            <tr>
+              <td>Prometheus</td>
+              <td><code>http://localhost:9090</code></td>
+              <td>Métriques</td>
+            </tr>
+            <tr>
+              <td>Grafana</td>
+              <td><code>http://localhost:3000</code></td>
+              <td>Tableaux de bord visuels</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ PREREQUISITES ============ -->
+    <section class="page" id="page-prerequisites">
+      <div class="page__header">
+        <div class="page__breadcrumb">Démarrage / Prérequis</div>
+        <h1 class="page__title">Prérequis</h1>
+        <p class="page__subtitle">Outils et versions nécessaires pour développer et exécuter la plateforme.</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Outil</th>
+              <th>Version minimum</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>.NET SDK</td>
+              <td>10.0</td>
+              <td>Backend API, compilation et exécution</td>
+            </tr>
+            <tr>
+              <td>Node.js</td>
+              <td>22.x (LTS)</td>
+              <td>Environnement d'exécution Angular CLI</td>
+            </tr>
+            <tr>
+              <td>npm</td>
+              <td>10.x</td>
+              <td>Gestionnaire de paquets frontend</td>
+            </tr>
+            <tr>
+              <td>Angular CLI</td>
+              <td>19.x</td>
+              <td>Génération de composants, build, serve</td>
+            </tr>
+            <tr>
+              <td>SQL Server</td>
+              <td>2022</td>
+              <td>Base de données relationnelle</td>
+            </tr>
+            <tr>
+              <td>Docker</td>
+              <td>24.x</td>
+              <td>Conteneurisation et déploiement</td>
+            </tr>
+            <tr>
+              <td>Docker Compose</td>
+              <td>2.x</td>
+              <td>Orchestration multi-services</td>
+            </tr>
+            <tr>
+              <td>Git</td>
+              <td>2.x</td>
+              <td>Contrôle de version</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout--warning">
+        <span class="material-icons-outlined">warning</span>
+        <div>
+          <strong>SQL Server requis</strong>
+          <p>En mode développement local (sans Docker), vous devez disposer d'une instance SQL Server accessible. La
+            connexion par défaut utilise <code>Trusted_Connection=True</code> (Windows Authentication).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ARCHITECTURE OVERVIEW ============ -->
+    <section class="page" id="page-architecture-overview">
+      <div class="page__header">
+        <div class="page__breadcrumb">Architecture / Vue d'ensemble</div>
+        <h1 class="page__title">Vue d'ensemble de l'architecture</h1>
+        <p class="page__subtitle">Annuaire Congo suit les principes de la <strong>Clean Architecture</strong> avec une
+          séparation stricte en 5 couches.</p>
+      </div>
+
+      <div class="diagram-container">
+        <div class="arch-diagram">
+          <div class="arch-layer arch-layer--client">
+            <div class="arch-layer__label">CLIENT</div>
+            <div class="arch-layer__content">
+              <div class="arch-box arch-box--angular">Angular 19 SPA</div>
+              <div class="arch-box arch-box--leaflet">Leaflet Maps</div>
+              <div class="arch-box arch-box--tailwind">TailwindCSS</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕ HTTP / JWT Bearer</div>
+          <div class="arch-layer arch-layer--api">
+            <div class="arch-layer__label">API</div>
+            <div class="arch-layer__content">
+              <div class="arch-box">Controllers</div>
+              <div class="arch-box">Middleware</div>
+              <div class="arch-box">Rate Limiting</div>
+              <div class="arch-box">Output Cache</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕ MediatR Commands / Queries</div>
+          <div class="arch-layer arch-layer--app">
+            <div class="arch-layer__label">APPLICATION</div>
+            <div class="arch-layer__content">
+              <div class="arch-box">Handlers (CQRS)</div>
+              <div class="arch-box">Validators</div>
+              <div class="arch-box">Behaviors</div>
+              <div class="arch-box">Interfaces</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕ Dépend de</div>
+          <div class="arch-layer arch-layer--domain">
+            <div class="arch-layer__label">DOMAIN</div>
+            <div class="arch-layer__content">
+              <div class="arch-box">Entités</div>
+              <div class="arch-box">Value Objects</div>
+              <div class="arch-box">Domain Events</div>
+              <div class="arch-box">Business Rules</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕ Implémenté par</div>
+          <div class="arch-layer arch-layer--infra">
+            <div class="arch-layer__label">INFRASTRUCTURE</div>
+            <div class="arch-layer__content">
+              <div class="arch-box">EF Core</div>
+              <div class="arch-box">Identity</div>
+              <div class="arch-box">Serilog / Seq</div>
+              <div class="arch-box">Grok AI</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Structure des projets</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>tree</span></div>
+        <pre><code>ANNUAIRECONGO/
+├── src/
+│   ├── ANNUAIRECONGO.Api/              ← Couche Présentation (Controllers, Middleware)
+│   ├── ANNUAIRECONGO.Application/      ← Couche Application (Handlers, Validators)
+│   ├── ANNUAIRECONGO.Domain/           ← Couche Domaine (Entités, Règles métier)
+│   ├── ANNUAIRECONGO.Infrastructure/   ← Couche Infrastructure (EF, Identity, Services)
+│   ├── ANNUAIRECONGO.Contracts/        ← DTOs et Contrats partagés
+│   └── ANNUAIRECONGO.Client/           ← Application Angular 19
+├── docker-compose.yml                  ← Orchestration multi-services
+├── Dockerfile                          ← Build multi-stage (API + Client)
+├── nginx.conf                          ← Reverse proxy pour le client
+└── docs/                               ← Cette documentation</code></pre>
+      </div>
+
+      <h2>Flux de données principal</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num">1</span>
+          <div><strong>Client Angular</strong>
+            <p>L'utilisateur interagit avec l'interface. Les requêtes HTTP sont envoyées via <code>ApiService</code>
+              avec le token JWT en en-tête.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">2</span>
+          <div><strong>API Controller</strong>
+            <p>Le contrôleur reçoit la requête, effectue les vérifications d'autorisation, et envoie une
+              commande/requête via MediatR.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">3</span>
+          <div><strong>Handler CQRS</strong>
+            <p>Le handler traite la logique applicative. La pipeline MediatR exécute les validators FluentValidation
+              avant le handler.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">4</span>
+          <div><strong>Domaine</strong>
+            <p>Les entités du domaine appliquent les règles métier. Les transitions d'état sont validées (ex : Draft →
+              Pending → Active).</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">5</span>
+          <div><strong>Infrastructure</strong>
+            <p>EF Core persiste les changements. Les domain events sont dispatched après <code>SaveChangesAsync</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CLEAN ARCHITECTURE ============ -->
+    <section class="page" id="page-clean-architecture">
+      <div class="page__header">
+        <div class="page__breadcrumb">Architecture / Clean Architecture</div>
+        <h1 class="page__title">Clean Architecture — Détails</h1>
+        <p class="page__subtitle">Chaque couche a des responsabilités bien définies. Les dépendances pointent uniquement
+          vers l'intérieur.</p>
+      </div>
+
+      <h2>Couche Domain</h2>
+      <p>Contient les entités métier, les value objects, les domain events, et les règles de validation. Aucune
+        dépendance externe.</p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Namespace</th>
+              <th>Entités principales</th>
+              <th>Responsabilité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Companies</code></td>
+              <td>Company, CompanyContact, CompanyImage, CompanyDocument, CompanyService, CompanyReport</td>
+              <td>Gestion des fiches entreprises avec machine d'état (Draft → Pending → Active/Rejected/Suspended)</td>
+            </tr>
+            <tr>
+              <td><code>BusinessOwners</code></td>
+              <td>BusinessOwner</td>
+              <td>Profil du propriétaire d'entreprise avec vérification KYC</td>
+            </tr>
+            <tr>
+              <td><code>Subscriptions</code></td>
+              <td>Subscription, Payment, Plan</td>
+              <td>Abonnements avec cycle de vie (Pending → Active → ExpiringSoon → Expired/Cancelled)</td>
+            </tr>
+            <tr>
+              <td><code>Geography</code></td>
+              <td>Region, City</td>
+              <td>Découpage géographique du Congo-Brazzaville (12 régions, 35+ villes)</td>
+            </tr>
+            <tr>
+              <td><code>Sectors</code></td>
+              <td>Sector, CompanySector</td>
+              <td>Classification sectorielle (6 secteurs stratégiques)</td>
+            </tr>
+            <tr>
+              <td><code>Analytics</code></td>
+              <td>ProfileView, ContactClick, AnalyticsDailySummary</td>
+              <td>Suivi des interactions utilisateurs</td>
+            </tr>
+            <tr>
+              <td><code>Notifications</code></td>
+              <td>Notification</td>
+              <td>Notifications in-app avec types (Info, Success, Warning, Error)</td>
+            </tr>
+            <tr>
+              <td><code>Logs</code></td>
+              <td>AdminLog</td>
+              <td>Journal d'audit des actions administratives</td>
+            </tr>
+            <tr>
+              <td><code>Identity</code></td>
+              <td>Role, RefreshToken</td>
+              <td>Rôles et tokens de rafraîchissement</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Couche Application</h2>
+      <p>Contient les handlers CQRS (via MediatR), les validators (FluentValidation), les behaviors (pipeline MediatR),
+        et les interfaces des services.</p>
+      <div class="callout callout--info">
+        <span class="material-icons-outlined">info</span>
+        <div>
+          <strong>Pattern CQRS</strong>
+          <p>Chaque cas d'utilisation est implémenté via une commande (écriture) ou une requête (lecture) MediatR. Les
+            validators FluentValidation s'exécutent automatiquement via le <code>ValidationBehavior</code> de la
+            pipeline MediatR.</p>
+        </div>
+      </div>
+
+      <h2>Couche Infrastructure</h2>
+      <p>Implémente les interfaces définies dans Application. Comprend :</p>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">storage</span>
+          <h4>Persistance (EF Core)</h4>
+          <p><code>AppDbContext</code> avec 20+ DbSets, intercepteurs d'audit, configurations Fluent API, et dispatch
+            automatique des domain events.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">fingerprint</span>
+          <h4>Identity & JWT</h4>
+          <p><code>IdentityService</code> et <code>TokenProvider</code> gèrent l'inscription, la connexion, les tokens
+            JWT avec refresh, et la vérification email.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">smart_toy</span>
+          <h4>Service IA (Grok)</h4>
+          <p><code>GrokService</code> intègre LLaMA 3.3 70B pour la recherche sémantique, le Trust Score, et les
+            rapports IA.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">folder_open</span>
+          <h4>Stockage local</h4>
+          <p><code>LocalStorageService</code> gère l'upload de fichiers (logos, images, documents) avec validation de
+            taille (max 10 MB).</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">notifications</span>
+          <h4>Notifications</h4>
+          <p><code>NotificationService</code> crée des notifications in-app pour les événements métier (validation,
+            paiement, expiration).</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">receipt_long</span>
+          <h4>Facturation</h4>
+          <p><code>InvoiceService</code> génère les factures PDF pour les paiements confirmés.</p>
+        </div>
+      </div>
+
+      <h2>Couche API</h2>
+      <p>Point d'entrée HTTP. Comprend 7 contrôleurs, le middleware pipeline, le rate limiting (100 req/min), et
+        l'output caching (avec exclusion des requêtes authentifiées).</p>
+
+      <h2>Couche Contracts</h2>
+      <p>DTOs partagés entre l'API et l'Application. Définit les structures de requête/réponse utilisées par les
+        contrôleurs et les handlers.</p>
+    </section>
+
+    <!-- ============ DOMAIN MODEL ============ -->
+    <section class="page" id="page-domain-model">
+      <div class="page__header">
+        <div class="page__breadcrumb">Architecture / Modèle de domaine</div>
+        <h1 class="page__title">Modèle de domaine</h1>
+        <p class="page__subtitle">Entités, agrégats et machines d'état du domaine métier.</p>
+      </div>
+
+      <h2>Machine d'état — Company</h2>
+      <p>L'entité <code>Company</code> est l'agrégat racine principal. Son statut suit une machine d'état stricte :</p>
+      <div class="state-machine">
+        <div class="state state--draft">Draft</div>
+        <div class="state-arrow">→ Submit()</div>
+        <div class="state state--pending">Pending</div>
+        <div class="state-arrow state-arrow--branch">
+          <span>↗ Approve()</span>
+          <span>↘ Reject(reason)</span>
+        </div>
+        <div class="state-row">
+          <div class="state state--active">Active</div>
+          <div class="state state--rejected">Rejected</div>
+        </div>
+        <div class="state-arrow">↓ Suspend()</div>
+        <div class="state state--suspended">Suspended</div>
+      </div>
+
+      <div class="callout callout--warning">
+        <span class="material-icons-outlined">warning</span>
+        <div>
+          <strong>Transitions protégées</strong>
+          <p>Chaque méthode de transition valide l'état actuel et retourne un <code>Result&lt;Updated&gt;</code>. Les
+            transitions invalides retournent une erreur typée (<code>CompanyErrors</code>).</p>
+        </div>
+      </div>
+
+      <h2>Machine d'état — Subscription</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num badge--pending">P</span>
+          <div><strong>Pending</strong>
+            <p>Créée lors de la souscription. En attente de confirmation de paiement.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num badge--active">A</span>
+          <div><strong>Active</strong>
+            <p>Activée après confirmation du paiement. L'entreprise bénéficie des fonctionnalités du plan.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num badge--warning">E</span>
+          <div><strong>ExpiringSoon</strong>
+            <p>Notification envoyée quand l'expiration approche.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num badge--expired">X</span>
+          <div><strong>Expired / Cancelled</strong>
+            <p>L'abonnement est terminé. Renouvellement possible.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2>Propriétés clés de Company</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Propriété</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Name</code></td>
+              <td>string</td>
+              <td>Nom de l'entreprise (obligatoire)</td>
+            </tr>
+            <tr>
+              <td><code>Slug</code></td>
+              <td>string</td>
+              <td>URL-friendly identifier, généré automatiquement</td>
+            </tr>
+            <tr>
+              <td><code>Status</code></td>
+              <td>CompanyStatus</td>
+              <td>Draft, Pending, Active, Rejected, Suspended</td>
+            </tr>
+            <tr>
+              <td><code>IsFeatured</code></td>
+              <td>bool</td>
+              <td>Mise en avant sur la page d'accueil</td>
+            </tr>
+            <tr>
+              <td><code>IsVerified</code></td>
+              <td>bool</td>
+              <td>Vérification KYC par l'administration</td>
+            </tr>
+            <tr>
+              <td><code>IsPremium</code></td>
+              <td>bool</td>
+              <td>Abonnement premium actif</td>
+            </tr>
+            <tr>
+              <td><code>TrustScore</code></td>
+              <td>int?</td>
+              <td>Score de confiance calculé par IA (0-100)</td>
+            </tr>
+            <tr>
+              <td><code>Contacts</code></td>
+              <td>List&lt;CompanyContact&gt;</td>
+              <td>Téléphone, Email, WhatsApp, Facebook, LinkedIn, etc.</td>
+            </tr>
+            <tr>
+              <td><code>Services</code></td>
+              <td>List&lt;CompanyService&gt;</td>
+              <td>Services offerts par l'entreprise</td>
+            </tr>
+            <tr>
+              <td><code>Images</code></td>
+              <td>List&lt;CompanyImage&gt;</td>
+              <td>Photos de l'entreprise avec ordre d'affichage</td>
+            </tr>
+            <tr>
+              <td><code>Documents</code></td>
+              <td>List&lt;CompanyDocument&gt;</td>
+              <td>Documents légaux : RCCM, NIF, Patente</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ DATABASE SCHEMA ============ -->
+    <section class="page" id="page-database-schema">
+      <div class="page__header">
+        <div class="page__breadcrumb">Architecture / Schéma de base de données</div>
+        <h1 class="page__title">Schéma de base de données</h1>
+        <p class="page__subtitle">SQL Server 2022 — Toutes les tables sont gérées via EF Core Code-First avec
+          migrations.</p>
+      </div>
+
+      <h2>Tables principales (DbSets)</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>DbSet</th>
+              <th>Table</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Companies</code></td>
+              <td>Companies</td>
+              <td>Fiches d'entreprises — agrégat racine</td>
+            </tr>
+            <tr>
+              <td><code>BusinessOwners</code></td>
+              <td>BusinessOwners</td>
+              <td>Propriétaires d'entreprises avec profil KYC</td>
+            </tr>
+            <tr>
+              <td><code>CompanyContacts</code></td>
+              <td>CompanyContacts</td>
+              <td>Coordonnées multiples (Phone, Email, WhatsApp, réseaux sociaux)</td>
+            </tr>
+            <tr>
+              <td><code>CompanySectors</code></td>
+              <td>CompanySectors</td>
+              <td>Table de jointure entreprise ↔ secteur (many-to-many)</td>
+            </tr>
+            <tr>
+              <td><code>CompanyImages</code></td>
+              <td>CompanyImages</td>
+              <td>Galerie photos avec ordre d'affichage</td>
+            </tr>
+            <tr>
+              <td><code>CompanyDocuments</code></td>
+              <td>CompanyDocuments</td>
+              <td>Documents légaux (RCCM, NIF, Patente)</td>
+            </tr>
+            <tr>
+              <td><code>CompanyServices</code></td>
+              <td>CompanyServices</td>
+              <td>Services proposés</td>
+            </tr>
+            <tr>
+              <td><code>CompanyReports</code></td>
+              <td>CompanyReports</td>
+              <td>Signalements d'entreprises par les utilisateurs</td>
+            </tr>
+            <tr>
+              <td><code>Subscriptions</code></td>
+              <td>Subscriptions</td>
+              <td>Abonnements avec période de validité</td>
+            </tr>
+            <tr>
+              <td><code>Payments</code></td>
+              <td>Payments</td>
+              <td>Historique des paiements (Stripe, MTN MoMo, Airtel Money)</td>
+            </tr>
+            <tr>
+              <td><code>Plans</code></td>
+              <td>Plans</td>
+              <td>Forfaits disponibles (Free, Pro, Premium)</td>
+            </tr>
+            <tr>
+              <td><code>Regions</code></td>
+              <td>Regions</td>
+              <td>12 régions du Congo-Brazzaville</td>
+            </tr>
+            <tr>
+              <td><code>Cities</code></td>
+              <td>Cities</td>
+              <td>35+ villes avec lien vers la région parente</td>
+            </tr>
+            <tr>
+              <td><code>Sectors</code></td>
+              <td>Sectors</td>
+              <td>6 secteurs d'activité stratégiques</td>
+            </tr>
+            <tr>
+              <td><code>ProfileViews</code></td>
+              <td>ProfileViews</td>
+              <td>Traçabilité des vues de fiches</td>
+            </tr>
+            <tr>
+              <td><code>ContactClicks</code></td>
+              <td>ContactClicks</td>
+              <td>Clics sur les informations de contact</td>
+            </tr>
+            <tr>
+              <td><code>AnalyticsDailySummaries</code></td>
+              <td>AnalyticsDailySummaries</td>
+              <td>Agrégation quotidienne des métriques</td>
+            </tr>
+            <tr>
+              <td><code>Notifications</code></td>
+              <td>Notifications</td>
+              <td>Notifications utilisateur</td>
+            </tr>
+            <tr>
+              <td><code>AdminLogs</code></td>
+              <td>AdminLogs</td>
+              <td>Journal d'audit des actions admin</td>
+            </tr>
+            <tr>
+              <td><code>RefreshTokens</code></td>
+              <td>RefreshTokens</td>
+              <td>Tokens de rafraîchissement JWT</td>
+            </tr>
+            <tr>
+              <td><code>UserProfiles</code></td>
+              <td>UserProfiles</td>
+              <td>Profils des utilisateurs réguliers</td>
+            </tr>
+            <tr>
+              <td><code>UserSubscriptions</code></td>
+              <td>UserSubscriptions</td>
+              <td>Abonnements des utilisateurs réguliers</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Fonctionnalités de persistance</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">edit_note</span>
+          <h4>Audit automatique</h4>
+          <p><code>AuditableEntityInterceptor</code> remplit automatiquement <code>CreatedAt</code>,
+            <code>CreatedBy</code>, <code>LastModifiedAt</code>, <code>LastModifiedBy</code> sur chaque sauvegarde.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">bolt</span>
+          <h4>Domain Events</h4>
+          <p>Les events sont collectés depuis les entités et dispatched via MediatR après <code>SaveChangesAsync</code>.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">tune</span>
+          <h4>Fluent API</h4>
+          <p>Configurations EF Core appliquées depuis l'assembly via <code>ApplyConfigurationsFromAssembly</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">cached</span>
+          <h4>HybridCache</h4>
+          <p>Cache à 2 niveaux : L1 local (30s) + L2 distribué (10min) pour les requêtes fréquentes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API OVERVIEW ============ -->
+    <section class="page" id="page-api-overview">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Vue d'ensemble</div>
+        <h1 class="page__title">Vue d'ensemble de l'API</h1>
+        <p class="page__subtitle">API REST versionnée (v1) avec authentification JWT Bearer. Base URL :
+          <code>/api/v1</code>
+        </p>
+      </div>
+
+      <h2>Conventions</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">link</span>
+          <h4>URL Versioning</h4>
+          <p>Toutes les routes sont préfixées par <code>/api/v{version}</code>. Version actuelle : <code>v1</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">code</span>
+          <h4>Format de réponse</h4>
+          <p>JSON avec <code>JsonStringEnumConverter</code> — les enums sont sérialisées en chaînes.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">speed</span>
+          <h4>Rate Limiting</h4>
+          <p>Sliding window : <strong>100 requêtes par minute</strong> par IP.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">cached</span>
+          <h4>Output Caching</h4>
+          <p>Réponses publiques mises en cache. Les requêtes authentifiées sont <strong>exclues du cache</strong> pour
+            éviter les données périmées.</p>
+        </div>
+      </div>
+
+      <h2>Contrôleurs</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Contrôleur</th>
+              <th>Préfixe de route</th>
+              <th>Description</th>
+              <th>Auth requise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>IdentityController</code></td>
+              <td><code>/api/v1/identity</code></td>
+              <td>Inscription, connexion, tokens, profil</td>
+              <td>Mixte</td>
+            </tr>
+            <tr>
+              <td><code>CompaniesController</code></td>
+              <td><code>/api/v1/companies</code></td>
+              <td>CRUD entreprises, recherche, statut</td>
+              <td>Mixte</td>
+            </tr>
+            <tr>
+              <td><code>SubscriptionsController</code></td>
+              <td><code>/api/v1/subscriptions</code></td>
+              <td>Abonnements, plans, paiements</td>
+              <td>Oui</td>
+            </tr>
+            <tr>
+              <td><code>GeographyController</code></td>
+              <td><code>/api/v1/geography</code></td>
+              <td>Régions et villes</td>
+              <td>Mixte</td>
+            </tr>
+            <tr>
+              <td><code>SectorsController</code></td>
+              <td><code>/api/v1/sectors</code></td>
+              <td>Secteurs d'activité</td>
+              <td>Mixte</td>
+            </tr>
+            <tr>
+              <td><code>AdminController</code></td>
+              <td><code>/api/v1/admin</code></td>
+              <td>Actions administratives élevées</td>
+              <td>Admin</td>
+            </tr>
+            <tr>
+              <td><code>StatsController</code></td>
+              <td><code>/api/v1/stats</code></td>
+              <td>Statistiques et exports</td>
+              <td>Oui</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Authentification</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>HTTP</span></div>
+        <pre><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+# Token JWT — durée de validité : 60 minutes
+# Refresh token via POST /api/v1/identity/token/refresh-token
+# ClockSkew : TimeSpan.Zero (pas de marge de tolérance)</code></pre>
+      </div>
+    </section>
+
+    <!-- ============ API IDENTITY ============ -->
+    <section class="page" id="page-api-identity">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Identité & Auth</div>
+        <h1 class="page__title">Identité & Authentification</h1>
+        <p class="page__subtitle">Endpoints pour l'inscription, la connexion, la gestion de compte et les tokens JWT.
+        </p>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/register</div>
+          <div class="endpoint__desc">Inscription d'un propriétaire d'entreprise (<code>EntrepriseOwner</code>)</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/register/user</div>
+          <div class="endpoint__desc">Inscription d'un utilisateur régulier (<code>RegularUser</code>)</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/token/generate</div>
+          <div class="endpoint__desc">Connexion — génère un access token + refresh token</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/token/refresh-token</div>
+          <div class="endpoint__desc">Rafraîchissement du token JWT expiré</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/identity/current-user/claims</div>
+          <div class="endpoint__desc">Récupère les claims de l'utilisateur courant</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/verify-email</div>
+          <div class="endpoint__desc">Vérification de l'adresse email</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/forgot-password</div>
+          <div class="endpoint__desc">Demande de réinitialisation du mot de passe</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/reset-password</div>
+          <div class="endpoint__desc">Réinitialisation du mot de passe avec token</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/identity/change-password</div>
+          <div class="endpoint__desc">Changement de mot de passe (utilisateur connecté)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method put">PUT</div>
+          <div class="endpoint__path">/api/v1/identity/profile</div>
+          <div class="endpoint__desc">Mise à jour du profil utilisateur</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method delete">DELETE</div>
+          <div class="endpoint__path">/api/v1/identity/delete-account</div>
+          <div class="endpoint__desc">Suppression du compte (RGPD)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/identity/export-data</div>
+          <div class="endpoint__desc">Export des données personnelles (RGPD)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API COMPANIES ============ -->
+    <section class="page" id="page-api-companies">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Entreprises</div>
+        <h1 class="page__title">Entreprises</h1>
+        <p class="page__subtitle">CRUD complet, recherche avancée, transitions de statut et gestion de contenu.</p>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/companies</div>
+          <div class="endpoint__desc">Liste paginée avec filtres (secteur, ville, région, recherche, statut)</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/companies/{id}</div>
+          <div class="endpoint__desc">Détail complet d'une entreprise</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies</div>
+          <div class="endpoint__desc">Créer une nouvelle fiche (statut initial : Draft)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method put">PUT</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/profile</div>
+          <div class="endpoint__desc">Mettre à jour le profil de l'entreprise</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/submit</div>
+          <div class="endpoint__desc">Soumettre la fiche pour validation (Draft → Pending)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/approve</div>
+          <div class="endpoint__desc">Approuver la fiche (Pending → Active)</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/reject</div>
+          <div class="endpoint__desc">Rejeter la fiche avec motif (Pending → Rejected)</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/suspend</div>
+          <div class="endpoint__desc">Suspendre l'entreprise (Active → Suspended)</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+
+      <h2>Gestion du contenu</h2>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/images</div>
+          <div class="endpoint__desc">Uploader une image (multipart/form-data, max 10 MB)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method delete">DELETE</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/images/{imageId}</div>
+          <div class="endpoint__desc">Supprimer une image de la galerie</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/documents</div>
+          <div class="endpoint__desc">Uploader un document légal (RCCM, NIF, Patente)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/contacts</div>
+          <div class="endpoint__desc">Ajouter un contact (Phone, Email, WhatsApp, réseaux sociaux)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/services</div>
+          <div class="endpoint__desc">Ajouter un service proposé par l'entreprise</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/report</div>
+          <div class="endpoint__desc">Signaler une entreprise</div>
+          <span class="endpoint__auth auth">Bearer (RegularUser/EntrepriseOwner)</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/trust-score</div>
+          <div class="endpoint__desc">Calculer le Trust Score IA de l'entreprise</div>
+          <span class="endpoint__auth">Public (AllowAnonymous)</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/generate-description</div>
+          <div class="endpoint__desc">Générer une description IA pour la fiche</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+      </div>
+
+      <h2>Paramètres de filtrage</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Paramètre</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>searchTerm</code></td>
+              <td>string</td>
+              <td>Recherche textuelle dans le nom et la description</td>
+            </tr>
+            <tr>
+              <td><code>smartSearch</code></td>
+              <td>string</td>
+              <td>Recherche sémantique IA (via GrokService / LLaMA)</td>
+            </tr>
+            <tr>
+              <td><code>sectorId</code></td>
+              <td>Guid</td>
+              <td>Filtrer par secteur</td>
+            </tr>
+            <tr>
+              <td><code>sectorSlug</code></td>
+              <td>string</td>
+              <td>Filtrer par slug de secteur</td>
+            </tr>
+            <tr>
+              <td><code>cityId</code></td>
+              <td>Guid</td>
+              <td>Filtrer par ville</td>
+            </tr>
+            <tr>
+              <td><code>regionId</code></td>
+              <td>Guid</td>
+              <td>Filtrer par région</td>
+            </tr>
+            <tr>
+              <td><code>status</code></td>
+              <td>int</td>
+              <td>Filtrer par statut (0=Draft, 1=Pending, 2=Active, 3=Rejected, 4=Suspended)</td>
+            </tr>
+            <tr>
+              <td><code>isVerified</code></td>
+              <td>bool</td>
+              <td>Filtrer les entreprises vérifiées KYC uniquement</td>
+            </tr>
+            <tr>
+              <td><code>isPremium</code></td>
+              <td>bool</td>
+              <td>Filtrer les entreprises avec abonnement premium actif</td>
+            </tr>
+            <tr>
+              <td><code>pageNumber</code></td>
+              <td>int</td>
+              <td>Numéro de page (défaut : 1)</td>
+            </tr>
+            <tr>
+              <td><code>pageSize</code></td>
+              <td>int</td>
+              <td>Taille de page (défaut : 10, max : 50)</td>
+            </tr>
+            <tr>
+              <td><code>sortBy</code></td>
+              <td>string</td>
+              <td>Champ de tri : <code>name</code>, <code>createdAt</code>, <code>trustScore</code></td>
+            </tr>
+            <tr>
+              <td><code>sortOrder</code></td>
+              <td>string</td>
+              <td><code>asc</code> ou <code>desc</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.5. Interface de recherche avec filtres et résultats paginés.png" alt="Interface de recherche d'entreprises" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ API SUBSCRIPTIONS ============ -->
+    <section class="page" id="page-api-subscriptions">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Abonnements & Paiements</div>
+        <h1 class="page__title">Abonnements & Paiements</h1>
+        <p class="page__subtitle">Gestion des plans, souscriptions et historique de paiement.</p>
+      </div>
+
+      <h2>Plans disponibles</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Prix</th>
+              <th>Images max</th>
+              <th>Documents max</th>
+              <th>Analytics</th>
+              <th>Badge Featured</th>
+              <th>Priorité recherche</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge">Free</span></td>
+              <td>0 XAF</td>
+              <td>3</td>
+              <td>1</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>3 (basse)</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--pro">Pro</span></td>
+              <td>Variable</td>
+              <td>10</td>
+              <td>5</td>
+              <td>✅</td>
+              <td>❌</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--premium">Premium</span></td>
+              <td>Variable</td>
+              <td>20</td>
+              <td>10</td>
+              <td>✅</td>
+              <td>✅</td>
+              <td>1 (haute)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Méthodes de paiement</h2>
+      <div class="feature-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">credit_card</span>
+          <h4>Stripe</h4>
+          <p>Paiement par carte bancaire internationale.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">phone_android</span>
+          <h4>MTN MoMo</h4>
+          <p>Mobile Money MTN — leader en Afrique centrale.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">phone_android</span>
+          <h4>Airtel Money</h4>
+          <p>Mobile Money Airtel — disponible au Congo.</p>
+        </div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/subscriptions/plans</div>
+          <div class="endpoint__desc">Liste des plans actifs</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/subscriptions</div>
+          <div class="endpoint__desc">Souscrire à un plan</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/subscriptions/{companyId}/current</div>
+          <div class="endpoint__desc">Abonnement actif d'une entreprise</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/subscriptions/{id}/cancel</div>
+          <div class="endpoint__desc">Annuler un abonnement</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API GEOGRAPHY ============ -->
+    <section class="page" id="page-api-geography">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Géographie</div>
+        <h1 class="page__title">Géographie</h1>
+        <p class="page__subtitle">12 régions et 35+ villes du Congo-Brazzaville.</p>
+      </div>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/geography/regions</div>
+          <div class="endpoint__desc">Liste de toutes les régions</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/geography/cities</div>
+          <div class="endpoint__desc">Liste de toutes les villes (avec filtre par région)</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/geography/regions</div>
+          <div class="endpoint__desc">Créer une région</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/geography/cities</div>
+          <div class="endpoint__desc">Créer une ville</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+
+      <h2>Régions du Congo-Brazzaville</h2>
+      <div class="region-grid">
+        <div class="region-chip">Brazzaville</div>
+        <div class="region-chip">Pointe-Noire</div>
+        <div class="region-chip">Kouilou</div>
+        <div class="region-chip">Niari</div>
+        <div class="region-chip">Bouenza</div>
+        <div class="region-chip">Lékoumou</div>
+        <div class="region-chip">Pool</div>
+        <div class="region-chip">Plateaux</div>
+        <div class="region-chip">Cuvette</div>
+        <div class="region-chip">Cuvette-Ouest</div>
+        <div class="region-chip">Sangha</div>
+        <div class="region-chip">Likouala</div>
+      </div>
+    </section>
+
+    <!-- ============ API SECTORS ============ -->
+    <section class="page" id="page-api-sectors">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Secteurs</div>
+        <h1 class="page__title">Secteurs d'activité</h1>
+        <p class="page__subtitle">6 secteurs stratégiques couvrant les principales activités économiques du Congo.</p>
+      </div>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/sectors</div>
+          <div class="endpoint__desc">Liste de tous les secteurs</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/sectors</div>
+          <div class="endpoint__desc">Créer un secteur</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method put">PUT</div>
+          <div class="endpoint__path">/api/v1/sectors/{id}</div>
+          <div class="endpoint__desc">Modifier un secteur</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+
+      <h2>Secteurs pré-configurés</h2>
+      <div
+        style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/secteurs_1781602725416.png" alt="Secteurs publics"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+      <div class="sector-cards">
+        <div class="sector-card">
+          <span class="material-icons-outlined">directions_boat</span>
+          <h4>Maritime & Portuaire</h4>
+          <p>Port de Pointe-Noire, compagnies maritimes, services portuaires et logistique offshore.</p>
+          <code>Slug: maritime</code>
+        </div>
+        <div class="sector-card">
+          <span class="material-icons-outlined">local_shipping</span>
+          <h4>Logistique & Transport</h4>
+          <p>Transport routier, ferroviaire, aérien et solutions intégrées.</p>
+          <code>Slug: logistique</code>
+        </div>
+        <div class="sector-card">
+          <span class="material-icons-outlined">inventory_2</span>
+          <h4>Douane & Transit</h4>
+          <p>Dédouanement, transit et conseil en réglementation des échanges extérieurs.</p>
+          <code>Slug: douane</code>
+        </div>
+        <div class="sector-card">
+          <span class="material-icons-outlined">precision_manufacturing</span>
+          <h4>Industrie</h4>
+          <p>Manufacture, transformation industrielle, agro-industrie et production locale.</p>
+          <code>Slug: industrie</code>
+        </div>
+        <div class="sector-card">
+          <span class="material-icons-outlined">security</span>
+          <h4>Sécurité</h4>
+          <p>Surveillance, gardiennage, protection rapprochée et systèmes électroniques.</p>
+          <code>Slug: securite</code>
+        </div>
+        <div class="sector-card">
+          <span class="material-icons-outlined">forklift</span>
+          <h4>Manutention & Entreposage</h4>
+          <p>Stockage, gestion d'entrepôts, opérations portuaires lourdes.</p>
+          <code>Slug: manutention</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API ADMIN ============ -->
+    <section class="page" id="page-api-admin">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Administration</div>
+        <h1 class="page__title">Administration</h1>
+        <p class="page__subtitle">Endpoints réservés aux administrateurs pour la gestion complète de la plateforme.</p>
+      </div>
+      <div class="callout callout--danger">
+        <span class="material-icons-outlined">gpp_maybe</span>
+        <div>
+          <strong>Accès restreint</strong>
+          <p>Tous les endpoints de ce contrôleur nécessitent le rôle <code>Admin</code>. Le contrôleur permet aux admins
+            d'agir "au nom de" propriétaires d'entreprise.</p>
+        </div>
+      </div>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/admin/users</div>
+          <div class="endpoint__desc">Liste paginée de tous les utilisateurs</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div
+          style="margin: 16px 0 24px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+          <img src="images/admin_utilisateurs_1781603156668.png" alt="Gestion des utilisateurs"
+            style="display: block; width: 100%; height: auto;" />
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/admin/logs</div>
+          <div class="endpoint__desc">Journal d'audit des actions administratives</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/admin/companies/{id}/approve</div>
+          <div class="endpoint__desc">Approuver une fiche d'entreprise</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/admin/companies/{id}/reject</div>
+          <div class="endpoint__desc">Rejeter une fiche avec motif</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/admin/payments/{id}/confirm</div>
+          <div class="endpoint__desc">Confirmer un paiement manuellement</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API STATS ============ -->
+    <section class="page" id="page-api-stats">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / Statistiques</div>
+        <h1 class="page__title">Statistiques & Analytiques</h1>
+        <p class="page__subtitle">Métriques de la plateforme et statistiques individuelles des entreprises.</p>
+      </div>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/platform</div>
+          <div class="endpoint__desc">Statistiques globales de la plateforme</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/companies/{id}</div>
+          <div class="endpoint__desc">Statistiques d'une entreprise (vues, clics, visiteurs uniques)</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/regions</div>
+          <div class="endpoint__desc">Répartition des entreprises par région</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/sectors</div>
+          <div class="endpoint__desc">Répartition des entreprises par secteur</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/export</div>
+          <div class="endpoint__desc">Export des statistiques (CSV/Excel)</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FRONTEND OVERVIEW ============ -->
+    <section class="page" id="page-frontend-overview">
+      <div class="page__header">
+        <div class="page__breadcrumb">Client Angular / Architecture Frontend</div>
+        <h1 class="page__title">Architecture Frontend</h1>
+        <p class="page__subtitle">Application Angular 19 standalone avec lazy-loading, signals, et architecture
+          modulaire.</p>
+      </div>
+
+      <h2>Stack technique</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Technologie</th>
+              <th>Version</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Angular</td>
+              <td>19.2</td>
+              <td>Framework SPA principal</td>
+            </tr>
+            <tr>
+              <td>RxJS</td>
+              <td>7.8</td>
+              <td>Programmation réactive</td>
+            </tr>
+            <tr>
+              <td>TailwindCSS</td>
+              <td>3.4</td>
+              <td>Système de design utilitaire</td>
+            </tr>
+            <tr>
+              <td>Leaflet</td>
+              <td>1.9</td>
+              <td>Cartographie interactive</td>
+            </tr>
+            <tr>
+              <td>Angular CDK</td>
+              <td>19.2</td>
+              <td>Overlays (modals, toasts)</td>
+            </tr>
+            <tr>
+              <td>TypeScript</td>
+              <td>5.7</td>
+              <td>Typage statique</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Structure des dossiers</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>tree</span></div>
+        <pre><code>src/app/
+├── core/                    ← Services singleton, guards, interceptors, models
+│   ├── guards/              ← authGuard, adminGuard, publicGuard, espaceGuard, entrepriseOwnerGuard
+│   ├── interceptors/        ← authInterceptor, httpErrorInterceptor
+│   ├── models/              ← auth.model.ts, company.model.ts, geography.model.ts
+│   ├── services/            ← 17 services (auth, company, admin, stats, etc.)
+│   ├── i18n/                ← Internationalisation
+│   └── sw/                  ← Service Worker (PWA)
+├── features/                ← Modules fonctionnels (lazy-loaded)
+│   ├── public/              ← 11 pages publiques
+│   ├── auth/                ← 5 pages d'authentification
+│   ├── espace/              ← 6 sections espace entreprise
+│   └── admin/               ← 15 sections panneau admin
+├── layout/                  ← 4 layouts (Public, Auth, Espace, Admin)
+├── shared/                  ← Composants réutilisables
+├── app.config.ts            ← Configuration (providers, locale fr, animations)
+└── app.routes.ts            ← 70+ routes avec lazy-loading</code></pre>
+      </div>
+
+      <h2>Caractéristiques</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">bolt</span>
+          <h4>Standalone Components</h4>
+          <p>Angular 19 standalone components — pas de NgModules. Chaque composant est auto-suffisant.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">dynamic_feed</span>
+          <h4>Signals</h4>
+          <p>Angular Signals pour la gestion d'état réactive (<code>signal()</code>, <code>computed()</code>) dans
+            <code>AuthService</code>.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">speed</span>
+          <h4>Lazy Loading</h4>
+          <p>Chaque route charge son composant à la demande via <code>loadComponent()</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">language</span>
+          <h4>Locale française</h4>
+          <p>Locale <code>fr</code> enregistrée pour <code>DatePipe</code>, <code>CurrencyPipe</code> (XAF).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FRONTEND ROUTING ============ -->
+    <section class="page" id="page-frontend-routing">
+      <div class="page__header">
+        <div class="page__breadcrumb">Client Angular / Routage & Navigation</div>
+        <h1 class="page__title">Routage & Navigation</h1>
+        <p class="page__subtitle">4 layouts principaux avec des routes protégées par des guards.</p>
+      </div>
+
+      <h2>Layouts</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Layout</th>
+              <th>Préfixe</th>
+              <th>Guard</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>PublicLayout</code></td>
+              <td><code>/</code></td>
+              <td>Aucun</td>
+              <td>Pages accessibles à tous : accueil, annuaire, secteurs, tarifs, cartographie</td>
+            </tr>
+            <tr>
+              <td><code>AuthLayout</code></td>
+              <td><code>/auth/*</code></td>
+              <td><code>publicGuard</code></td>
+              <td>Connexion, inscription, mot de passe oublié (redirige si déjà connecté)</td>
+            </tr>
+            <tr>
+              <td><code>EspaceLayout</code></td>
+              <td><code>/espace/*</code></td>
+              <td><code>espaceGuard</code></td>
+              <td>Espace entreprise : fiche, abonnement, statistiques, compte</td>
+            </tr>
+            <tr>
+              <td><code>AdminLayout</code></td>
+              <td><code>/admin/*</code></td>
+              <td><code>authGuard</code> + <code>adminGuard</code></td>
+              <td>Panneau d'administration complet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Routes publiques</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Path</th>
+              <th>Composant</th>
+              <th>Titre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/</code></td>
+              <td>AccueilComponent</td>
+              <td>Annuaire Congo — Accueil</td>
+            </tr>
+            <tr>
+              <td><code>/annuaire</code></td>
+              <td>AnnuaireListComponent</td>
+              <td>Entreprises de Congo-Brazzaville</td>
+            </tr>
+            <tr>
+              <td><code>/annuaire/:id</code></td>
+              <td>FicheEntrepriseComponent</td>
+              <td>Fiche entreprise</td>
+            </tr>
+            <tr>
+              <td><code>/secteurs</code></td>
+              <td>SecteursComponent</td>
+              <td>6 secteurs stratégiques</td>
+            </tr>
+            <tr>
+              <td><code>/cartographie</code></td>
+              <td>CartographieComponent</td>
+              <td>Cartographie des entreprises</td>
+            </tr>
+            <tr>
+              <td><code>/tarifs</code></td>
+              <td>TarifsComponent</td>
+              <td>Forfaits & Tarifs</td>
+            </tr>
+            <tr>
+              <td><code>/registre</code></td>
+              <td>RegistreComponent</td>
+              <td>Registre national</td>
+            </tr>
+            <tr>
+              <td><code>/contact</code></td>
+              <td>ContactComponent</td>
+              <td>Nous contacter</td>
+            </tr>
+            <tr>
+              <td><code>/support</code></td>
+              <td>SupportComponent</td>
+              <td>Support & Aide</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Redirections héritées (Legacy)</h2>
+      <p>L'application gère les anciennes URL anglaises avec des redirections automatiques :</p>
+      <div class="code-block">
+        <div class="code-block__header"><span>Routes</span></div>
+        <pre><code>/login        → /auth/connexion
+/register     → /auth/inscription
+/companies    → /annuaire
+/dashboard    → /espace
+/profile      → /espace/compte
+/**           → /404</code></pre>
+      </div>
+    </section>
+
+    <!-- ============ FRONTEND SERVICES ============ -->
+    <section class="page" id="page-frontend-services">
+      <div class="page__header">
+        <div class="page__breadcrumb">Client Angular / Services & State</div>
+        <h1 class="page__title">Services & Gestion d'état</h1>
+        <p class="page__subtitle">17 services injectables gèrent la communication API, l'authentification et l'état
+          applicatif.</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Fichier</th>
+              <th>Responsabilité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>ApiService</code></td>
+              <td>api.service.ts</td>
+              <td>Client HTTP générique avec méthodes get/post/put/delete/getBlob</td>
+            </tr>
+            <tr>
+              <td><code>AuthService</code></td>
+              <td>auth.service.ts</td>
+              <td>Authentification, tokens, état utilisateur (Signals)</td>
+            </tr>
+            <tr>
+              <td><code>CompanyService</code></td>
+              <td>company.service.ts</td>
+              <td>CRUD entreprises, upload, recherche</td>
+            </tr>
+            <tr>
+              <td><code>CompanyContextService</code></td>
+              <td>company-context.service.ts</td>
+              <td>État contextuel de l'entreprise courante</td>
+            </tr>
+            <tr>
+              <td><code>AdminService</code></td>
+              <td>admin.service.ts</td>
+              <td>Actions administratives (validation, gestion)</td>
+            </tr>
+            <tr>
+              <td><code>AdminLogsService</code></td>
+              <td>admin-logs.service.ts</td>
+              <td>Journal d'audit admin</td>
+            </tr>
+            <tr>
+              <td><code>SubscriptionService</code></td>
+              <td>subscription.service.ts</td>
+              <td>Gestion des abonnements</td>
+            </tr>
+            <tr>
+              <td><code>PlanService</code></td>
+              <td>plan.service.ts</td>
+              <td>Récupération et gestion des forfaits</td>
+            </tr>
+            <tr>
+              <td><code>GeographyService</code></td>
+              <td>geography.service.ts</td>
+              <td>Régions et villes</td>
+            </tr>
+            <tr>
+              <td><code>SectorService</code></td>
+              <td>sector.service.ts</td>
+              <td>Secteurs d'activité</td>
+            </tr>
+            <tr>
+              <td><code>StatsService</code></td>
+              <td>stats.service.ts</td>
+              <td>Statistiques et métriques</td>
+            </tr>
+            <tr>
+              <td><code>NotificationService</code></td>
+              <td>notification.service.ts</td>
+              <td>Notifications in-app</td>
+            </tr>
+            <tr>
+              <td><code>BusinessOwnerService</code></td>
+              <td>business-owner.service.ts</td>
+              <td>Profil du propriétaire d'entreprise</td>
+            </tr>
+            <tr>
+              <td><code>UploadService</code></td>
+              <td>upload.service.ts</td>
+              <td>Upload de fichiers (images, documents)</td>
+            </tr>
+            <tr>
+              <td><code>ThemeService</code></td>
+              <td>theme.service.ts</td>
+              <td>Gestion du thème (clair/sombre)</td>
+            </tr>
+            <tr>
+              <td><code>ChatService</code></td>
+              <td>chat.service.ts</td>
+              <td>Service de chat IA</td>
+            </tr>
+            <tr>
+              <td><code>UserSubscriptionService</code></td>
+              <td>user-subscription.service.ts</td>
+              <td>Abonnements des utilisateurs réguliers</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ FRONTEND GUARDS ============ -->
+    <section class="page" id="page-frontend-guards">
+      <div class="page__header">
+        <div class="page__breadcrumb">Client Angular / Guards & Interceptors</div>
+        <h1 class="page__title">Guards & Interceptors</h1>
+        <p class="page__subtitle">Protection des routes et transformation automatique des requêtes HTTP.</p>
+      </div>
+
+      <h2>Route Guards</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Guard</th>
+              <th>Rôle</th>
+              <th>Comportement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>authGuard</code></td>
+              <td>Authentification</td>
+              <td>Redirige vers <code>/auth/connexion</code> si non authentifié</td>
+            </tr>
+            <tr>
+              <td><code>adminGuard</code></td>
+              <td>Admin</td>
+              <td>Redirige vers <code>/</code> si l'utilisateur n'est pas Admin</td>
+            </tr>
+            <tr>
+              <td><code>publicGuard</code></td>
+              <td>Pages publiques</td>
+              <td>Redirige les utilisateurs déjà connectés vers leur espace</td>
+            </tr>
+            <tr>
+              <td><code>espaceGuard</code></td>
+              <td>Espace entreprise</td>
+              <td>Redirige si non authentifié ou si rôle incompatible</td>
+            </tr>
+            <tr>
+              <td><code>entrepriseOwnerGuard</code></td>
+              <td>Propriétaire</td>
+              <td>Vérifie le rôle <code>EntrepriseOwner</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>HTTP Interceptors</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Interceptor</th>
+              <th>Responsabilité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>authInterceptor</code></td>
+              <td>Ajoute automatiquement le header <code>Authorization: Bearer {token}</code> à chaque requête sortante
+              </td>
+            </tr>
+            <tr>
+              <td><code>httpErrorInterceptor</code></td>
+              <td>Intercepte les erreurs HTTP (401, 403, 500) et gère le refresh token automatique sur 401</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES AUTH ============ -->
+    <section class="page" id="page-features-auth">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Authentification</div>
+        <h1 class="page__title">Authentification</h1>
+        <p class="page__subtitle">Flux complet d'authentification JWT avec refresh token, vérification email et
+          récupération de mot de passe.</p>
+      </div>
+
+      <h2>Flux d'inscription</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num">1</span>
+          <div><strong>Inscription</strong>
+            <p>L'utilisateur s'inscrit via <code>/auth/inscription</code> en tant que EntrepriseOwner ou RegularUser.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">2</span>
+          <div><strong>Email de vérification</strong>
+            <p>Un token de vérification est envoyé par email via <code>NotificationService</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">3</span>
+          <div><strong>Vérification</strong>
+            <p>L'utilisateur clique sur le lien et confirme son email via <code>/auth/verification-email</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">4</span>
+          <div><strong>Connexion</strong>
+            <p>L'utilisateur peut maintenant se connecter. Un access token (60 min) et un refresh token sont générés.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div
+        style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/connexion_1781602781355.png" alt="Page de connexion"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+
+      <h2>Gestion des tokens</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Durée</th>
+              <th>Stockage</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Access Token (JWT)</td>
+              <td>60 minutes</td>
+              <td><code>localStorage</code></td>
+              <td>Header Authorization pour chaque requête API</td>
+            </tr>
+            <tr>
+              <td>Refresh Token</td>
+              <td>Variable</td>
+              <td><code>localStorage</code></td>
+              <td>Rafraîchissement automatique via interceptor</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Politique de mot de passe</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>C# — IdentityOptions</span></div>
+        <pre><code>options.Password.RequiredLength = 6;
+options.Password.RequireDigit = false;
+options.Password.RequireNonAlphanumeric = false;
+options.Password.RequireUppercase = false;
+options.Password.RequireLowercase = false;
+options.Password.RequiredUniqueChars = 1;
+options.SignIn.RequireConfirmedAccount = false;</code></pre>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES COMPANY ============ -->
+    <section class="page" id="page-features-company">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Gestion d'entreprise</div>
+        <h1 class="page__title">Gestion d'entreprise</h1>
+        <p class="page__subtitle">Cycle de vie complet d'une fiche entreprise, de la création à la publication.</p>
+      </div>
+
+      <h2>Cycle de vie d'une fiche</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num">1</span>
+          <div><strong>Création (Draft)</strong>
+            <p>Le propriétaire crée sa fiche via <code>/espace/fiche/creer</code>. La fiche est en statut Draft.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">2</span>
+          <div><strong>Complétion</strong>
+            <p>Ajout d'informations : description, contacts, services, images, documents légaux (RCCM, NIF).</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">3</span>
+          <div><strong>Soumission (Pending)</strong>
+            <p>Le propriétaire soumet la fiche pour validation. Statut passe à Pending.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">4</span>
+          <div><strong>Validation admin</strong>
+            <p>Un administrateur examine la fiche via <code>/admin/validation/:id</code> et l'approuve ou la rejette.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">5</span>
+          <div><strong>Publication (Active)</strong>
+            <p>La fiche approuvée est visible publiquement dans l'annuaire et sur la cartographie.</p>
+          </div>
+        </div>
+      </div>
+      <div
+        style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/admin_entreprises_1781603061411.png" alt="Gestion des entreprises"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+
+      <h2>Types de contacts</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Valeur enum</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Phone</td>
+              <td>0</td>
+              <td>Numéro de téléphone</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>1</td>
+              <td>Adresse email</td>
+            </tr>
+            <tr>
+              <td>WhatsApp</td>
+              <td>2</td>
+              <td>Numéro WhatsApp</td>
+            </tr>
+            <tr>
+              <td>Facebook</td>
+              <td>3</td>
+              <td>Page Facebook</td>
+            </tr>
+            <tr>
+              <td>LinkedIn</td>
+              <td>4</td>
+              <td>Profil LinkedIn</td>
+            </tr>
+            <tr>
+              <td>Instagram</td>
+              <td>5</td>
+              <td>Compte Instagram</td>
+            </tr>
+            <tr>
+              <td>Twitter</td>
+              <td>6</td>
+              <td>Compte Twitter/X</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Documents légaux</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Valeur enum</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RCCM</td>
+              <td>0</td>
+              <td>Registre du Commerce et du Crédit Mobilier</td>
+            </tr>
+            <tr>
+              <td>NIF</td>
+              <td>1</td>
+              <td>Numéro d'Identification Fiscale</td>
+            </tr>
+            <tr>
+              <td>Patent</td>
+              <td>2</td>
+              <td>Patente commerciale</td>
+            </tr>
+            <tr>
+              <td>Other</td>
+              <td>3</td>
+              <td>Autre document</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES SUBSCRIPTION ============ -->
+    <section class="page" id="page-features-subscription">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Plans & Abonnements</div>
+        <h1 class="page__title">Plans & Abonnements</h1>
+        <p class="page__subtitle">Système d'abonnement à 3 niveaux avec paiements mobiles et facturation.</p>
+      </div>
+
+      <h2>Comparaison des plans</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Fonctionnalité</th>
+              <th><span class="badge">Free</span></th>
+              <th><span class="badge badge--pro">Pro</span></th>
+              <th><span class="badge badge--premium">Premium</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fiche entreprise</td>
+              <td>✅</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Images max</td>
+              <td>3</td>
+              <td>10</td>
+              <td>20</td>
+            </tr>
+            <tr>
+              <td>Documents max</td>
+              <td>1</td>
+              <td>5</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>Analytics</td>
+              <td>❌</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Badge "En vedette"</td>
+              <td>❌</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Priorité de recherche</td>
+              <td>Basse (3)</td>
+              <td>Moyenne (2)</td>
+              <td>Haute (1)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/tarifs_1781602743510.png" alt="Tableau des tarifs"
+          style="display: block; width: 100%; height: auto;" />
+      </div>
+
+      <h2>Flux de paiement</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num">1</span>
+          <div><strong>Sélection du plan</strong>
+            <p>L'utilisateur choisit un plan sur la page <code>/tarifs</code> ou <code>/espace/abonnement</code>.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">2</span>
+          <div><strong>Création de l'abonnement</strong>
+            <p>Un <code>Subscription</code> est créé en statut Pending avec la durée du plan.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">3</span>
+          <div><strong>Paiement</strong>
+            <p>L'utilisateur paie via Stripe, MTN MoMo ou Airtel Money. Un <code>Payment</code> est enregistré.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">4</span>
+          <div><strong>Confirmation</strong>
+            <p>L'admin confirme le paiement. L'abonnement passe en Active. La facture est générée.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">5</span>
+          <div><strong>Expiration</strong>
+            <p>Le <code>AnalyticsAggregationBackgroundService</code> détecte les abonnements expirés et met à jour leur
+              statut.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES ANALYTICS ============ -->
+    <section class="page" id="page-features-analytics">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Analytiques & IA</div>
+        <h1 class="page__title">Analytiques & Intelligence Artificielle</h1>
+        <p class="page__subtitle">Suivi des interactions, agrégation quotidienne et intégration IA (Grok / LLaMA 3.3
+          70B).</p>
+      </div>
+
+      <h2>Métriques collectées</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">visibility</span>
+          <h4>Vues de profil</h4>
+          <p>Chaque visite d'une fiche entreprise est enregistrée dans <code>ProfileViews</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">touch_app</span>
+          <h4>Clics sur les contacts</h4>
+          <p>Les clics sur téléphone, email, WhatsApp sont tracés dans <code>ContactClicks</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">calendar_month</span>
+          <h4>Agrégation quotidienne</h4>
+          <p><code>AnalyticsAggregationBackgroundService</code> agrège les métriques chaque jour dans
+            <code>AnalyticsDailySummary</code>.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">trending_up</span>
+          <h4>Statistiques mensuelles</h4>
+          <p>Historique par mois avec vues, visiteurs uniques et clics pour chaque entreprise.</p>
+        </div>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.14. Tableau de bord statistiques propriétaire.png" alt="Tableau de bord analytique" style="display: block; width: 100%; height: auto;" />
+      </div>
+      </div>
+
+      <div class="callout callout--info">
+        <span class="material-icons-outlined">info</span>
+        <div>
+          <strong>Fonctionnalités IA avancées</strong>
+          <p>CongoBot, Trust Score et génération de description sont documentés en détail dans les sections <span
+              data-nav="features-congobot"
+              style="cursor:pointer;color:var(--brand);text-decoration:underline;text-underline-offset:3px">CongoBot
+              IA</span> et <span data-nav="features-trustscore"
+              style="cursor:pointer;color:var(--brand);text-decoration:underline;text-underline-offset:3px">Trust
+              Score</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES NOTIFICATIONS ============ -->
+    <section class="page" id="page-features-notifications">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Notifications</div>
+        <h1 class="page__title">Notifications</h1>
+        <p class="page__subtitle">Système de notifications in-app avec 4 niveaux de sévérité.</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Valeur</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge--info">Info</span></td>
+              <td>0</td>
+              <td>Informations générales, mises à jour de la plateforme</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--success">Success</span></td>
+              <td>1</td>
+              <td>Fiche approuvée, paiement confirmé</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--warning-badge">Warning</span></td>
+              <td>2</td>
+              <td>Abonnement expirant, document manquant</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--error">Error</span></td>
+              <td>3</td>
+              <td>Fiche rejetée, paiement échoué</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2>Événements déclencheurs</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Événement</th>
+              <th>Type</th>
+              <th>Destinataire</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fiche soumise pour validation</td>
+              <td><span class="badge badge--info">Info</span></td>
+              <td>Admin</td>
+            </tr>
+            <tr>
+              <td>Fiche approuvée</td>
+              <td><span class="badge badge--success">Success</span></td>
+              <td>EntrepriseOwner</td>
+            </tr>
+            <tr>
+              <td>Fiche rejetée</td>
+              <td><span class="badge badge--error">Error</span></td>
+              <td>EntrepriseOwner</td>
+            </tr>
+            <tr>
+              <td>Paiement reçu (en attente confirmation)</td>
+              <td><span class="badge badge--info">Info</span></td>
+              <td>Admin</td>
+            </tr>
+            <tr>
+              <td>Paiement confirmé</td>
+              <td><span class="badge badge--success">Success</span></td>
+              <td>EntrepriseOwner</td>
+            </tr>
+            <tr>
+              <td>Abonnement expirant bientôt</td>
+              <td><span class="badge badge--warning-badge">Warning</span></td>
+              <td>EntrepriseOwner</td>
+            </tr>
+            <tr>
+              <td>Abonnement expiré</td>
+              <td><span class="badge badge--error">Error</span></td>
+              <td>EntrepriseOwner</td>
+            </tr>
+            <tr>
+              <td>Entreprise signalée par un utilisateur</td>
+              <td><span class="badge badge--warning-badge">Warning</span></td>
+              <td>Admin</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Endpoints</h2>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/notifications</div>
+          <div class="endpoint__desc">Liste des notifications de l'utilisateur courant</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method put">PUT</div>
+          <div class="endpoint__path">/api/v1/notifications/{id}/read</div>
+          <div class="endpoint__desc">Marquer une notification comme lue</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method put">PUT</div>
+          <div class="endpoint__path">/api/v1/notifications/read-all</div>
+          <div class="endpoint__desc">Marquer toutes les notifications comme lues</div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+      </div>
+
+      <p>Les notifications sont créées côté serveur par <code>NotificationService</code> et affichées dans les espaces
+        <code>/espace/notifications</code> et <code>/admin/notifications</code>.
+      </p>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.15. Centre de notifications in-app.png" alt="Centre de notifications" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ INFRA SECURITY ============ -->
+    <section class="page" id="page-infra-security">
+      <div class="page__header">
+        <div class="page__breadcrumb">Infrastructure / Sécurité</div>
+        <h1 class="page__title">Sécurité</h1>
+        <p class="page__subtitle">Mécanismes de sécurité mis en place à chaque couche de l'application.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">key</span>
+          <h4>JWT Bearer</h4>
+          <p>Authentification via tokens JWT signés HMAC-SHA256 avec validation d'issuer, audience et lifetime.
+            ClockSkew = 0.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">speed</span>
+          <h4>Rate Limiting</h4>
+          <p>Sliding window limiter : 100 requêtes par minute par IP. Protège contre les attaques par force brute.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">security</span>
+          <h4>CORS strict</h4>
+          <p>Origines autorisées limitées à : <code>localhost:4200</code>, <code>localhost:4300</code>,
+            <code>localhost:5001</code>.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">gpp_good</span>
+          <h4>RBAC</h4>
+          <p>Contrôle d'accès basé sur les rôles : Admin, EntrepriseOwner, RegularUser. Guards côté client et attributs
+            côté serveur.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">check_circle</span>
+          <h4>Validation</h4>
+          <p>FluentValidation sur chaque commande MediatR. Validation côté client avec Angular Reactive Forms.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">description</span>
+          <h4>Audit Trail</h4>
+          <p>Toute action admin est enregistrée dans <code>AdminLogs</code>. <code>AuditableEntityInterceptor</code>
+            trace les modifications.</p>
+        </div>
+      </div>
+
+      <h2>Configuration JWT</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>appsettings.json</span></div>
+        <pre><code>{
+  "JwtSettings": {
+    "Secret": "96461dde37850c762273043f6927cb14...",
+    "TokenExpirationInMinutes": 60,
+    "Issuer": "localhost",
+    "Audience": "localhost"
+  }
+}</code></pre>
+      </div>
+      <div class="callout callout--danger">
+        <span class="material-icons-outlined">gpp_maybe</span>
+        <div>
+          <strong>⚠️ Production</strong>
+          <p>Le secret JWT doit être stocké dans un coffre-fort de secrets (Azure Key Vault, AWS Secrets Manager) et
+            jamais dans <code>appsettings.json</code> en production.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INFRA OBSERVABILITY ============ -->
+    <section class="page" id="page-infra-observability">
+      <div class="page__header">
+        <div class="page__breadcrumb">Infrastructure / Observabilité</div>
+        <h1 class="page__title">Observabilité</h1>
+        <p class="page__subtitle">Logging structuré, métriques Prometheus et dashboards Grafana.</p>
+      </div>
+
+      <h2>Stack d'observabilité</h2>
+      <div class="feature-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">article</span>
+          <h4>Serilog + Seq</h4>
+          <p>Logging structuré avec enrichissement automatique (machine, thread, contexte). Centralisation dans Seq sur
+            <code>:8081</code>.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">monitor_heart</span>
+          <h4>OpenTelemetry + Prometheus</h4>
+          <p>Métriques applicatives exportées via OTLP vers Prometheus sur <code>:9090</code>.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">dashboard</span>
+          <h4>Grafana</h4>
+          <p>Tableaux de bord visuels connectés à Prometheus sur <code>:3000</code>.</p>
+        </div>
+      </div>
+
+      <h2>Configuration Serilog</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>appsettings.json</span></div>
+        <pre><code>{
+  "Serilog": {
+    "Using": ["Serilog.Sinks.Console", "Serilog.Sinks.OpenTelemetry"],
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": { "Microsoft": "Information" }
+    },
+    "WriteTo": [
+      { "Name": "Console" },
+      {
+        "Name": "OpenTelemetry",
+        "Args": { "endpoint": "http://seq:5341/ingest/otlp" }
+      }
+    ],
+    "Enrich": ["FromLogContext", "WithMachineName", "WithThreadId"],
+    "Properties": { "Application": "api" }
+  }
+}</code></pre>
+      </div>
+
+      <div class="callout callout--tip">
+        <span class="material-icons-outlined">lightbulb</span>
+        <div>
+          <strong>Accès Seq</strong>
+          <p>En développement local : <code>http://localhost:8081</code>. Filtres utiles dans Seq :
+            <code>@Level = 'Warning'</code>, <code>RequestId = 'xxx'</code>, <code>UserId = 'xxx'</code>.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.17. Interface Seq— visualisation des logs Serilog structurés.png" alt="Dashboard Seq — logs structurés" style="display: block; width: 100%; height: auto;" />
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.18. Interface Grafana —métriques Prometheus de l'API.png" alt="Dashboard Grafana" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ INFRA DEPLOYMENT ============ -->
+    <section class="page" id="page-infra-deployment">
+      <div class="page__header">
+        <div class="page__breadcrumb">Infrastructure / Déploiement</div>
+        <h1 class="page__title">Déploiement</h1>
+        <p class="page__subtitle">Build multi-stage Docker, orchestration Docker Compose, et reverse proxy Nginx.</p>
+      </div>
+
+      <h2>Architecture Docker</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>Dockerfile — Build multi-stage</span></div>
+        <pre><code># Stage 1: Build .NET API (SDK 10.0)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api-build
+→ dotnet publish -c Release
+
+# Stage 2: Build Angular App (Node 22)
+FROM node:22-alpine AS client-build
+→ npm ci && npm run build --configuration production
+
+# Stage 3: Runtime (.NET 10 + Nginx)
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+→ API sur :5000, Client servi par Nginx sur :80</code></pre>
+      </div>
+
+      <h2>Services Docker Compose</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Image</th>
+              <th>Port</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>annuairecongo-api</code></td>
+              <td>Custom (Dockerfile)</td>
+              <td>5001:80</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code>sqlserver</code></td>
+              <td>mcr.microsoft.com/mssql/server:2022</td>
+              <td>1433</td>
+              <td>sqlserver-data</td>
+            </tr>
+            <tr>
+              <td><code>seq</code></td>
+              <td>datalust/seq:latest</td>
+              <td>5341, 8081</td>
+              <td>./containers/seq</td>
+            </tr>
+            <tr>
+              <td><code>prometheus</code></td>
+              <td>prom/prometheus:latest</td>
+              <td>9090</td>
+              <td>prometheus.yml</td>
+            </tr>
+            <tr>
+              <td><code>grafana</code></td>
+              <td>grafana/grafana:latest</td>
+              <td>3000</td>
+              <td>grafana-data</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Variables d'environnement</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Défaut</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>ASPNETCORE_ENVIRONMENT</code></td>
+              <td>Development</td>
+              <td>Environnement .NET</td>
+            </tr>
+            <tr>
+              <td><code>SQL_PASSWORD</code></td>
+              <td>YourStrong@Password1</td>
+              <td>Mot de passe SQL Server SA</td>
+            </tr>
+            <tr>
+              <td><code>GRAFANA_PASSWORD</code></td>
+              <td>YourStrongPwd</td>
+              <td>Mot de passe admin Grafana</td>
+            </tr>
+            <tr>
+              <td><code>TZ</code></td>
+              <td>Africa/Tunis</td>
+              <td>Fuseau horaire du conteneur</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Commandes utiles</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code># Démarrer tous les services
+docker compose up -d
+
+# Voir les logs en temps réel
+docker compose logs -f annuairecongo-api
+
+# Reconstruire après changements
+docker compose up -d --build
+
+# Arrêter et supprimer
+docker compose down -v</code></pre>
+      </div>
+    </section>
+
+    <!-- ============ INFRA CONFIGURATION ============ -->
+    <section class="page" id="page-infra-configuration">
+      <div class="page__header">
+        <div class="page__breadcrumb">Infrastructure / Configuration</div>
+        <h1 class="page__title">Configuration</h1>
+        <p class="page__subtitle">Fichiers de configuration et options paramétrables de la plateforme.</p>
+      </div>
+
+      <h2>appsettings.json — Sections</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>ConnectionStrings</code></td>
+              <td>Chaîne de connexion SQL Server</td>
+            </tr>
+            <tr>
+              <td><code>JwtSettings</code></td>
+              <td>Secret, issuer, audience, expiration (60 min)</td>
+            </tr>
+            <tr>
+              <td><code>AppSettings</code></td>
+              <td>Pagination par défaut, CORS, URL client</td>
+            </tr>
+            <tr>
+              <td><code>StorageSettings</code></td>
+              <td>URL de base et taille max des fichiers (10 MB)</td>
+            </tr>
+            <tr>
+              <td><code>GrokSettings</code></td>
+              <td>Modèle IA (<code>llama-3.3-70b-versatile</code>)</td>
+            </tr>
+            <tr>
+              <td><code>Serilog</code></td>
+              <td>Configuration du logging structuré</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>AppSettings détaillé</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>appsettings.json</span></div>
+        <pre><code>{
+  "AppSettings": {
+    "LocalCacheExpirationInMins": 5,
+    "DistributedCacheExpirationMins": 5,
+    "DefaultPageNumber": 1,
+    "DefaultPageSize": 10,
+    "CorsPolicyName": "AnnuaireCongo",
+    "AllowedOrigins": [
+      "https://localhost:5001",
+      "http://localhost:4200",
+      "http://localhost:4300"
+    ],
+    "ClientAppUrl": "http://localhost:4200"
+  }
+}</code></pre>
+      </div>
+
+      <h2>Options validées au démarrage</h2>
+      <p>Les sections de configuration suivantes sont validées via <code>ValidateDataAnnotations()</code> et
+        <code>ValidateOnStart()</code> — l'application refusera de démarrer si les valeurs sont invalides :
+      </p>
+      <ul>
+        <li><code>StorageSettings</code> — BaseUrl et MaxFileSizeBytes</li>
+        <li><code>GrokSettings</code> — Modèle IA</li>
+      </ul>
+    </section>
+
+    <!-- ============ PIPELINE CQRS ============ -->
+    <section class="page" id="page-pipeline-cqrs">
+      <div class="page__header">
+        <div class="page__breadcrumb">Architecture / Pipeline CQRS</div>
+        <h1 class="page__title">Pipeline CQRS & Behaviors</h1>
+        <p class="page__subtitle">Chaque commande et requête MediatR traverse un pipeline de <strong>4
+            behaviors</strong> avant d'atteindre le handler. Cette architecture garantit la séparation des
+          préoccupations et évite la duplication de code transversal.</p>
+      </div>
+
+      <div class="info-banner">
+        <span class="material-icons-outlined">info</span>
+        <div>
+          <strong>Enregistrement automatique</strong>
+          <p>Les behaviors sont enregistrés dans <code>Application/DependencyInjection.cs</code> via
+            <code>AddMediatR()</code>. Les validators FluentValidation sont découverts automatiquement par
+            <code>AddValidatorsFromAssembly()</code>.
+          </p>
+        </div>
+      </div>
+
+      <h2>Ordre d'exécution du pipeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step pipeline-step--exception">
+          <div class="pipeline-step__num">1</div>
+          <div>
+            <div class="pipeline-step__label">ExceptionHandlingBehavior&lt;TRequest, TResponse&gt;</div>
+            <p class="pipeline-step__desc">Enveloppe toute la pipeline dans un try/catch. Convertit les exceptions non
+              gérées en <code>Result.Failure</code> avec message d'erreur structuré. Évite que les exceptions remontent
+              jusqu'au contrôleur.</p>
+          </div>
+        </div>
+        <div class="pipeline-connector"></div>
+        <div class="pipeline-step pipeline-step--validation">
+          <div class="pipeline-step__num">2</div>
+          <div>
+            <div class="pipeline-step__label">ValidationBehavior&lt;TRequest, TResponse&gt;</div>
+            <p class="pipeline-step__desc">Cherche tous les <code>IValidator&lt;TRequest&gt;</code> enregistrés et les
+              exécute. Si des règles échouent, retourne immédiatement une <code>400 Bad Request</code> avec la liste
+              complète des erreurs. Le handler n'est <em>jamais</em> appelé si la validation échoue.</p>
+          </div>
+        </div>
+        <div class="pipeline-connector"></div>
+        <div class="pipeline-step pipeline-step--performance">
+          <div class="pipeline-step__num">3</div>
+          <div>
+            <div class="pipeline-step__label">PerformanceBehavior&lt;TRequest, TResponse&gt;</div>
+            <p class="pipeline-step__desc">Mesure le temps d'exécution total du handler avec <code>Stopwatch</code>. Si
+              la durée dépasse <strong>500 ms</strong>, émet un <code>Warning</code> Serilog avec le nom de la commande,
+              l'ID utilisateur et le temps écoulé. Aide à détecter les régressions de performance.</p>
+          </div>
+        </div>
+        <div class="pipeline-connector"></div>
+        <div class="pipeline-step pipeline-step--cache">
+          <div class="pipeline-step__num">4</div>
+          <div>
+            <div class="pipeline-step__label">CachingBehavior&lt;TRequest, TResponse&gt;</div>
+            <p class="pipeline-step__desc">S'applique uniquement aux requêtes implémentant <code>ICacheableQuery</code>.
+              Vérifie le <strong>HybridCache</strong> (L1 local 30 s + L2 distribué 10 min) avant d'appeler le handler.
+              Sur un hit de cache, retourne directement le résultat sans toucher à la base de données.</p>
+          </div>
+        </div>
+        <div class="pipeline-connector"></div>
+        <div class="pipeline-step pipeline-step--handler">
+          <div class="pipeline-step__num">✓</div>
+          <div>
+            <div class="pipeline-step__label">Handler (IRequestHandler&lt;TRequest, TResponse&gt;)</div>
+            <p class="pipeline-step__desc">La logique métier du cas d'utilisation. Accède à <code>IAppDbContext</code>,
+              aux services, et retourne un <code>Result&lt;T&gt;</code>. Les domain events sont dispatchés après
+              <code>SaveChangesAsync()</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2>Exemple — Commande complète</h2>
+      <div class="tabs">
+        <div class="tab-list">
+          <button class="tab-btn active" data-tab="tab-command">Commande</button>
+          <button class="tab-btn" data-tab="tab-validator">Validator</button>
+          <button class="tab-btn" data-tab="tab-handler">Handler</button>
+        </div>
+        <div class="tab-panel active" id="tab-command">
+          <div class="code-block">
+            <div class="code-block__header"><span>C# — CreateCompanyCommand.cs</span><button class="code-block__copy"
+                onclick="copyCode(this)">Copier</button></div>
+            <pre><code>// Application/Features/Companies/Commands/CreateCompany/
+public sealed record CreateCompanyCommand(
+    string Name,
+    string? Description,
+    Guid CityId,
+    List&lt;Guid&gt; SectorIds
+) : IRequest&lt;Result&lt;Guid&gt;&gt;;</code></pre>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-validator">
+          <div class="code-block">
+            <div class="code-block__header"><span>C# — CreateCompanyCommandValidator.cs</span><button
+                class="code-block__copy" onclick="copyCode(this)">Copier</button></div>
+            <pre><code>public sealed class CreateCompanyCommandValidator
+    : AbstractValidator&lt;CreateCompanyCommand&gt;
+{
+    public CreateCompanyCommandValidator()
+    {
+        RuleFor(x =&gt; x.Name)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x =&gt; x.CityId)
+            .NotEmpty();
+
+        RuleFor(x =&gt; x.SectorIds)
+            .NotEmpty()
+            .WithMessage("Au moins un secteur requis.");
+    }
+}</code></pre>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-handler">
+          <div class="code-block">
+            <div class="code-block__header"><span>C# — CreateCompanyCommandHandler.cs</span><button
+                class="code-block__copy" onclick="copyCode(this)">Copier</button></div>
+            <pre><code>public sealed class CreateCompanyCommandHandler(
+    IAppDbContext ctx,
+    IUser user)
+    : IRequestHandler&lt;CreateCompanyCommand, Result&lt;Guid&gt;&gt;
+{
+    public async Task&lt;Result&lt;Guid&gt;&gt; Handle(
+        CreateCompanyCommand request, CancellationToken ct)
+    {
+        var company = Company.Create(
+            request.Name,
+            request.Description,
+            request.CityId,
+            user.BusinessOwnerId);   // from JWT claim
+
+        ctx.Companies.Add(company);
+        await ctx.SaveChangesAsync(ct);
+
+        return Result.Success(company.Id);
+    }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h2>HybridCache — Stratégie de cache</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Niveau</th>
+              <th>Type</th>
+              <th>TTL</th>
+              <th>Invalidation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>L1</td>
+              <td>In-process (mémoire locale)</td>
+              <td>30 secondes</td>
+              <td>Tags via <code>RemoveByTagAsync()</code></td>
+            </tr>
+            <tr>
+              <td>L2</td>
+              <td>Distribué (IDistributedCache)</td>
+              <td>10 minutes</td>
+              <td>Tags via <code>RemoveByTagAsync()</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Seules les requêtes implémentant <code>ICacheableQuery</code> sont mise en cache (ex :
+        <code>GetCompaniesByFilterQuery</code>, <code>GetSectorsQuery</code>). Les commandes (écriture) invalident les
+        tags concernés après <code>SaveChangesAsync</code>.
+      </p>
+    </section>
+
+    <!-- ============ API AI ============ -->
+    <section class="page" id="page-api-ai">
+      <div class="page__header">
+        <div class="page__breadcrumb">Référence API / CongoBot & IA</div>
+        <h1 class="page__title">CongoBot & Intelligence Artificielle</h1>
+        <p class="page__subtitle">Endpoints IA — accès public. Propulsés par <strong>GrokService</strong> intégrant le
+          modèle <strong>LLaMA 3.3 70B Versatile</strong> via l'API Groq (compatibilité OpenAI).</p>
+      </div>
+
+      <div class="callout callout--info">
+        <span class="material-icons-outlined">info</span>
+        <div>
+          <strong>Route : <code>/api/v1/ai</code></strong>
+          <p>Le contrôleur <code>AiController</code> est entièrement <code>[AllowAnonymous]</code>. Aucune
+            authentification requise pour interagir avec l'IA.</p>
+        </div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/ai/chat</div>
+          <div class="endpoint__desc">Envoyer un message au CongoBot — assistant conversationnel de la plateforme</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+      </div>
+
+      <h2>Corps de la requête</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>JSON — Requête</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code>{
+  "message": "Quelles sont les entreprises de transport à Brazzaville ?"
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__header"><span>JSON — Réponse</span></div>
+        <pre><code>{
+  "response": "D'après l'annuaire, voici les entreprises de transport ...",
+  "sources": ["Congo Transport SA", "LogiCongo SARL"]
+}</code></pre>
+      </div>
+
+      <h2>Autres endpoints IA (sur CompaniesController)</h2>
+      <div class="endpoint-group">
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/trust-score</div>
+          <div class="endpoint__desc">Calculer le Trust Score IA d'une entreprise (0–100)</div>
+          <span class="endpoint__auth">Public (AllowAnonymous)</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method post">POST</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/generate-description</div>
+          <div class="endpoint__desc">Générer une description professionnelle par IA à partir des données de la fiche
+          </div>
+          <span class="endpoint__auth auth">Bearer</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/companies/{id}/recommendations</div>
+          <div class="endpoint__desc">Entreprises similaires recommandées par IA (même secteur/région)</div>
+          <span class="endpoint__auth">Public</span>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint__method get">GET</div>
+          <div class="endpoint__path">/api/v1/stats/sector-report/{sectorId}</div>
+          <div class="endpoint__desc">Rapport IA sur un secteur : tendances, top entreprises, analyse</div>
+          <span class="endpoint__auth auth">Admin</span>
+        </div>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.9. Interface CongoBot—chatbot contextuel.png" alt="Interface CongoBot" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ FEATURES CONGOBOT ============ -->
+    <section class="page" id="page-features-congobot">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / CongoBot IA</div>
+        <h1 class="page__title">CongoBot — Assistant IA</h1>
+        <p class="page__subtitle">Assistant conversationnel intégré à la plateforme, alimenté par LLaMA 3.3 70B.
+          Accessible à tous les visiteurs sans compte.</p>
+      </div>
+
+      <h2>Cas d'usage</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">search</span>
+          <h4>Recherche naturelle</h4>
+          <p>"Trouve-moi une entreprise de logistique qui gère le dédouanement à Pointe-Noire" — le bot interroge
+            l'annuaire et retourne des résultats pertinents.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">help_outline</span>
+          <h4>Questions sur la plateforme</h4>
+          <p>Comment s'inscrire ? Comment soumettre une fiche ? Quels sont les plans disponibles ? Le CongoBot guide les
+            nouveaux utilisateurs.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">business_center</span>
+          <h4>Informations sectorielles</h4>
+          <p>Combien d'entreprises dans le secteur maritime ? Quelles sont les entreprises certifiées ISO dans le
+            secteur industriel ?</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">language</span>
+          <h4>Support multilingue</h4>
+          <p>Le modèle LLaMA 3.3 comprend le français, l'anglais et les langues locales africaines pour une
+            accessibilité maximale.</p>
+        </div>
+      </div>
+
+      <h2>Architecture du service</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>C# — GrokService (simplifié)</span></div>
+        <pre><code>public class GrokService(HttpClient http, IOptions&lt;GrokSettings&gt; settings)
+{
+    // Compatibilité API OpenAI
+    private const string BaseUrl = "https://api.groq.com/openai/v1/";
+
+    public async Task&lt;string&gt; ChatAsync(string userMessage, CancellationToken ct)
+    {
+        var payload = new {
+            model   = settings.Value.Model,  // "llama-3.3-70b-versatile"
+            messages = new[] {
+                new { role = "system", content = SystemPrompt },
+                new { role = "user",   content = userMessage }
+            }
+        };
+        var response = await http.PostAsJsonAsync("chat/completions", payload, ct);
+        // ... extraction du contenu
+    }
+}</code></pre>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Figure 4.9. Interface CongoBot—chatbot contextuel.png" alt="Fenêtre CongoBot" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ FEATURES TRUST SCORE ============ -->
+    <section class="page" id="page-features-trustscore">
+      <div class="page__header">
+        <div class="page__breadcrumb">Fonctionnalités / Trust Score</div>
+        <h1 class="page__title">Trust Score</h1>
+        <p class="page__subtitle">Score de confiance calculé par IA (0–100) pour évaluer la fiabilité et la complétude
+          de chaque fiche entreprise.</p>
+      </div>
+
+      <div class="info-banner">
+        <span class="material-icons-outlined">verified</span>
+        <div>
+          <strong>Endpoint public</strong>
+          <p><code>POST /api/v1/companies/{id}/trust-score</code> est <code>[AllowAnonymous]</code> — n'importe qui peut
+            consulter ou recalculer le score d'une entreprise.</p>
+        </div>
+      </div>
+
+      <h2>Les 10 indicateurs</h2>
+      <div class="trust-indicators">
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">badge</span>
+          <div class="trust-indicator__name">Nom & Description</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:100%"></div>
+          </div>
+          <div class="trust-indicator__points">15 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">phone</span>
+          <div class="trust-indicator__name">Contacts renseignés</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:80%"></div>
+          </div>
+          <div class="trust-indicator__points">12 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">description</span>
+          <div class="trust-indicator__name">Documents légaux (RCCM/NIU)</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:100%"></div>
+          </div>
+          <div class="trust-indicator__points">15 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">photo_library</span>
+          <div class="trust-indicator__name">Photos & Galerie</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:67%"></div>
+          </div>
+          <div class="trust-indicator__points">10 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">map</span>
+          <div class="trust-indicator__name">Localisation & Adresse</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:67%"></div>
+          </div>
+          <div class="trust-indicator__points">10 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">work</span>
+          <div class="trust-indicator__name">Services détaillés</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:53%"></div>
+          </div>
+          <div class="trust-indicator__points">8 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">admin_panel_settings</span>
+          <div class="trust-indicator__name">Vérifié par l'admin (KYC)</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:100%"></div>
+          </div>
+          <div class="trust-indicator__points">15 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">category</span>
+          <div class="trust-indicator__name">Secteurs renseignés</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:33%"></div>
+          </div>
+          <div class="trust-indicator__points">5 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">history</span>
+          <div class="trust-indicator__name">Ancienneté (année fondation)</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:33%"></div>
+          </div>
+          <div class="trust-indicator__points">5 pts</div>
+        </div>
+        <div class="trust-indicator">
+          <span class="material-icons-outlined trust-indicator__icon">smart_toy</span>
+          <div class="trust-indicator__name">Analyse qualité IA</div>
+          <div class="trust-indicator__bar-wrap">
+            <div class="trust-indicator__bar" style="width:33%"></div>
+          </div>
+          <div class="trust-indicator__points">5 pts</div>
+        </div>
+      </div>
+
+      <h2>Interprétation</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Score</th>
+              <th>Niveau</th>
+              <th>Affichage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>80 – 100</td>
+              <td>Excellent</td>
+              <td>Badge vert "Très fiable"</td>
+            </tr>
+            <tr>
+              <td>60 – 79</td>
+              <td>Bon</td>
+              <td>Badge bleu "Fiable"</td>
+            </tr>
+            <tr>
+              <td>40 – 59</td>
+              <td>Moyen</td>
+              <td>Badge orange "Partiel"</td>
+            </tr>
+            <tr>
+              <td>0 – 39</td>
+              <td>Faible</td>
+              <td>Badge rouge "Incomplet"</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin: 32px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-card);">
+        <img src="images/Trust Score sur une fiche entreprise.png" alt="Trust Score sur une fiche entreprise" style="display: block; width: 100%; height: auto;" />
+      </div>
+    </section>
+
+    <!-- ============ TESTS ============ -->
+    <section class="page" id="page-tests">
+      <div class="page__header">
+        <div class="page__breadcrumb">Tests & Contribution / Stratégie de tests</div>
+        <h1 class="page__title">Stratégie de tests</h1>
+        <p class="page__subtitle">4 projets de test organisés en pyramide : tests unitaires rapides, tests d'intégration
+          avec base de données réelle via Testcontainers.</p>
+      </div>
+
+      <h2>Pyramide de tests</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">hub</span>
+          <h4>Domain.UnitTests</h4>
+          <p>Tests des entités du domaine : machines d'état (Company, Subscription), value objects, règles métier.
+            Aucune dépendance externe — exécution en millisecondes.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">bolt</span>
+          <h4>Application.UnitTests</h4>
+          <p>Tests des handlers CQRS avec mocks (<code>NSubstitute</code>) de <code>IAppDbContext</code> et
+            <code>IUser</code>. Vérifie la logique applicative sans base de données.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">layers</span>
+          <h4>Application.SubcutaneousTests</h4>
+          <p>Tests de la couche Application avec <strong>Testcontainers</strong> (SQL Server 2022 réel). Vérifie les
+            interactions EF Core, migrations et seed data.</p>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons-outlined feature-item__icon">http</span>
+          <h4>Api.IntegrationTests</h4>
+          <p>Tests end-to-end de l'API HTTP avec <code>WebApplicationFactory</code> + Testcontainers. Vérifie les
+            contrôleurs, middleware, authentification et autorisation.</p>
+        </div>
+      </div>
+
+      <h2>Lancer les tests</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span><button class="code-block__copy"
+            onclick="copyCode(this)">Copier</button></div>
+        <pre><code># Tous les tests
+dotnet test
+
+# Tests unitaires uniquement (pas de Docker requis)
+dotnet test tests/AnnuaireCongo.Domain.UnitTests/
+dotnet test tests/AnnuaireCongo.Application.UnitTests/
+
+# Tests d'intégration (Docker requis — Testcontainers)
+dotnet test tests/AnnuaireCongo.Application.SubcutaneousTests/
+dotnet test tests/AnnuaireCongo.Api.IntegrationTests/
+
+# Avec rapport TRX
+dotnet test --logger "trx;LogFileName=results.trx"</code></pre>
+      </div>
+
+      <div class="callout callout--warning">
+        <span class="material-icons-outlined">warning</span>
+        <div>
+          <strong>Prérequis : Docker Desktop</strong>
+          <p>Les tests <code>SubcutaneousTests</code> et <code>IntegrationTests</code> utilisent Testcontainers pour
+            démarrer une instance SQL Server 2022 dans un conteneur Docker. Assurez-vous que Docker Desktop est actif
+            avant de les lancer.</p>
+        </div>
+      </div>
+
+      <h2>Exemple de test unitaire</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>C# — Domain.UnitTests</span></div>
+        <pre><code>[Fact]
+public void Submit_WhenDraft_ShouldTransitionToPending()
+{
+    // Arrange
+    var company = Company.Create("Test SARL", null, cityId, ownerId);
+
+    // Act
+    var result = company.Submit();
+
+    // Assert
+    result.IsSuccess.Should().BeTrue();
+    company.Status.Should().Be(CompanyStatus.Pending);
+    company.SubmittedAt.Should().NotBeNull();
+}
+
+[Fact]
+public void Submit_WhenAlreadyPending_ShouldFail()
+{
+    var company = Company.Create("Test", null, cityId, ownerId);
+    company.Submit(); // first submit OK
+
+    var result = company.Submit(); // second attempt
+
+    result.IsFailure.Should().BeTrue();
+    result.Error.Code.Should().Be("Company.InvalidState");
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ============ CONTRIBUTING ============ -->
+    <section class="page" id="page-contributing">
+      <div class="page__header">
+        <div class="page__breadcrumb">Tests & Contribution / Contribuer</div>
+        <h1 class="page__title">Contribuer au projet</h1>
+        <p class="page__subtitle">Guide pour ajouter une nouvelle fonctionnalité end-to-end, des entités à l'endpoint
+          HTTP.</p>
+      </div>
+
+      <h2>Checklist — Nouvelle fonctionnalité</h2>
+      <div class="flow-steps">
+        <div class="flow-step"><span class="flow-step__num">1</span>
+          <div><strong>Entité de domaine</strong>
+            <p>Créer <code>Domain/{Groupe}/{Entité}.cs</code> avec setters privés, constructeur EF Core privé et factory
+              method statique.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">2</span>
+          <div><strong>Erreurs de domaine</strong>
+            <p>Créer <code>Domain/{Groupe}/{Entité}Errors.cs</code> avec des constantes <code>Error</code> typées.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">3</span>
+          <div><strong>Configuration EF Core</strong>
+            <p>Créer <code>Infrastructure/Data/Configurations/{Entité}Configurations.cs</code> implémentant
+              <code>IEntityTypeConfiguration&lt;T&gt;</code>.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">4</span>
+          <div><strong>DbSet + Migration</strong>
+            <p>Ajouter <code>DbSet&lt;T&gt;</code> à <code>IAppDbContext</code> et <code>AppDbContext</code>, puis
+              <code>dotnet ef migrations add</code>.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">5</span>
+          <div><strong>Commande/Requête + Validator + Handler</strong>
+            <p>Créer dans <code>Application/Features/{Groupe}/Commands/{Action}/</code> ou <code>Queries/</code>. Le
+              validator est découvert automatiquement.</p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">6</span>
+          <div><strong>Contrats (DTOs)</strong>
+            <p>Créer les DTOs request/response dans <code>Contracts/Requests/</code> et
+              <code>Contracts/Responses/</code>.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">7</span>
+          <div><strong>Endpoint HTTP</strong>
+            <p>Ajouter l'action dans le contrôleur existant ou créer un nouveau contrôleur avec
+              <code>[ApiVersion("1")]</code>.
+            </p>
+          </div>
+        </div>
+        <div class="flow-step"><span class="flow-step__num">8</span>
+          <div><strong>Tests</strong>
+            <p>Tester l'entité domaine (UnitTests), le handler (Application.UnitTests avec mocks) et l'endpoint
+              (Api.IntegrationTests).</p>
+          </div>
+        </div>
+      </div>
+
+      <h2>Conventions de nommage</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Convention</th>
+              <th>Exemple</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Commande</td>
+              <td><code>{Action}{Entité}Command</code></td>
+              <td><code>CreateCompanyCommand</code></td>
+            </tr>
+            <tr>
+              <td>Handler de commande</td>
+              <td><code>{Action}{Entité}CommandHandler</code></td>
+              <td><code>CreateCompanyCommandHandler</code></td>
+            </tr>
+            <tr>
+              <td>Validator</td>
+              <td><code>{Action}{Entité}CommandValidator</code></td>
+              <td><code>CreateCompanyCommandValidator</code></td>
+            </tr>
+            <tr>
+              <td>Requête</td>
+              <td><code>Get{Entité}{Filtre}Query</code></td>
+              <td><code>GetCompanyByIdQuery</code></td>
+            </tr>
+            <tr>
+              <td>Erreurs domaine</td>
+              <td><code>{Entité}Errors</code></td>
+              <td><code>CompanyErrors</code></td>
+            </tr>
+            <tr>
+              <td>Configuration EF</td>
+              <td><code>{Entité}Configurations</code></td>
+              <td><code>CompanyConfigurations</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Règle clé : Primary Constructors</h2>
+      <div class="code-block">
+        <div class="code-block__header"><span>C# — Pattern préféré</span></div>
+        <pre><code>// ✅ Utiliser les primary constructors C# 13
+public sealed class CreateCompanyCommandHandler(
+    IAppDbContext ctx,
+    IUser user,
+    IHybridCache cache)
+    : IRequestHandler&lt;CreateCompanyCommand, Result&lt;Guid&gt;&gt;
+{ ... }
+
+// ❌ Éviter les champs avec this._
+public sealed class CreateCompanyCommandHandler
+    : IRequestHandler&lt;CreateCompanyCommand, Result&lt;Guid&gt;&gt;
+{
+    private readonly IAppDbContext _ctx;
+    public CreateCompanyCommandHandler(IAppDbContext ctx) { _ctx = ctx; }
+}</code></pre>
+      </div>
+
+      <h2>Commits</h2>
+      <p>Le projet suit les <strong>Conventional Commits</strong> :</p>
+      <div class="code-block">
+        <div class="code-block__header"><span>bash</span></div>
+        <pre><code>feat: add company FAQ feature
+fix: trust score calculation for companies without documents
+refactor: extract company state machine to domain service
+test: add integration tests for subscription renewal
+docs: update API reference for v1/ai/chat endpoint</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════ Footer ═══════════════ -->
+    <footer class="content-footer">
+      <div class="content-footer__inner">
+        <p style="font-size:.9rem;font-weight:600;color:var(--text-2);margin-bottom:8px;">Annuaire Congo — Documentation
+          Technique</p>
+        <p style="font-size:.78rem;color:var(--text-3);">Stack : .NET 10 · Angular 19 · SQL Server 2022 · MediatR ·
+          FluentValidation · LLaMA 3.3 70B · Docker</p>
+        <p style="font-size:.75rem;color:var(--text-3);margin-top:8px;">© 2026 Annuaire Congo — République du Congo
+          (Congo-Brazzaville)</p>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ═══════════════ Back to Top ═══════════════ -->
+  <button class="back-to-top" id="backToTop" aria-label="Retour en haut">
+    <span class="material-icons-outlined">arrow_upward</span>
+  </button>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

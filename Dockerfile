@@ -56,4 +56,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx && dotnet /app/api/ANNUAIRECONGO.Api.dll"]
+CMD ["sh", "-c", "nginx && cd /app/api && dotnet ANNUAIRECONGO.Api.dll"]

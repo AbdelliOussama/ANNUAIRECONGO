@@ -222,7 +222,12 @@ public static class DependencyInjection
         app.UseSerilogRequestLogging();
 
         // 5. CORS (before authentication/authorization)
-        app.UseCors(configuration["AppSettings:CorsPolicyName"]!);
+        var policyName = configuration["AppSettings:CorsPolicyName"];
+        Console.WriteLine($"CorsPolicyName is: '{policyName}'");
+        if (string.IsNullOrEmpty(policyName)) {
+            policyName = "AnnuaireCongo";
+        }
+        app.UseCors(policyName);
 
         // 6. Rate limiting (before authentication to protect auth endpoints)
         app.UseRateLimiter();

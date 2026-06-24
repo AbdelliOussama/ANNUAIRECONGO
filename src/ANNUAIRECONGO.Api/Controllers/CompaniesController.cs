@@ -525,11 +525,10 @@ public async Task<IActionResult> AddService(Guid id, [FromBody] AddServiceReques
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [EndpointSummary("Add report for a company by id.")]
-[EndpointDescription("This endpoint adds a report for a company by id.")]
+[EndpointDescription("This endpoint adds a report for a company by id. Requires authentication (RegularUser or EntrepriseOwner).")]
 [EndpointName("AddReport")]
 [MapToApiVersion("1.0")]
-// Allow both authenticated and anonymous users to report companies
-[AllowAnonymous]
+[Authorize(Roles = "RegularUser,EntrepriseOwner")]
 public async Task<IActionResult> AddReport(Guid id, [FromBody] AddReportRequest commandRequest, CancellationToken ct)
 {
     var command = new AddReportCommand(id, HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, commandRequest.Reason);
